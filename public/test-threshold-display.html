@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阈值配置显示测试</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>阈值配置显示测试</h2>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <button class="btn btn-primary" id="loadTestBtn">加载并测试阈值显示</button>
+                <button class="btn btn-success" id="manualTestBtn">手动切换测试</button>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <h4>调试信息</h4>
+            <div id="debugInfo" class="border p-3" style="height: 200px; overflow-y: auto; background: #f8f9fa;">
+                <!-- 调试信息将在这里显示 -->
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <h4>模态框测试区域</h4>
+            <div class="border p-3">
+                <!-- 报警类型选择器 -->
+                <div class="mb-3">
+                    <label for="testAlarmTypeSelect" class="form-label">报警类型</label>
+                    <select class="form-select" id="testAlarmTypeSelect">
+                        <option value="no_update">无更新报警</option>
+                        <option value="threshold">阈值报警</option>
+                    </select>
+                </div>
+                
+                <!-- 无更新报警配置 -->
+                <div id="testNoUpdateConfig" class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">无更新报警配置</h6>
+                    </div>
+                    <div class="card-body">
+                        <p>这是无更新报警配置区域</p>
+                    </div>
+                </div>
+                
+                <!-- 阈值报警配置 -->
+                <div id="testThresholdConfig" class="card mb-3" style="display: none;">
+                    <div class="card-header">
+                        <h6 class="mb-0">阈值报警配置</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="testThresholdOperator" class="form-label">判断逻辑</label>
+                                <select class="form-select" id="testThresholdOperator">
+                                    <option value="greater_than">大于 (&gt;)</option>
+                                    <option value="greater_equal">大于等于 (&gt;=)</option>
+                                    <option value="less_than">小于 (&lt;)</option>
+                                    <option value="less_equal">小于等于 (&lt;=)</option>
+                                    <option value="equals">等于 (=)</option>
+                                    <option value="not_equals">不等于 (≠)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="testThresholdValue" class="form-label">设定值</label>
+                                <input type="number" class="form-control" id="testThresholdValue" step="any" placeholder="请输入阈值">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="testThresholdDuration" class="form-label">持续时间 (秒)</label>
+                                <input type="number" class="form-control" id="testThresholdDuration" min="1" value="60" placeholder="触发报警前的持续时间">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 单点报警模态框容器 -->
+    <div id="singlePointAlarmModalContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 调试日志函数
+        function log(message) {
+            const debugInfo = document.getElementById('debugInfo');
+            const timestamp = new Date().toLocaleTimeString();
+            debugInfo.innerHTML += `[${timestamp}] ${message}<br>`;
+            debugInfo.scrollTop = debugInfo.scrollHeight;
+            console.log(message);
+        }
+
+        // 测试阈值配置切换
+        function testThresholdToggle() {
+            const alarmType = document.getElementById('testAlarmTypeSelect').value;
+            const noUpdateConfig = document.getElementById('testNoUpdateConfig');
+            const thresholdConfig = document.getElementById('testThresholdConfig');
+            
+            log(`切换报警类型到: ${alarmType}`);
+            
+            if (alarmType === 'no_update') {
+                noUpdateConfig.style.display = 'block';
+                thresholdConfig.style.display = 'none';
+                log('显示无更新配置，隐藏阈值配置');
+            } else if (alarmType === 'threshold') {
+                noUpdateConfig.style.display = 'none';
+                thresholdConfig.style.display = 'block';
+                log('隐藏无更新配置，显示阈值配置');
+            }
+        }
+
+        // 加载并测试完整模态框
+        function loadAndTestModal() {
+            log('开始加载完整模态框测试...');
+            
+            // 先加载HTML
+            fetch('/html/single-point-alarm-modal.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('singlePointAlarmModalContainer').innerHTML = html;
+                    log('模态框HTML加载成功');
+                    
+                    // 再加载脚本
+                    const script = document.createElement('script');
+                    script.src = '/js/single-point-alarm.js';
+                    script.onload = function() {
+                        log('JavaScript脚本加载成功');
+                        
+                        // 测试模态框中的阈值配置
+                        setTimeout(() => {
+                            testModalThresholdConfig();
+                        }, 500);
+                    };
+                    script.onerror = function(error) {
+                        log('JavaScript脚本加载失败');
+                    };
+                    document.head.appendChild(script);
+                })
+                .catch(error => {
+                    log('模态框HTML加载失败: ' + error.message);
+                });
+        }
+
+        // 测试模态框中的阈值配置
+        function testModalThresholdConfig() {
+            log('测试模态框中的阈值配置...');
+            
+            const alarmTypeSelect = document.getElementById('alarmTypeSelect');
+            const noUpdateConfig = document.getElementById('noUpdateConfig');
+            const thresholdConfig = document.getElementById('thresholdConfig');
+            
+            if (!alarmTypeSelect || !noUpdateConfig || !thresholdConfig) {
+                log('错误: 模态框元素不完整');
+                return;
+            }
+            
+            log('模态框元素检查通过');
+            log(`当前报警类型: ${alarmTypeSelect.value}`);
+            log(`无更新配置显示状态: ${noUpdateConfig.style.display}`);
+            log(`阈值配置显示状态: ${thresholdConfig.style.display}`);
+            
+            // 切换到阈值报警
+            log('切换到阈值报警...');
+            alarmTypeSelect.value = 'threshold';
+            
+            // 手动调用切换函数
+            if (typeof window.onAlarmTypeChange === 'function') {
+                window.onAlarmTypeChange();
+                log('已调用onAlarmTypeChange函数');
+            } else {
+                // 手动切换
+                noUpdateConfig.style.display = 'none';
+                thresholdConfig.style.display = 'block';
+                log('手动切换显示状态');
+            }
+            
+            setTimeout(() => {
+                log(`切换后无更新配置显示状态: ${noUpdateConfig.style.display}`);
+                log(`切换后阈值配置显示状态: ${thresholdConfig.style.display}`);
+                
+                // 检查阈值操作符选择器
+                const thresholdOperator = document.getElementById('thresholdOperator');
+                if (thresholdOperator) {
+                    log(`判断逻辑选择器存在，选项数量: ${thresholdOperator.options.length}`);
+                    for (let i = 0; i < thresholdOperator.options.length; i++) {
+                        log(`选项 ${i}: ${thresholdOperator.options[i].value} - ${thresholdOperator.options[i].text}`);
+                    }
+                } else {
+                    log('错误: 判断逻辑选择器不存在');
+                }
+            }, 200);
+        }
+
+        // 页面加载完成后绑定事件
+        document.addEventListener('DOMContentLoaded', function() {
+            log('页面加载完成');
+            
+            // 绑定测试区域的事件
+            document.getElementById('testAlarmTypeSelect').addEventListener('change', testThresholdToggle);
+            document.getElementById('loadTestBtn').addEventListener('click', loadAndTestModal);
+            document.getElementById('manualTestBtn').addEventListener('click', testThresholdToggle);
+            
+            log('事件监听器绑定完成');
+        });
+    </script>
+</body>
+</html> 

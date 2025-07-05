@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试知识库上传</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h1 {
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>测试知识库文档上传</h1>
+        
+        <label for="content">文档内容:</label>
+        <textarea id="content" rows="5" placeholder="输入测试文档内容">这是一个测试文档内容，用于验证知识库上传功能是否正常工作。</textarea>
+        
+        <label for="length">文档长度:</label>
+        <select id="length">
+            <option value="short">短文档 (少于100字符)</option>
+            <option value="medium">中等文档 (约500字符)</option>
+            <option value="long">长文档 (约2000字符)</option>
+        </select>
+        
+        <button id="submitBtn">上传测试文档</button>
+        
+        <div id="result">结果将显示在这里...</div>
+    </div>
+
+    <script>
+        document.getElementById('submitBtn').addEventListener('click', async function() {
+            const content = document.getElementById('content').value;
+            const length = document.getElementById('length').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = '正在上传测试文档...';
+            
+            try {
+                const response = await fetch('/api/modbus/test-knowledge-upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content,
+                        length
+                    })
+                });
+                
+                const data = await response.json();
+                
+                resultDiv.innerHTML = '上传结果:\n' + JSON.stringify(data, null, 2);
+                
+                // 如果上传成功并有诊断结果，尝试获取更详细的诊断
+                if (data.success && data.documentId) {
+                    resultDiv.innerHTML += '\n\n正在获取文档诊断信息...';
+                    
+                    try {
+                        const diagResponse = await fetch(`/api/modbus/knowledge/diagnose/${data.documentId}`);
+                        const diagData = await diagResponse.json();
+                        
+                        resultDiv.innerHTML += '\n\n诊断结果:\n' + JSON.stringify(diagData, null, 2);
+                    } catch (diagError) {
+                        resultDiv.innerHTML += '\n\n获取诊断失败: ' + diagError.message;
+                    }
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '上传失败: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html> 

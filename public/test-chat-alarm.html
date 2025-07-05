@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat告警功能测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.danger {
+            background-color: #f44336;
+        }
+        button.danger:hover {
+            background-color: #da190b;
+        }
+        .log {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alarm-display {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            min-height: 100px;
+        }
+        .alarm-item {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .alarm-clear-item {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chat告警功能测试</h1>
+        
+        <!-- WebSocket连接状态 -->
+        <div class="test-section">
+            <h3>WebSocket连接状态</h3>
+            <div id="connectionStatus" class="status disconnected">未连接</div>
+            <button onclick="connectWebSocket()">连接WebSocket</button>
+            <button onclick="disconnectWebSocket()" class="danger">断开连接</button>
+        </div>
+        
+        <!-- 告警模拟测试 -->
+        <div class="test-section">
+            <h3>告警模拟测试</h3>
+            <p>模拟发送告警消息到前端：</p>
+            <button onclick="simulateAlarm()">模拟告警触发</button>
+            <button onclick="simulateAlarmClear()">模拟告警解除</button>
+            <button onclick="simulateMultipleAlarms()">模拟多个告警</button>
+            <hr style="margin: 15px 0;">
+            <p>通过API测试真实告警流程：</p>
+            <button onclick="testRealAlarm()">API测试告警触发</button>
+            <button onclick="testRealAlarmClear()">API测试告警解除</button>
+        </div>
+        
+        <!-- 告警显示区域 -->
+        <div class="test-section">
+            <h3>告警显示区域</h3>
+            <div id="alarmDisplay" class="alarm-display">
+                <p>等待告警消息...</p>
+            </div>
+            <button onclick="clearAlarmDisplay()">清空显示</button>
+        </div>
+        
+        <!-- 音频测试 -->
+        <div class="test-section">
+            <h3>音频测试</h3>
+            <button onclick="testAlarmSound()">测试告警音频</button>
+            <button onclick="testBroadcastSound()">测试广播提示音</button>
+            <button onclick="testTextToSpeech()">测试文本转语音</button>
+        </div>
+        
+        <!-- 日志显示 -->
+        <div class="test-section">
+            <h3>日志</h3>
+            <div id="logDisplay" class="log"></div>
+            <button onclick="clearLog()">清空日志</button>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let alarmCount = 0;
+        
+        // 日志函数
+        function log(message) {
+            const logDisplay = document.getElementById('logDisplay');
+            const timestamp = new Date().toLocaleTimeString();
+            logDisplay.innerHTML += `[${timestamp}] ${message}\n`;
+            logDisplay.scrollTop = logDisplay.scrollHeight;
+            console.log(`[Chat告警测试] ${message}`);
+        }
+        
+        // 清空日志
+        function clearLog() {
+            document.getElementById('logDisplay').innerHTML = '';
+        }
+        
+        // 清空告警显示
+        function clearAlarmDisplay() {
+            document.getElementById('alarmDisplay').innerHTML = '<p>等待告警消息...</p>';
+        }
+        
+        // 连接WebSocket
+        function connectWebSocket() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                log('WebSocket已经连接');
+                return;
+            }
+            
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            
+            log(`正在连接WebSocket: ${wsUrl}`);
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function() {
+                log('WebSocket连接成功');
+                updateConnectionStatus(true);
+            };
+            
+            ws.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    log(`收到WebSocket消息: ${data.type}`);
+                    
+                    // 处理告警消息
+                    if (data.type === 'alarm') {
+                        log(`收到告警消息: ${JSON.stringify(data.data)}`);
+                        handleAlarmMessage(data.data);
+                    }
+                    // 处理告警解除消息
+                    else if (data.type === 'alarm_cleared') {
+                        log(`收到告警解除消息: ${JSON.stringify(data.data)}`);
+                        handleAlarmClearedMessage(data.data);
+                    }
+                    else {
+                        log(`收到其他消息类型: ${data.type}`);
+                    }
+                } catch (error) {
+                    log(`解析WebSocket消息失败: ${error.message}`);
+                }
+            };
+            
+            ws.onclose = function() {
+                log('WebSocket连接已关闭');
+                updateConnectionStatus(false);
+            };
+            
+            ws.onerror = function(error) {
+                log(`WebSocket错误: ${error}`);
+                updateConnectionStatus(false);
+            };
+        }
+        
+        // 断开WebSocket
+        function disconnectWebSocket() {
+            if (ws) {
+                ws.close();
+                ws = null;
+                log('已主动断开WebSocket连接');
+                updateConnectionStatus(false);
+            }
+        }
+        
+        // 更新连接状态显示
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connectionStatus');
+            if (connected) {
+                statusEl.textContent = '已连接';
+                statusEl.className = 'status connected';
+            } else {
+                statusEl.textContent = '未连接';
+                statusEl.className = 'status disconnected';
+            }
+        }
+        
+        // 处理告警消息
+        function handleAlarmMessage(alarmData) {
+            log(`处理告警消息: ${alarmData.content}`);
+            
+            const alarmDisplay = document.getElementById('alarmDisplay');
+            const alarmItem = document.createElement('div');
+            alarmItem.className = 'alarm-item';
+            alarmItem.innerHTML = `
+                <strong>🚨 告警触发</strong><br>
+                <strong>标识符:</strong> ${alarmData.identifier}<br>
+                <strong>内容:</strong> ${alarmData.content}<br>
+                <strong>时间:</strong> ${new Date(alarmData.timestamp).toLocaleString()}<br>
+                <strong>数据点:</strong> ${alarmData.dataPointName || '未知'}
+            `;
+            
+            alarmDisplay.appendChild(alarmItem);
+            
+            // 播放告警音频
+            playAlarmAudio(alarmData.content);
+        }
+        
+        // 处理告警解除消息
+        function handleAlarmClearedMessage(alarmData) {
+            log(`处理告警解除消息: ${alarmData.content}`);
+            
+            const alarmDisplay = document.getElementById('alarmDisplay');
+            const clearItem = document.createElement('div');
+            clearItem.className = 'alarm-clear-item';
+            clearItem.innerHTML = `
+                <strong>✅ 告警解除</strong><br>
+                <strong>标识符:</strong> ${alarmData.identifier}<br>
+                <strong>内容:</strong> ${alarmData.content}<br>
+                <strong>时间:</strong> ${new Date(alarmData.timestamp).toLocaleString()}<br>
+                <strong>数据点:</strong> ${alarmData.dataPointName || '未知'}
+            `;
+            
+            alarmDisplay.appendChild(clearItem);
+        }
+        
+        // 播放告警音频
+        function playAlarmAudio(content) {
+            log(`播放告警音频: ${content}`);
+            
+            // 播放广播提示音
+            const audio = new Audio('/audio/Broadcastalert.mp3');
+            audio.volume = 0.8;
+            
+            audio.onended = () => {
+                log('广播提示音播放完成，开始语音播报');
+                // 播放语音内容
+                const utterance = new SpeechSynthesisUtterance(content);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 0.8;
+                
+                // 获取可用的语音
+                const voices = window.speechSynthesis.getVoices();
+                const chineseVoice = voices.find(voice => 
+                    voice.lang.includes('zh') || 
+                    voice.name.includes('Chinese') || 
+                    voice.name.includes('中文')
+                );
+                
+                if (chineseVoice) {
+                    utterance.voice = chineseVoice;
+                }
+                
+                window.speechSynthesis.speak(utterance);
+            };
+            
+            audio.play().catch(error => {
+                log(`播放广播提示音失败: ${error.message}`);
+                // 直接播放语音内容
+                const utterance = new SpeechSynthesisUtterance(content);
+                utterance.lang = 'zh-CN';
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+        
+        // 模拟告警触发
+        function simulateAlarm() {
+            alarmCount++;
+            const alarmData = {
+                identifier: `TEST_ALARM_${alarmCount}`,
+                content: `测试告警 ${alarmCount} - 设备异常`,
+                timestamp: new Date().toISOString(),
+                dataPointName: `测试数据点${alarmCount}`
+            };
+            
+            log(`模拟告警触发: ${alarmData.content}`);
+            handleAlarmMessage(alarmData);
+        }
+        
+        // 模拟告警解除
+        function simulateAlarmClear() {
+            const clearData = {
+                identifier: `TEST_ALARM_${alarmCount}`,
+                content: `测试告警 ${alarmCount} - 设备异常`,
+                timestamp: new Date().toISOString(),
+                dataPointName: `测试数据点${alarmCount}`
+            };
+            
+            log(`模拟告警解除: ${clearData.content}`);
+            handleAlarmClearedMessage(clearData);
+        }
+        
+        // 模拟多个告警
+        function simulateMultipleAlarms() {
+            for (let i = 1; i <= 3; i++) {
+                setTimeout(() => {
+                    simulateAlarm();
+                }, i * 1000);
+            }
+        }
+        
+        // 测试告警音频
+        function testAlarmSound() {
+            log('测试告警音频');
+            playAlarmAudio('这是一个测试告警音频');
+        }
+        
+        // 测试广播提示音
+        function testBroadcastSound() {
+            log('测试广播提示音');
+            const audio = new Audio('/audio/Broadcastalert.mp3');
+            audio.volume = 0.8;
+            audio.play().catch(error => {
+                log(`播放广播提示音失败: ${error.message}`);
+            });
+        }
+        
+        // 测试文本转语音
+        function testTextToSpeech() {
+            log('测试文本转语音');
+            const utterance = new SpeechSynthesisUtterance('这是一个文本转语音测试');
+            utterance.lang = 'zh-CN';
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 0.8;
+            
+            // 获取可用的语音
+            const voices = window.speechSynthesis.getVoices();
+            const chineseVoice = voices.find(voice => 
+                voice.lang.includes('zh') || 
+                voice.name.includes('Chinese') || 
+                voice.name.includes('中文')
+            );
+            
+            if (chineseVoice) {
+                utterance.voice = chineseVoice;
+            }
+            
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        // 通过API测试真实告警触发
+        function testRealAlarm() {
+            log('通过API测试真实告警触发');
+            
+            const alarmData = {
+                type: 'trigger',
+                identifier: 'API_TEST_ALARM',
+                content: 'API测试告警 - 这是通过后端API触发的真实告警'
+            };
+            
+            fetch('/api/test-alarm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(alarmData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    log(`API告警触发成功: ${data.message}`);
+                } else {
+                    log(`API告警触发失败: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                log(`API请求失败: ${error.message}`);
+            });
+        }
+        
+        // 通过API测试真实告警解除
+        function testRealAlarmClear() {
+            log('通过API测试真实告警解除');
+            
+            const clearData = {
+                type: 'clear',
+                identifier: 'API_TEST_ALARM',
+                content: 'API测试告警 - 这是通过后端API触发的真实告警'
+            };
+            
+            fetch('/api/test-alarm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(clearData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    log(`API告警解除成功: ${data.message}`);
+                } else {
+                    log(`API告警解除失败: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                log(`API请求失败: ${error.message}`);
+            });
+        }
+        
+        // 页面加载时自动连接WebSocket
+        window.addEventListener('load', function() {
+            log('页面加载完成');
+            connectWebSocket();
+        });
+    </script>
+</body>
+</html> 

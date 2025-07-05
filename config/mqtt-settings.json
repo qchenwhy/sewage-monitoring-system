@@ -1,0 +1,17 @@
+{
+  "dataSourceType": "mqtt",
+  "url": "mqtt://localhost:1883",
+  "clientId": "modbus_mqtt_client_3272809a",
+  "username": "",
+  "password": "",
+  "keepalive": 60,
+  "reconnectPeriod": 5000,
+  "connectTimeout": 30000,
+  "clean": true,
+  "autoReconnect": true,
+  "subscribeTopic": "data/modbus",
+  "publishTopic": "data/mqtt",
+  "dataFormat": "json",
+  "retain": false,
+  "enableForwarding": false
+}

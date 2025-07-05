@@ -1,0 +1,2408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能聊天</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .chat-container {
+            background-color: white;
+            border-radius: 0 0 5px 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        
+        .user-message {
+            background-color: #DCF8C6;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .bot-message {
+            background-color: #F1F0F0;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 15px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+        }
+        
+        .chat-input button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .chat-input button:hover {
+            background-color: #45a049;
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 10px 15px;
+            background-color: #f1f1f1;
+            border-radius: 18px;
+            margin-bottom: 15px;
+            width: fit-content;
+        }
+        
+        .typing-indicator span {
+            height: 10px;
+            width: 10px;
+            float: left;
+            margin: 0 1px;
+            background-color: #9E9EA1;
+            display: block;
+            border-radius: 50%;
+            opacity: 0.4;
+        }
+        
+        .typing-indicator span:nth-of-type(1) {
+            animation: 1s blink infinite 0.3333s;
+        }
+        
+        .typing-indicator span:nth-of-type(2) {
+            animation: 1s blink infinite 0.6666s;
+        }
+        
+        .typing-indicator span:nth-of-type(3) {
+            animation: 1s blink infinite 0.9999s;
+        }
+        
+        @keyframes blink {
+            50% {
+                opacity: 1;
+            }
+        }
+        
+        .file-upload {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .file-upload label {
+            padding: 8px 15px;
+            background-color: #f1f1f1;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        .file-upload label:hover {
+            background-color: #e1e1e1;
+        }
+        
+        .file-preview {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .file-item {
+            position: relative;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .file-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        
+        .remove-file {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            background-color: #ff4d4d;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            cursor: pointer;
+        }
+        
+        .file-status {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background-color: #333;
+        }
+        
+        .nav-bar a {
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+        }
+        
+        .nav-bar a:hover {
+            background-color: #555;
+            border-radius: 5px;
+        }
+        
+        /* 重置按钮样式 */
+        .reset-button {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .reset-button:hover {
+            background-color: #ff5252;
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-left: auto;
+        }
+        
+        /* 录音按钮样式 */
+        .record-button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .record-button.recording {
+            background-color: #cc0000;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .record-button:hover {
+            background-color: #d32f2f;
+        }
+        
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+        
+        .recording-status {
+            display: none;
+            font-size: 14px;
+            color: #f44336;
+            margin-top: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div>
+            <a href="/">首页</a>
+            <a href="/timer.html">计时器</a>
+            <a href="/chat.html">聊天</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>智能聊天助手</h1>
+            <div class="actions">
+                <button id="reset-button" class="reset-button">重置对话</button>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <!-- 聊天消息将在这里显示 -->
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="输入您的问题..." autocomplete="off">
+                <button id="sendButton">发送</button>
+                <button id="recordButton" class="record-button">录音</button>
+            </div>
+            
+            <div class="recording-status" id="recordingStatus">正在录音...</div>
+            
+            <div class="file-upload">
+                <input type="file" id="fileInput" accept="image/*" multiple>
+                <label for="fileInput">上传图片</label>
+                <div id="fileStatus" class="file-status"></div>
+            </div>
+            
+            <div class="file-preview" id="filePreview">
+                <!-- 文件预览将在这里显示 -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM元素
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const fileInput = document.getElementById('fileInput');
+        const fileStatus = document.getElementById('fileStatus');
+        const filePreview = document.getElementById('filePreview');
+        const recordButton = document.getElementById('recordButton');
+        
+        // 全局变量
+        let conversationId = localStorage.getItem('lastSessionId') || '';
+        let userId = localStorage.getItem('userId') || generateUserId();
+        let ws = null;
+        let sessionStartTime = Date.now();
+        let mediaSource = null;
+        let sourceBuffer = null;
+        let audioElement = null;
+        let audioChunks = [];
+        let audioQueue = [];
+        let pendingAudioUrls = [];
+        let isAudioPlaying = false;
+        let isProcessingAudio = false;
+        let audioInitialized = false;
+        let processedUrls = new Set();
+        let deletedFiles = new Set();
+        let totalAudioReceived = 0;
+        let totalAudioPlayed = 0;
+        let currentPlayingAudio = null;
+        let currentTaskId = null; // 添加当前任务ID变量
+        let isStreamingResponse = false; // 标记是否正在接收流式响应
+        let uploadedFiles = []; // 添加上传文件数组
+        let botMessage = ''; // 添加机器人消息变量，用于累加显示消息内容
+        let currentConversationRoundId = ''; // 当前对话轮次ID，用于过滤音频
+        
+        // 录音相关变量
+        let isRecording = false;
+        let mediaRecorder = null;
+        let audioStream = null;
+        let audioTracks = null;
+        let recordingStartTime = 0;
+        
+        // 添加用户交互事件，解锁音频播放
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('keydown', unlockAudio);
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('页面已加载，初始化聊天界面');
+            
+            // 初始化并获取用户标识
+            userId = localStorage.getItem('userId');
+            if (!userId) {
+                userId = 'user-' + Date.now();
+                localStorage.setItem('userId', userId);
+                console.log(`生成新的用户标识: ${userId}`);
+            } else {
+                console.log(`使用已保存的用户标识: ${userId}`);
+            }
+            
+            // 初始化语音识别处理状态
+            window.isProcessingAjaxRecognition = false;
+            
+            // 尝试从localStorage恢复会话ID
+            const savedSessionId = localStorage.getItem('lastSessionId');
+            const savedSessionDate = localStorage.getItem('lastSessionDate');
+            const currentDate = getCurrentDateString();
+            
+            if (savedSessionId && savedSessionDate === currentDate) {
+                // 如果有保存的会话ID，且是今天的，则使用它
+                conversationId = savedSessionId;
+                console.log(`从localStorage恢复会话ID: ${conversationId}`);
+            } else {
+                // 否则初始化/检查会话ID
+                checkAndUpdateConversationId();
+                console.log('当前会话ID:', conversationId);
+            }
+            
+            // 添加事件监听器
+            sendButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); // 阻止默认的回车换行
+                    sendMessage();
+                }
+            });
+            fileInput.addEventListener('change', handleFileUpload);
+            
+            // 初始化音频相关变量
+            mediaSource = null;
+            sourceBuffer = null;
+            audioElement = null;
+            audioChunks = [];
+            audioQueue = [];
+            pendingAudioUrls = [];
+            isAudioPlaying = false;
+            isProcessingAudio = false;
+            audioInitialized = false;
+            processedUrls = new Set();
+            deletedFiles = new Set();
+            totalAudioReceived = 0;
+            totalAudioPlayed = 0;
+            currentPlayingAudio = null;
+            console.log('音频变量已初始化');
+            
+            // 添加欢迎消息
+            addMessage('您好！我是智能助手，有什么可以帮您的吗？', 'bot');
+            
+            // 清理旧会话的音频文件
+            cleanupOldAudioFiles(sessionStartTime);
+            
+            // 绑定重置按钮事件
+            document.getElementById('reset-button').addEventListener('click', resetConversation);
+            
+            // 初始化录音功能
+            initRecordingFeature();
+            
+            // 建立WebSocket连接
+            connectWebSocket();
+        });
+        
+        // 连接WebSocket
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+            
+            console.log(`尝试连接WebSocket: ${wsUrl}`);
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                console.log('WebSocket连接已建立');
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('收到WebSocket消息类型:', data.type);
+                    
+                    // 处理语音识别结果
+                    if (data.type === 'asr_result') {
+                        // 如果AJAX请求正在处理，跳过WebSocket更新
+                        if (window.isProcessingAjaxRecognition !== true) {
+                            updateRecognitionText(data);
+                        } else {
+                            console.log('AJAX识别请求正在处理中，跳过WebSocket asr_result更新');
+                        }
+                    }
+                    // 处理语音识别完成事件
+                    else if (data.type === 'asr_complete') {
+                        // 如果AJAX请求正在处理，跳过WebSocket更新
+                        if (window.isProcessingAjaxRecognition !== true) {
+                            handleRecognitionComplete(data);
+                        } else {
+                            console.log('AJAX识别请求正在处理中，跳过WebSocket asr_complete更新');
+                        }
+                    }
+                    // 处理计时器完成事件
+                    else if (data.type === 'timer_completed') {
+                        // 计时器完成
+                        handleTimerCompleted(data.timer);
+                    }
+                } catch (error) {
+                    console.error('解析WebSocket消息失败:', error);
+                }
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket连接已关闭，尝试重连...');
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket错误:', error);
+            };
+        }
+        
+        // 初始化录音功能
+        function initRecordingFeature() {
+            console.log('初始化录音功能');
+            
+            // 检查浏览器是否支持getUserMedia
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.error('浏览器不支持录音功能');
+                recordButton.style.display = 'none';
+                return;
+            }
+            
+            // 更新录音按钮状态 - 增强版本
+            function updateRecordingButtonState(state) {
+                console.log(`更新录音按钮状态: ${state}`);
+                
+                // 移除所有可能的类
+                recordButton.classList.remove('recording', 'processing', 'error');
+                
+                // 根据状态设置相应的类和属性
+                switch (state) {
+                    case 'idle':
+                        // 空闲状态
+                        recordButton.textContent = '录音';
+                        recordButton.disabled = false;
+                        recordButton.title = '开始录音';
+                        
+                        // 隐藏状态提示
+                        if (recordingStatus.textContent === '正在录音...' || 
+                            recordingStatus.textContent.startsWith('正在录音... ')) {
+                            recordingStatus.style.display = 'none';
+                        }
+                        break;
+                        
+                    case 'recording':
+                        // 录音中状态
+                        recordButton.classList.add('recording');
+                        recordButton.textContent = '停止';
+                        recordButton.disabled = false;
+                        recordButton.title = '停止录音';
+                        
+                        // 显示录音状态
+                        recordingStatus.style.display = 'block';
+                        recordingStatus.textContent = '正在录音...';
+                        break;
+                        
+                    case 'processing':
+                        // 处理中状态
+                        recordButton.classList.add('processing');
+                        recordButton.textContent = '处理中...';
+                        recordButton.disabled = true;
+                        recordButton.title = '处理中...';
+                        
+                        // 显示处理状态
+                        recordingStatus.style.display = 'block';
+                        recordingStatus.textContent = '正在处理录音...';
+                        break;
+                        
+                    case 'error':
+                        // 错误状态
+                        recordButton.classList.add('error');
+                        recordButton.textContent = '重试';
+                        recordButton.disabled = false;
+                        recordButton.title = '录音出错，点击重试';
+                        
+                        // 如果没有特定错误消息，显示通用消息
+                        if (recordingStatus.textContent === '') {
+                            recordingStatus.textContent = '录音出错，请重试';
+                        }
+                        
+                        recordingStatus.style.display = 'block';
+                        break;
+                    
+                    default:
+                        console.error(`未知的按钮状态: ${state}`);
+                        recordButton.textContent = '录音';
+                        recordButton.disabled = false;
+                        break;
+                }
+                
+                // 日志当前状态
+                console.log(`按钮状态已更新为: ${state}, 禁用状态: ${recordButton.disabled}, 文本: ${recordButton.textContent}`);
+            }
+            
+            // 显示录音状态信息
+            function showStatus(type, message) {
+                console.log(`状态更新: [${type}] ${message}`);
+                
+                if (!recordingStatus) {
+                    console.error('录音状态元素未找到');
+                    return;
+                }
+                
+                recordingStatus.textContent = message;
+                recordingStatus.style.display = 'block';
+                
+                // 根据状态类型设置不同的样式
+                recordingStatus.className = 'recording-status';
+                switch (type) {
+                    case 'error':
+                        recordingStatus.classList.add('status-error');
+                        break;
+                    case 'success':
+                        recordingStatus.classList.add('status-success');
+                        // 成功状态1.5秒后自动隐藏
+                        setTimeout(() => {
+                            if (recordingStatus.classList.contains('status-success')) {
+                                recordingStatus.style.display = 'none';
+                            }
+                        }, 1500);
+                        break;
+                    case 'info':
+                        recordingStatus.classList.add('status-info');
+                        break;
+                    case 'warning':
+                        recordingStatus.classList.add('status-warning');
+                        break;
+                    case 'processing':
+                        recordingStatus.classList.add('status-processing');
+                        break;
+                    default:
+                        break;
+                }
+            }
+            
+            // 添加录音按钮事件 - 增强版本
+            recordButton.addEventListener('click', (event) => {
+                console.log('录音按钮被点击，当前录音状态:', isRecording ? '录音中' : '未录音');
+                
+                // 阻止事件冒泡和默认行为，避免多次触发
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // 录音按钮在处理中时禁用点击
+                if (recordButton.disabled) {
+                    console.log('录音按钮当前已禁用，忽略点击');
+                    return;
+                }
+                
+                if (isRecording) {
+                    console.log('尝试停止录音...');
+                    // 立即更新UI状态，防止用户重复点击
+                    recordButton.disabled = true;
+                    updateRecordingButtonState('processing');
+                    
+                    // 使用setTimeout确保状态更新后再停止录音
+                    setTimeout(() => {
+                        stopRecording();
+                    }, 10);
+                } else {
+                    console.log('尝试开始录音...');
+                    startRecording();
+                }
+            });
+            
+            // 开始录音 - 只保留完整录音识别版本
+            async function startRecording() {
+                console.log('开始录音（完整识别模式）');
+                
+                // 更新录音按钮状态
+                updateRecordingButtonState('recording');
+                
+                try {
+                    // 重置音频块数组
+                    audioChunks = [];
+                    
+                    // 设置录音状态为true
+                    isRecording = true;
+                    
+                    // 获取媒体流
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            sampleRate: 16000,
+                            channelCount: 1 // 确保单声道
+                        }
+                    });
+                    
+                    console.log('获取到麦克风权限');
+                    
+                    // 保存媒体流和轨道
+                    audioStream = stream;
+                    audioTracks = stream.getAudioTracks();
+                    
+                    // 创建MediaRecorder实例，明确指定mime类型和比特率
+                    const options = {
+                        mimeType: 'audio/webm;codecs=opus',
+                        audioBitsPerSecond: 128000
+                    };
+                    
+                    // 如果不支持，尝试其他格式
+                    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                        console.warn(`${options.mimeType} 不支持，尝试备选格式`);
+                        options.mimeType = 'audio/webm';
+                    }
+                    
+                    console.log(`使用录音格式: ${options.mimeType}`);
+                    mediaRecorder = new MediaRecorder(stream, options);
+                    
+                    // 记录开始时间
+                    recordingStartTime = Date.now();
+                    
+                    // 设置数据可用事件处理器
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            console.log(`收集到音频块: ${(event.data.size / 1024).toFixed(2)} KB`);
+                            audioChunks.push(event.data);
+                        }
+                    };
+                    
+                    // 设置停止事件处理器
+                    mediaRecorder.onstop = () => {
+                        console.log('MediaRecorder 停止');
+                        
+                        // 停止所有音频轨道
+                        if (audioTracks) {
+                            audioTracks.forEach(track => {
+                                if (track.readyState === 'live') {
+                                    track.stop();
+                                    console.log('音频轨道已停止');
+                                }
+                            });
+                        }
+                        
+                        // 处理完整录音
+                        processRecording();
+                    };
+                    
+                    // 开始录音
+                    mediaRecorder.start(1000);  // 每1秒获取一次数据块
+                    console.log('录音已开始，每1秒收集一次数据');
+                    
+                    showStatus('info', '录音中...');
+                } catch (error) {
+                    console.error('启动录音时出错:', error);
+                    
+                    // 确保录音状态设置为false
+                    isRecording = false;
+                    
+                    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                        showStatus('error', '麦克风访问被拒绝，请检查浏览器权限设置');
+                    } else {
+                        showStatus('error', `启动录音出错: ${error.message}`);
+                    }
+                    
+                    updateRecordingButtonState('error');
+                    
+                    // 延迟后恢复按钮状态
+                    setTimeout(() => {
+                        updateRecordingButtonState('idle');
+                    }, 2000);
+                }
+            }
+            
+            // 停止录音
+            function stopRecording() {
+                console.log('停止录音');
+                
+                // 更新按钮状态
+                updateRecordingButtonState('processing');
+                
+                // 设置录音状态为false
+                isRecording = false;
+                
+                try {
+                    // 检查mediaRecorder是否存在和状态
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        console.log('停止MediaRecorder');
+                        mediaRecorder.stop();
+                    } else {
+                        console.warn('MediaRecorder不存在或不在录音状态');
+                        
+                        // 如果录音器不存在，直接处理结果
+                        if (audioChunks && audioChunks.length > 0) {
+                            processRecording();
+                        } else {
+                            updateRecordingButtonState('idle');
+                            showStatus('error', '录音异常，请重试');
+                        }
+                    }
+                    
+                    // 停止所有音频轨道
+                    if (audioTracks) {
+                        audioTracks.forEach(track => {
+                            if (track.readyState === 'live') {
+                                track.stop();
+                                console.log('音频轨道已停止');
+                            }
+                        });
+                    }
+                    
+                    // 释放音频流
+                    if (audioStream) {
+                        audioStream.getTracks().forEach(track => track.stop());
+                        audioStream = null;
+                    }
+                } catch (error) {
+                    console.error('停止录音时出错:', error);
+                    showStatus('error', `停止录音出错: ${error.message}`);
+                    updateRecordingButtonState('error');
+                    
+                    // 延迟后恢复按钮状态
+                    setTimeout(() => {
+                        updateRecordingButtonState('idle');
+                    }, 2000);
+                }
+            }
+            
+            // 处理录音数据
+            function processRecording() {
+                console.log('开始处理完整录音数据');
+                
+                // 检查是否有录音数据
+                if (!audioChunks || audioChunks.length === 0) {
+                    console.warn('没有录音数据可处理');
+                    showStatus('error', '没有检测到语音');
+                    updateRecordingButtonState('idle');
+                    return;
+                }
+                
+                try {
+                    // 创建音频Blob
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    console.log(`完整音频数据大小: ${(audioBlob.size / 1024).toFixed(2)} KB`);
+                    
+                    // 检查音频大小
+                    if (audioBlob.size < 8192) { // 8KB
+                        console.warn('音频数据太小，可能没有录到声音');
+                        showStatus('error', '录音太短或没有声音');
+                        updateRecordingButtonState('idle');
+                        return;
+                    }
+                    
+                    // 使用当前时间戳创建唯一用户ID和文件名
+                    const uniqueUserId = 'user-' + Date.now();
+                    const filename = `recording_${Date.now()}.webm`;
+                    
+                    // 创建FormData对象
+                    const formData = new FormData();
+                    formData.append('file', audioBlob, filename);
+                    formData.append('user', uniqueUserId);
+                    formData.append('isPartial', 'false'); // 标记为完整音频
+                    
+                    showStatus('info', '正在识别完整语音...');
+                    
+                    // 标记AJAX识别请求正在处理中
+                    window.isProcessingAjaxRecognition = true;
+                    
+                    // 发送到服务器进行识别
+                    fetch('/api/speech-to-text', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            console.error(`语音识别请求失败: ${response.status} ${response.statusText}`);
+                            throw new Error(`语音识别请求失败: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('完整语音识别结果(AJAX):', data);
+                        
+                        if (data.success && data.text) {
+                            // 将识别结果添加到输入框
+                            const inputBox = document.getElementById('messageInput');
+                            if (inputBox) {
+                                const currentText = inputBox.value.trim();
+                                let newText = '';
+                                
+                                // 如果当前输入框已有文本，追加新识别的文本而不是替换
+                                if (currentText) {
+                                    // 检查是否需要添加空格或标点符号
+                                    const needsSeparator = !currentText.endsWith(' ') && 
+                                                          !currentText.endsWith('，') && 
+                                                          !currentText.endsWith('。') &&
+                                                          !currentText.endsWith('？') &&
+                                                          !currentText.endsWith('！');
+                                    
+                                    // 添加适当的分隔符（中文环境下通常使用逗号）
+                                    newText = currentText + (needsSeparator ? '，' : '') + data.text;
+                                } else {
+                                    newText = data.text;
+                                }
+                                
+                                // 更新输入框文本
+                                inputBox.value = newText;
+                                
+                                // 将焦点设置到输入框末尾
+                                inputBox.focus();
+                                inputBox.setSelectionRange(inputBox.value.length, inputBox.value.length);
+                            } else {
+                                console.error('未找到id为messageInput的输入框元素');
+                            }
+                            
+                            showStatus('success', '语音识别成功，已添加到输入框');
+                        } else {
+                            console.warn('语音识别没有返回文本');
+                            showStatus('warning', '未能识别语音内容');
+                        }
+                        
+                        // 恢复按钮状态
+                        updateRecordingButtonState('idle');
+                    })
+                    .catch(error => {
+                        console.error('语音识别处理出错:', error);
+                        showStatus('error', `语音识别失败: ${error.message}`);
+                        updateRecordingButtonState('error');
+                        
+                        // 延迟后恢复按钮状态
+                        setTimeout(() => {
+                            updateRecordingButtonState('idle');
+                        }, 2000);
+                    })
+                    .finally(() => {
+                        // 清空音频数据
+                        audioChunks = [];
+                        // 标记AJAX识别请求处理完成
+                        window.isProcessingAjaxRecognition = false;
+                    });
+                } catch (error) {
+                    console.error('处理录音数据出错:', error);
+                    showStatus('error', `处理录音出错: ${error.message}`);
+                    updateRecordingButtonState('error');
+                    
+                    // 延迟后恢复按钮状态
+                    setTimeout(() => {
+                        updateRecordingButtonState('idle');
+                    }, 2000);
+                    
+                    // 清空音频数据
+                    audioChunks = [];
+                    // 确保状态重置
+                    window.isProcessingAjaxRecognition = false;
+                }
+            }
+        }
+        
+        // 解锁音频播放（浏览器需要用户交互才能自动播放音频）
+        let audioUnlocked = false;
+        function unlockAudio() {
+            if (audioUnlocked) return;
+            
+            console.log('尝试解锁音频播放...');
+            
+            // 创建一个静音的音频元素并尝试播放
+            const silentAudio = new Audio();
+            silentAudio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU4LjU0AAAAAAAAAAAAAAAAJAYAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA';
+            silentAudio.volume = 0.01;
+            
+            const promise = silentAudio.play();
+            if (promise !== undefined) {
+                promise.then(() => {
+                    console.log('音频播放已解锁');
+                    audioUnlocked = true;
+                    
+                    // 初始化MediaSource
+                    if (!audioInitialized) {
+                        initMediaSource();
+                    }
+                }).catch(e => {
+                    console.warn('无法解锁音频播放:', e);
+                });
+            }
+            
+            // 移除事件监听器
+            document.removeEventListener('click', unlockAudio);
+            document.removeEventListener('keydown', unlockAudio);
+        }
+        
+        // 处理音频数据
+        function handleAudioData(base64Audio) {
+            if (!mediaSource || mediaSource.readyState !== 'open') {
+                initMediaSource();
+            }
+            
+            try {
+                // 将Base64音频数据转换为ArrayBuffer
+                const binaryString = atob(base64Audio);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                
+                // 如果SourceBuffer正在更新，将音频块添加到队列
+                if (sourceBuffer && sourceBuffer.updating) {
+                    audioChunks.push(bytes.buffer);
+                } else if (sourceBuffer) {
+                    // 否则，直接添加到SourceBuffer
+                    sourceBuffer.appendBuffer(bytes.buffer);
+                } else {
+                    console.error('SourceBuffer尚未创建');
+                }
+                
+                // 如果音频未在播放，开始播放
+                if (!isAudioPlaying && audioElement) {
+                    audioElement.play().then(() => {
+                        isAudioPlaying = true;
+                        console.log('开始播放音频');
+                    }).catch(e => {
+                        console.error('音频播放失败:', e);
+                    });
+                }
+            } catch (e) {
+                console.error('处理音频数据失败:', e);
+            }
+        }
+        
+        // 结束音频流
+        function endAudioStream() {
+            if (mediaSource && mediaSource.readyState === 'open') {
+                // 处理完队列中的所有音频块后关闭MediaSource
+                if (audioChunks.length === 0 && sourceBuffer && !sourceBuffer.updating) {
+                    try {
+                        mediaSource.endOfStream();
+                    } catch (e) {
+                        console.error('关闭MediaSource失败:', e);
+                    }
+                } else {
+                    // 如果队列不为空或SourceBuffer正在更新，等待处理完成后再关闭
+                    setTimeout(endAudioStream, 100);
+                }
+            }
+        }
+        
+        // 发送消息
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            
+            if (!message && uploadedFiles.length === 0) {
+                return;
+            }
+            
+            // 在发送新消息前，立即停止所有正在播放的音频和响应
+            console.log('发送新消息，停止所有响应和音频播放');
+            
+            // 立即中断当前正在处理的流式响应
+            if (isStreamingResponse) {
+                try {
+                    // 尝试中止当前的响应读取器（如果存在）
+                    if (window.currentResponseReader && window.currentResponseReader.cancel) {
+                        window.currentResponseReader.cancel('用户发送了新消息');
+                        console.log('已中断当前响应流读取器');
+                    }
+                    
+                    // 移除当前的机器人消息DOM元素（如果正在显示）
+                    if (window.currentBotMessageElement) {
+                        console.log('移除未完成的机器人消息元素');
+                        if (window.currentBotMessageElement.parentNode) {
+                            window.currentBotMessageElement.parentNode.removeChild(window.currentBotMessageElement);
+                        }
+                        window.currentBotMessageElement = null;
+                    }
+                } catch (error) {
+                    console.error('中断当前响应时出错:', error);
+                }
+            }
+            
+            // 停止所有音频播放
+            stopAllAudio();
+            
+            // 如果有正在进行的流式响应，先停止它
+            if (isStreamingResponse && currentTaskId) {
+                console.log(`检测到新的用户输入，停止当前响应，任务ID: ${currentTaskId}`);
+                // 立即发送停止请求，但不等待其完成
+                fetch(`/api/chat/${currentTaskId}/stop`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        user: userId
+                    })
+                }).catch(err => {
+                    console.error('发送停止请求失败:', err);
+                });
+                
+                // 立即重置状态，无需等待停止请求完成
+                console.log('立即重置状态，准备发送新消息');
+                isStreamingResponse = false;
+                currentTaskId = null;
+            }
+            
+            // 直接处理新消息
+            processSendMessage(message);
+        }
+        
+        // 处理消息发送流程
+        function processSendMessage(message) {
+            // 如果没有会话ID，检查并更新
+            if (!conversationId) {
+                checkAndUpdateConversationId();
+            }
+            
+            // 生成新的对话轮次ID
+            currentConversationRoundId = 'round_' + Date.now();
+            console.log(`生成新的对话轮次ID: ${currentConversationRoundId}`);
+            
+            // 添加用户消息到聊天窗口
+            addMessage(message, 'user');
+            
+            // 清空输入框
+            messageInput.value = '';
+            
+            // 显示输入指示器
+            typingIndicator.style.display = 'block';
+            
+            // 每次发送新消息时，彻底重置音频相关变量
+            // 清空音频队列
+            pendingAudioUrls = [];
+            // 清空已处理URL集合
+            processedUrls = new Set();
+            // 保留已删除文件记录，避免重复处理
+            // 重置计数器
+            totalAudioReceived = 0;
+            totalAudioPlayed = 0;
+            // 重置当前播放状态
+            currentPlayingAudio = null;
+            isProcessingAudio = false;
+            
+            console.log('已重置所有音频状态，准备接收新的音频响应');
+            
+            // 准备文件数据
+            const files = uploadedFiles.map(file => ({
+                type: 'image',
+                transfer_method: 'remote_url',
+                url: file.url
+            }));
+            
+            // 更详细的会话ID日志
+            console.log(`========== 发送消息 ==========`);
+            console.log(`用户消息: ${message}`);
+            console.log(`用户标识: ${userId}`);
+            console.log(`会话ID: ${conversationId || '无'}`);
+            console.log(`当前轮次ID: ${currentConversationRoundId}`);
+            console.log(`会话ID类型: ${conversationId ? (conversationId.startsWith('chat_session_') ? '自定义基于日期' : 'UUID格式') : '无'}`);
+            console.log(`附件数量: ${files.length}`);
+            
+            // 检查会话ID是否过期
+            const savedSessionDate = localStorage.getItem('lastSessionDate');
+            const currentDate = getCurrentDateString();
+            let isSessionValid = true;
+            
+            // 如果是UUID格式，但日期不是今天的，可能会话已过期
+            if (conversationId && !conversationId.startsWith('chat_session_') && 
+                savedSessionDate && savedSessionDate !== currentDate) {
+                console.log(`会话ID可能已过期（保存日期: ${savedSessionDate}，当前日期: ${currentDate}）`);
+                console.log(`将尝试使用现有会话ID发送，如失败将自动重置`);
+                isSessionValid = false;
+            }
+            
+            console.log(`会话是否可能有效: ${isSessionValid ? '是' : '可能已过期'}`);
+            console.log(`===============================`);
+            
+            // 发送请求到服务器 - 发送当前轮次ID
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    query: message,
+                    // 只有当conversationId有值且不是自定义格式时才发送
+                    conversation_id: conversationId && !conversationId.startsWith('chat_session_') ? conversationId : undefined,
+                    user: userId,
+                    files: files,
+                    round_id: currentConversationRoundId // 添加轮次ID
+                })
+            })
+            .then(response => {
+                // 检查是否返回404错误（会话不存在）
+                if (response.status === 404) {
+                    return response.json().then(errorData => {
+                        // 检查是否是会话不存在的错误
+                        if (errorData.message && errorData.message.includes("Conversation Not Exists")) {
+                            console.log(`会话ID不存在错误 (${conversationId})，重置会话ID并重试请求...`);
+                            // 清除会话ID
+                            conversationId = '';
+                            localStorage.removeItem('lastSessionId');
+                            localStorage.removeItem('lastSessionDate');
+                            
+                            // 重试请求（无会话ID）
+                            return fetch('/api/chat', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    query: message,
+                                    user: userId, // 保持用户标识不变
+                                    files: files
+                                })
+                            });
+                        } else {
+                            // 如果是其他类型的错误，则抛出
+                            return Promise.reject(new Error(`${response.status} ${JSON.stringify(errorData)}`));
+                        }
+                    });
+                }
+                return response;
+            })
+            .then(response => {
+                // 检查是否为流式响应
+                const contentType = response.headers.get('Content-Type');
+                if (contentType && contentType.includes('text/event-stream')) {
+                    // 标记为正在接收流式响应
+                    isStreamingResponse = true;
+                    
+                    // 处理流式响应
+                    const reader = response.body.getReader();
+                    // 保存读取器到全局变量，以便在需要时中断
+                    window.currentResponseReader = reader;
+                    
+                    // 清空现有的botMessage，准备接收新消息
+                    botMessage = '';
+                    
+                    // 创建一个新的消息元素
+                    const messageEl = document.createElement('div');
+                    messageEl.className = 'message bot-message';
+                    chatMessages.appendChild(messageEl);
+                    
+                    // 保存消息元素到全局变量，以便在需要时移除
+                    window.currentBotMessageElement = messageEl;
+                    
+                    // 隐藏输入指示器
+                    typingIndicator.style.display = 'none';
+                    
+                    // 处理数据流
+                    const processStream = async () => {
+                        try {
+                            while (true) {
+                                const { done, value } = await reader.read();
+                                
+                                if (done) {
+                                    console.log(`数据流结束，共收到 ${totalAudioReceived} 个音频URL`);
+                                    
+                                    // 重置流响应状态
+                                    isStreamingResponse = false;
+                                    currentTaskId = null;
+                                    window.currentResponseReader = null;
+                                    window.currentBotMessageElement = null;
+                                    
+                                    // 检查是否有未播放的音频
+                                    if (pendingAudioUrls.length > 0) {
+                                        console.log(`数据流结束时仍有 ${pendingAudioUrls.length} 个音频未播放`);
+                                    }
+                                    
+                                    // 数据流结束后立即检查音频文件
+                                    checkMissingAudio();
+                                    
+                                    // 5秒后再次检查，确保所有音频都被处理
+                                    setTimeout(checkMissingAudio, 5000);
+                                    break;
+                                }
+                                
+                                // 将二进制数据转换为文本
+                                const chunk = new TextDecoder().decode(value);
+                                console.log(`收到数据块: ${chunk.length} 字节`);
+                                
+                                // 解析SSE格式的数据
+                                const lines = chunk.split('\n\n');
+                                console.log(`解析到 ${lines.length} 个事件`);
+                                
+                                for (const line of lines) {
+                                    if (line.startsWith('data: ')) {
+                                        const data = line.substring(6);
+                                        try {
+                                            const parsedData = JSON.parse(data);
+                                            console.log(`收到事件: ${parsedData.event}`);
+                                            
+                                            // 保存任务ID (如果有)
+                                            if (parsedData.task_id && !currentTaskId) {
+                                                currentTaskId = parsedData.task_id;
+                                                console.log(`接收到任务ID: ${currentTaskId}`);
+                                            }
+                                            
+                                            // 处理不同类型的事件
+                                            if (parsedData.event === 'message') {
+                                                // 输出消息事件信息
+                                                console.log(`接收到message事件，当前消息长度: ${botMessage.length}`);
+                                                
+                                                // 更新机器人消息
+                                                if (parsedData.answer !== undefined) {
+                                                    // 从调试信息看，服务器每次返回的是新增的一小段文本，而不是完整消息
+                                                    // 因此我们需要将每次返回的文本片段累加起来
+                                                    if (typeof parsedData.answer === 'string') {
+                                                        // 去除可能包含的省略号标记(...)，这只是服务器的标记，不应该显示给用户
+                                                        const newText = parsedData.answer.replace(/\.{3}$/, '');
+                                                        console.log(`收到新文本片段: "${newText}"`);
+                                                        
+                                                        // 累加文本到全局变量
+                                                        botMessage += newText;
+                                                        
+                                                        // 更新显示
+                                                        messageEl.textContent = botMessage;
+                                                        console.log(`更新后消息内容(${botMessage.length}字符): "${botMessage}"`);
+                                                    } else {
+                                                        console.log(`收到的answer不是字符串: ${typeof parsedData.answer}`);
+                                                    }
+                                                } else {
+                                                    console.log('消息事件中没有answer字段');
+                                                }
+                                                
+                                                // 保存会话ID
+                                                if (parsedData.conversation_id) {
+                                                    console.log(`接收到服务器返回的会话ID: ${parsedData.conversation_id}`);
+                                                    // 验证是否为有效的UUID格式
+                                                    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                                                    const isValidUUID = uuidPattern.test(parsedData.conversation_id);
+                                                    
+                                                    if (isValidUUID) {
+                                                        if (conversationId !== parsedData.conversation_id) {
+                                                            console.log(`会话ID已更新: ${conversationId || '无'} -> ${parsedData.conversation_id} (UUID格式)`);
+                                                            // 保存Dify返回的会话ID (UUID格式)
+                                                            conversationId = parsedData.conversation_id;
+                                                            // 更新日期记录，确保保持上下文
+                                                            localStorage.setItem('lastSessionId', conversationId);
+                                                            localStorage.setItem('lastSessionDate', getCurrentDateString());
+                                                            console.log('已将会话ID保存到localStorage');
+                                                        } else {
+                                                            console.log(`会话ID未变化: ${conversationId} (UUID格式)`);
+                                                        }
+                                                    } else {
+                                                        console.log(`收到的会话ID不是有效的UUID格式: ${parsedData.conversation_id}`);
+                                                    }
+                                                }
+                                            } 
+                                            else if (parsedData.event === 'audio') {
+                                                // 使用专门的函数处理音频事件
+                                                handleAudioEvent(parsedData);
+                                            } 
+                                            else if (parsedData.event === 'audio_summary') {
+                                                // 处理音频汇总事件
+                                                console.log('收到音频汇总:', parsedData);
+                                            } 
+                                            else if (parsedData.event === 'end' || parsedData.event === 'message_end') {
+                                                // 处理结束事件
+                                                console.log('收到结束事件:', parsedData.message || '无消息');
+                                                
+                                                // 重置状态
+                                                isStreamingResponse = false;
+                                                currentTaskId = null;
+                                                
+                                                // 检查是否有未处理的音频
+                                                if (pendingAudioUrls.length > 0) {
+                                                    console.log(`结束事件后仍有 ${pendingAudioUrls.length} 个音频未处理`);
+                                                }
+                                                
+                                                // 主动检查是否有遗漏的音频文件
+                                                checkMissingAudio();
+                                            }
+                                            else if (parsedData.event === 'error') {
+                                                // 处理错误事件
+                                                console.error('收到错误事件:', parsedData.message);
+                                                // 停止所有音频播放
+                                                stopAllAudio();
+                                                // 重置状态
+                                                isStreamingResponse = false;
+                                                currentTaskId = null;
+                                            }
+                                        } catch (e) {
+                                            console.error('解析数据失败:', e);
+                                        }
+                                    }
+                                }
+                                
+                                // 滚动到底部
+                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                            }
+                        } catch (error) {
+                            console.error('流处理错误:', error);
+                            // 重置状态
+                            isStreamingResponse = false;
+                            currentTaskId = null;
+                            messageEl.textContent = botMessage || '抱歉，处理您的请求时出错了。';
+                            
+                            // 停止所有音频播放
+                            stopAllAudio();
+                        }
+                    };
+                    
+                    // 开始处理流
+                    processStream();
+                } else {
+                    // 处理非流式响应
+                    return response.json().then(data => {
+                        // 隐藏输入指示器
+                        typingIndicator.style.display = 'none';
+                        
+                        // 添加机器人回复
+                        addMessage(data.answer || '抱歉，我无法理解您的问题。', 'bot');
+                        
+                        // 保存会话ID
+                        if (data.conversation_id) {
+                            console.log(`接收到非流式响应中的会话ID: ${data.conversation_id}`);
+                            // 验证是否为有效的UUID格式
+                            const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                            const isValidUUID = uuidPattern.test(data.conversation_id);
+                            
+                            if (isValidUUID) {
+                                if (conversationId !== data.conversation_id) {
+                                    console.log(`会话ID已更新: ${conversationId || '无'} -> ${data.conversation_id} (UUID格式)`);
+                                    // 保存Dify返回的会话ID (UUID格式)
+                                    conversationId = data.conversation_id;
+                                    // 更新日期记录，确保保持上下文
+                                    localStorage.setItem('lastSessionId', conversationId);
+                                    localStorage.setItem('lastSessionDate', getCurrentDateString());
+                                    console.log('已将会话ID保存到localStorage');
+                                } else {
+                                    console.log(`会话ID未变化: ${conversationId} (UUID格式)`);
+                                }
+                            } else {
+                                console.log(`收到的会话ID不是有效的UUID格式: ${data.conversation_id}`);
+                            }
+                        } else {
+                            console.log(`响应中未包含会话ID`);
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('聊天请求失败:', error);
+                
+                // 隐藏输入指示器
+                typingIndicator.style.display = 'none';
+                
+                // 重置状态
+                isStreamingResponse = false;
+                currentTaskId = null;
+                
+                // 添加错误消息
+                addMessage('抱歉，发生了错误，请稍后再试。', 'bot');
+            });
+            
+            // 清空文件预览和上传的文件
+            filePreview.innerHTML = '';
+            uploadedFiles = [];
+        }
+        
+        // 增强stopAllAudio函数，确保彻底停止和清理所有音频
+        function stopAllAudio() {
+            console.log('停止所有正在播放的音频');
+            
+            // 查找并停止所有音频元素
+            const audioElements = document.querySelectorAll('audio');
+            if (audioElements.length > 0) {
+                console.log(`找到 ${audioElements.length} 个音频元素，停止播放并移除`);
+                audioElements.forEach(audio => {
+                    try {
+                        // 记录被停止的音频URL
+                        if (audio.dataset.audioUrl) {
+                            console.log(`停止播放音频: ${audio.dataset.audioUrl}`);
+                            processedUrls.add(audio.dataset.audioUrl);
+                        }
+                        
+                        // 停止播放
+                        audio.pause();
+                        audio.currentTime = 0;
+                        
+                        // 移除元素
+                        if (audio.parentNode) {
+                            audio.parentNode.removeChild(audio);
+                        }
+                    } catch (err) {
+                        console.error('停止音频元素时出错:', err);
+                    }
+                });
+            }
+            
+            // 清空待处理队列
+            if (pendingAudioUrls.length > 0) {
+                console.log(`清空音频队列 (${pendingAudioUrls.length} 个项目)`);
+                pendingAudioUrls = [];
+            }
+            
+            // 取消所有挂起的合成请求（如果有）
+            if (window.currentSynthesisRequests && window.currentSynthesisRequests.length > 0) {
+                console.log(`取消 ${window.currentSynthesisRequests.length} 个挂起的合成请求`);
+                window.currentSynthesisRequests.forEach(controller => {
+                    if (controller && controller.abort) {
+                        try {
+                            controller.abort();
+                        } catch (err) {
+                            console.error('取消合成请求时出错:', err);
+                        }
+                    }
+                });
+                window.currentSynthesisRequests = [];
+            }
+            
+            // 重置状态
+            isProcessingAudio = false;
+            currentPlayingAudio = null;
+            console.log('音频播放已完全停止，所有相关状态已重置');
+        }
+        
+        // 添加消息到聊天窗口
+        function addMessage(content, sender) {
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${sender}-message`;
+            messageEl.textContent = content;
+            
+            chatMessages.appendChild(messageEl);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // 处理文件上传
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            
+            if (!files || files.length === 0) {
+                return;
+            }
+            
+            fileStatus.textContent = '正在上传...';
+            
+            // 清空文件预览
+            filePreview.innerHTML = '';
+            uploadedFiles = [];
+            
+            // 上传每个文件
+            Array.from(files).forEach(file => {
+                // 创建FormData
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                // 上传文件到服务器
+                fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.url) {
+                        // 添加到上传的文件列表
+                        uploadedFiles.push({
+                            name: file.name,
+                            url: data.url
+                        });
+                        
+                        // 创建预览
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        
+                        const img = document.createElement('img');
+                        img.src = data.url;
+                        fileItem.appendChild(img);
+                        
+                        const removeBtn = document.createElement('div');
+                        removeBtn.className = 'remove-file';
+                        removeBtn.textContent = 'x';
+                        removeBtn.addEventListener('click', () => {
+                            // 从预览和上传列表中移除
+                            fileItem.remove();
+                            uploadedFiles = uploadedFiles.filter(f => f.url !== data.url);
+                        });
+                        fileItem.appendChild(removeBtn);
+                        
+                        filePreview.appendChild(fileItem);
+                        
+                        // 更新状态
+                        fileStatus.textContent = `已上传 ${uploadedFiles.length} 个文件`;
+                    } else {
+                        console.error('文件上传失败:', data.error);
+                        fileStatus.textContent = '文件上传失败';
+                    }
+                })
+                .catch(error => {
+                    console.error('文件上传请求失败:', error);
+                    fileStatus.textContent = '文件上传失败';
+                });
+            });
+        }
+
+        // 初始化MediaSource
+        function initMediaSource() {
+            console.log('初始化MediaSource');
+            
+            // 如果已经初始化，则返回
+            if (audioInitialized) {
+                console.log('MediaSource已经初始化');
+                return;
+            }
+            
+            // 创建MediaSource实例
+            mediaSource = new MediaSource();
+            
+            // 创建音频元素
+            audioElement = new Audio();
+            audioElement.controls = false;
+            audioElement.style.display = 'none';
+            audioElement.volume = 1.0;
+            document.body.appendChild(audioElement);
+            
+            // 设置音频源
+            audioElement.src = URL.createObjectURL(mediaSource);
+            
+            // 监听MediaSource打开事件
+            mediaSource.addEventListener('sourceopen', () => {
+                console.log('MediaSource已打开');
+                
+                try {
+                    // 尝试不同的MIME类型
+                    try {
+                        sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+                    } catch (e) {
+                        console.warn('无法创建audio/mpeg SourceBuffer，尝试其他格式');
+                        try {
+                            sourceBuffer = mediaSource.addSourceBuffer('audio/mp3');
+                        } catch (e2) {
+                            console.warn('无法创建audio/mp3 SourceBuffer，尝试其他格式');
+                            sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg; codecs="mp3"');
+                        }
+                    }
+                    
+                    // 监听SourceBuffer更新结束事件
+                    sourceBuffer.addEventListener('updateend', () => {
+                        console.log('SourceBuffer更新结束');
+                        // 如果队列中有待处理的音频块，继续添加
+                        if (audioChunks.length > 0 && !sourceBuffer.updating) {
+                            const chunk = audioChunks.shift();
+                            console.log(`从队列中取出音频块，剩余: ${audioChunks.length}`);
+                            sourceBuffer.appendBuffer(chunk);
+                        }
+                    });
+                    
+                    audioInitialized = true;
+                    console.log('音频播放器初始化完成');
+                } catch (e) {
+                    console.error('创建SourceBuffer失败:', e);
+                    // 尝试使用普通Audio元素播放
+                    fallbackToSimpleAudio();
+                }
+            });
+            
+            // 添加错误处理
+            mediaSource.addEventListener('error', (e) => {
+                console.error('MediaSource错误:', e);
+                fallbackToSimpleAudio();
+            });
+            
+            // 监听音频播放结束事件
+            audioElement.addEventListener('ended', () => {
+                console.log('音频播放结束');
+                isAudioPlaying = false;
+            });
+            
+            // 添加错误处理
+            audioElement.addEventListener('error', (e) => {
+                console.error('音频元素错误:', e);
+                fallbackToSimpleAudio();
+            });
+        }
+
+        // 添加音频块到MediaSource
+        function appendAudioChunk(arrayBuffer) {
+            if (!sourceBuffer || !mediaSource || mediaSource.readyState !== 'open') {
+                // 如果MediaSource尚未准备好，将块添加到队列
+                audioChunks.push(arrayBuffer);
+                console.log('MediaSource尚未准备好，将音频块添加到队列');
+                return;
+            }
+            
+            try {
+                if (sourceBuffer.updating) {
+                    // 如果SourceBuffer正在更新，将块添加到队列
+                    audioChunks.push(arrayBuffer);
+                    console.log('SourceBuffer正在更新，将音频块添加到队列');
+                } else {
+                    // 直接添加到SourceBuffer
+                    console.log(`直接添加音频块到SourceBuffer，大小: ${arrayBuffer.byteLength}`);
+                    sourceBuffer.appendBuffer(arrayBuffer);
+                    console.log(`音频块已添加到SourceBuffer，队列长度: ${audioChunks.length}`);
+                }
+            } catch (e) {
+                console.error('添加音频块失败:', e);
+                // 如果添加失败，尝试降级
+                fallbackToSimpleAudio();
+            }
+        }
+
+        // 添加音频预加载功能
+        function preloadAudio(url) {
+            return new Promise((resolve, reject) => {
+                const audio = new Audio();
+                audio.oncanplaythrough = () => {
+                    resolve(audio);
+                };
+                audio.onerror = (error) => {
+                    reject(error);
+                };
+                audio.src = url;
+                audio.load();
+            });
+        }
+
+        // 辅助函数：检查URL是否已处理过
+        function isUrlProcessed(url) {
+            // 完整URL检查
+            if (processedUrls.has(url)) return true;
+            
+            // 文件名检查（有时URL格式可能略有不同）
+            const filename = url.split('/').pop();
+            for (const processedUrl of processedUrls) {
+                const processedFilename = processedUrl.split('/').pop();
+                if (processedFilename === filename) return true;
+            }
+            return false;
+        }
+        
+        // 辅助函数：检查URL是否已在队列中
+        function isUrlInQueue(url) {
+            // 完整URL检查
+            const exactMatch = pendingAudioUrls.some(item => item.url === url);
+            if (exactMatch) return true;
+            
+            // 文件名检查（有时URL格式可能略有不同）
+            const filename = url.split('/').pop();
+            return pendingAudioUrls.some(item => {
+                const itemFilename = item.url.split('/').pop();
+                return itemFilename === filename;
+            });
+        }
+        
+        // 当收到音频事件时，处理音频URL
+        function handleAudioEvent(parsedData) {
+            console.log('收到音频URL:', parsedData.url);
+            console.log('音频文本:', parsedData.text);
+            console.log('是否最终片段:', parsedData.isFinal);
+            console.log('音频轮次ID:', parsedData.roundId || '未指定');
+            
+            // 检查URL是否有效
+            if (!parsedData.url || !parsedData.url.startsWith('/audio/')) {
+                console.log('跳过无效音频URL');
+                return;
+            }
+            
+            // 提取文件名
+            const filename = parsedData.url.split('/').pop();
+            
+            // 检查文件是否已被删除
+            if (deletedFiles.has(filename)) {
+                console.log(`跳过已删除的音频文件: ${filename}`);
+                return;
+            }
+            
+            // 检查音频是否属于当前对话轮次 - 使用后端返回的轮次ID
+            const audioRoundId = parsedData.roundId;
+            if (audioRoundId && audioRoundId !== currentConversationRoundId) {
+                console.log(`跳过不属于当前轮次的音频: ${parsedData.url} [轮次ID: ${audioRoundId} 不等于 ${currentConversationRoundId}]`);
+                return;
+            }
+            
+            // 检查URL是否已在队列中或已处理
+            if (isUrlProcessed(parsedData.url)) {
+                console.log(`音频URL已被处理，跳过: ${parsedData.url}`);
+                return;
+            }
+            
+            if (isUrlInQueue(parsedData.url)) {
+                console.log(`音频URL已在队列中，跳过: ${parsedData.url}`);
+                return;
+            }
+            
+            // 提取文件名中的数字（用于排序）
+            const match = parsedData.url.match(/tts_(\d+)(?:_round_[^.]+)?\.mp3$/);
+            const timestamp = match ? parseInt(match[1]) : 0;
+            
+            // 递增计数器
+            totalAudioReceived++;
+            console.log(`处理新音频 #${totalAudioReceived}: ${parsedData.url}`);
+            
+            // 添加到待处理队列，包含当前对话轮次ID
+            pendingAudioUrls.push({
+                url: parsedData.url,
+                text: parsedData.text || "",
+                isFinal: parsedData.isFinal || false,
+                timestamp: timestamp,
+                id: totalAudioReceived,
+                receivedAt: Date.now(),
+                roundId: audioRoundId || currentConversationRoundId // 使用后端返回的轮次ID，如没有则使用当前轮次ID
+            });
+            
+            console.log(`添加到队列成功，当前队列长度: ${pendingAudioUrls.length}, 轮次ID: ${audioRoundId || currentConversationRoundId}`);
+            
+            // 按时间戳排序队列
+            pendingAudioUrls.sort((a, b) => a.timestamp - b.timestamp);
+            
+            // 如果当前没有正在处理音频，开始处理
+            if (!isProcessingAudio) {
+                console.log('开始处理音频队列');
+                processNextAudio();
+            } else {
+                console.log('当前有音频正在处理，新音频已加入队列');
+            }
+        }
+
+        // 修改音频处理函数
+        async function processNextAudio() {
+            // 过滤不属于当前轮次的音频
+            if (pendingAudioUrls.length > 0) {
+                const outdatedAudios = pendingAudioUrls.filter(audio => audio.roundId !== currentConversationRoundId);
+                if (outdatedAudios.length > 0) {
+                    console.log(`发现 ${outdatedAudios.length} 个不属于当前轮次(${currentConversationRoundId})的音频，将被跳过`);
+                    // 从队列中移除这些音频
+                    pendingAudioUrls = pendingAudioUrls.filter(audio => audio.roundId === currentConversationRoundId);
+                }
+            }
+            
+            if (pendingAudioUrls.length === 0) {
+                isProcessingAudio = false;
+                currentPlayingAudio = null;
+                console.log('音频队列为空，处理结束');
+                return;
+            }
+            
+            isProcessingAudio = true;
+            const audioItem = pendingAudioUrls.shift();
+            currentPlayingAudio = audioItem;
+            
+            console.log(`开始处理音频: ${audioItem.url} (队列剩余: ${pendingAudioUrls.length}个) [轮次ID: ${audioItem.roundId}]`);
+            
+            // 再次检查该音频是否已被处理或已被删除
+            const filename = audioItem.url.split('/').pop();
+            if (isUrlProcessed(audioItem.url)) {
+                console.log(`音频已被处理，跳过: ${audioItem.url}`);
+                currentPlayingAudio = null;
+                processNextAudio();
+                return;
+            }
+            
+            if (deletedFiles.has(filename)) {
+                console.log(`音频文件已被删除，跳过: ${filename}`);
+                currentPlayingAudio = null;
+                processNextAudio();
+                return;
+            }
+            
+            try {
+                // 预加载音频
+                console.log(`预加载音频: ${audioItem.url}`);
+                const audio = await preloadAudio(audioItem.url);
+                console.log(`音频预加载成功: ${audioItem.url}`);
+                
+                // 添加轮次ID属性用于后续检查
+                audio.dataset.roundId = audioItem.roundId;
+                audio.dataset.audioUrl = audioItem.url;
+                
+                // 播放音频
+                audio.onended = () => {
+                    console.log(`音频播放完成: ${audioItem.url}`);
+                    // 标记为已处理
+                    processedUrls.add(audioItem.url);
+                    totalAudioPlayed++;
+                    currentPlayingAudio = null;
+                    
+                    // 播放完成后删除音频文件
+                    if (filename && filename.startsWith('tts_') && filename.endsWith('.mp3') && !deletedFiles.has(filename)) {
+                        deleteAudioFile(filename);
+                    }
+                    
+                    // 删除音频元素，避免内存泄漏
+                    document.body.removeChild(audio);
+                    processNextAudio();
+                };
+                
+                // 添加到DOM以便控制
+                audio.style.display = 'none'; // 隐藏元素但保持功能
+                document.body.appendChild(audio);
+                
+                console.log(`开始播放音频: ${audioItem.url}`);
+                audio.play().catch(error => {
+                    console.error(`音频播放失败: ${error.message}`);
+                    // 尝试重新加载并播放
+                    setTimeout(() => {
+                        console.log(`尝试重新加载音频: ${audioItem.url}`);
+                        audio.load();
+                        audio.play().catch(e => {
+                            console.error(`重试播放失败: ${e.message}`);
+                            // 移除DOM元素
+                            document.body.removeChild(audio);
+                            processNextAudio(); // 继续处理下一个
+                        });
+                    }, 1000);
+                });
+            } catch (error) {
+                console.error(`处理音频出错: ${error.message}`);
+                // 继续处理下一个
+                currentPlayingAudio = null;
+                processNextAudio();
+            }
+        }
+
+        // 开始播放
+        function startPlayback() {
+            // 如果音频未在播放，开始播放
+            if (!isAudioPlaying && audioElement && audioInitialized) {
+                audioElement.play()
+                    .then(() => {
+                        isAudioPlaying = true;
+                        console.log('开始播放音频流');
+                    })
+                    .catch(err => {
+                        // 如果播放失败，尝试降级
+                        fallbackToSimpleAudio();
+                    });
+            } else {
+                if (isAudioPlaying) {
+                    console.log('已在播放中');
+                } else {
+                    console.log('播放器未就绪');
+                }
+            }
+        }
+
+        // 降级到简单音频播放
+        function fallbackToSimpleAudio() {
+            console.log('降级到简单音频播放模式');
+            
+            // 重置状态
+            audioInitialized = false;
+            isAudioPlaying = false;
+            
+            // 清理现有元素
+            if (audioElement) {
+                audioElement.pause();
+                if (audioElement.parentNode) {
+                    audioElement.parentNode.removeChild(audioElement);
+                }
+            }
+            
+            // 确保队列按时间戳排序
+            pendingAudioUrls.sort((a, b) => a.timestamp - b.timestamp);
+            
+            // 显示当前队列状态
+            const queueInfo = pendingAudioUrls.map(item => {
+                const shortUrl = item.url.split('/').pop();
+                return `${shortUrl}`;
+            }).join(', ');
+            
+            // 创建音频队列播放器
+            const audioQueue = [...pendingAudioUrls];
+            pendingAudioUrls = [];
+            
+            // 播放第一个音频
+            if (audioQueue.length > 0) {
+                playNextInQueue(audioQueue);
+            }
+        }
+
+        // 按顺序播放队列中的音频
+        function playNextInQueue(queue) {
+            if (queue.length === 0) {
+                console.log('简单模式队列播放完成');
+                return;
+            }
+            
+            const audioData = queue.shift();
+            console.log(`简单模式播放: ${audioData.url.split('/').pop()}`);
+            
+            const audio = new Audio(audioData.url);
+            audio.volume = 1.0;
+            audio.controls = false;
+            audio.style.display = 'none';
+            document.body.appendChild(audio);
+            
+            // 播放结束后播放下一个
+            audio.onended = () => {
+                // 删除音频文件
+                const filename = audioData.url.split('/').pop();
+                if (filename && filename.startsWith('tts_') && filename.endsWith('.mp3') && !deletedFiles.has(filename)) {
+                    deleteAudioFile(filename);
+                }
+                
+                document.body.removeChild(audio);
+                playNextInQueue(queue);
+            };
+            
+            // 播放错误处理
+            audio.onerror = (e) => {
+                console.error('播放错误:', e);
+                document.body.removeChild(audio);
+                playNextInQueue(queue);
+            };
+            
+            // 开始播放
+            audio.play().catch(err => {
+                console.error('播放失败:', err);
+                document.body.removeChild(audio);
+                playNextInQueue(queue);
+            });
+        }
+
+        // 改进检查音频文件函数
+        function checkMissingAudio() {
+            console.log('开始检查音频文件...');
+            
+            // 获取最近30秒内的URL，避免检查太旧的音频
+            const recentTime = Date.now() - 30000; // 30秒前
+            
+            // 获取已处理的最近URLs
+            const recentProcessedUrls = Array.from(processedUrls)
+                .filter(url => {
+                    // 尝试从URL中提取时间戳
+                    const match = url.match(/tts_(\d+)(?:_round_[^.]+)?\.mp3$/);
+                    if (match) {
+                        const urlTimestamp = parseInt(match[1]);
+                        // 时间戳是否在最近30秒内
+                        return Date.now() - urlTimestamp < 30000;
+                    }
+                    return true; // 如果无法提取时间戳，默认保留
+                });
+            
+            // 检查后台生成的音频文件
+            fetch('/api/audio/list')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const backendFiles = data.files || [];
+                    if (backendFiles.length === 0) {
+                        console.log('后台没有音频文件');
+                        return;
+                    }
+                    
+                    console.log(`后台音频文件数量: ${backendFiles.length}`);
+                    
+                    // 获取最近生成的音频文件（按文件名中的时间戳排序）
+                    const recentFiles = backendFiles
+                        .filter(file => {
+                            // 修改正则表达式以匹配带有轮次ID的文件名
+                            const match = file.match(/tts_(\d+)(?:_round_([^.]+))?\.mp3$/);
+                            if (match) {
+                                const timestamp = parseInt(match[1]);
+                                const roundId = match[2];
+                                
+                                // 只处理30秒内的文件，并且要么没有轮次ID，要么轮次ID匹配当前轮次
+                                return Date.now() - timestamp < 30000 && 
+                                       (!roundId || roundId === currentConversationRoundId);
+                            }
+                            return false;
+                        })
+                        .sort((a, b) => {
+                            const matchA = a.match(/tts_(\d+)(?:_round_[^.]+)?\.mp3$/);
+                            const matchB = b.match(/tts_(\d+)(?:_round_[^.]+)?\.mp3$/);
+                            const timeA = matchA ? parseInt(matchA[1]) : 0;
+                            const timeB = matchB ? parseInt(matchB[1]) : 0;
+                            return timeA - timeB;
+                        });
+                    
+                    if (recentFiles.length === 0) {
+                        console.log('没有最近生成的音频文件');
+                        return;
+                    }
+                    
+                    console.log(`最近音频文件: ${recentFiles.join(', ')}`);
+                    
+                    // 检查是否有未处理的文件
+                    const pendingUrls = pendingAudioUrls.map(item => item.url.split('/').pop());
+                    
+                    const missingFiles = recentFiles.filter(file => {
+                        // 检查文件是否已被删除
+                        if (deletedFiles.has(file)) return false;
+                        
+                        // 检查文件名对应的URL是否已在队列中
+                        const fileUrl = `/audio/${file}`;
+                        if (isUrlInQueue(fileUrl)) return false;
+                        
+                        // 检查文件名对应的URL是否已被处理
+                        if (isUrlProcessed(fileUrl)) return false;
+                        
+                        // 检查文件是否属于当前轮次
+                        const match = file.match(/tts_\d+_round_([^.]+)\.mp3$/);
+                        if (match) {
+                            const roundId = match[1];
+                            if (roundId !== currentConversationRoundId) {
+                                console.log(`跳过不属于当前轮次的音频文件: ${file} [轮次ID: ${roundId}]`);
+                                return false;
+                            }
+                        }
+                        
+                        // 如果以上条件都不满足，则认为是遗漏的文件
+                        return true;
+                    });
+                    
+                    if (missingFiles.length > 0) {
+                        console.log(`发现 ${missingFiles.length} 个未处理的音频文件: ${missingFiles.join(', ')}`);
+                        
+                        // 限制添加的数量，避免添加太多旧文件
+                        const filesToAdd = missingFiles.slice(0, 5); // 最多添加5个
+                        
+                        console.log(`添加 ${filesToAdd.length} 个文件到队列`);
+                        
+                        // 添加到待处理队列，标记为当前轮次的音频
+                        filesToAdd.forEach((file, index) => {
+                            const url = `/audio/${file}`;
+                            
+                            // 检查是否已经在队列中
+                            const alreadyInQueue = pendingAudioUrls.some(item => item.url === url);
+                            if (alreadyInQueue) {
+                                console.log(`文件已在队列中: ${file}`);
+                                return;
+                            }
+                            
+                            // 提取文件中的轮次ID
+                            let fileRoundId = currentConversationRoundId;
+                            const roundMatch = file.match(/tts_\d+_round_([^.]+)\.mp3$/);
+                            if (roundMatch) {
+                                fileRoundId = roundMatch[1];
+                            }
+                            
+                            const timestampMatch = file.match(/tts_(\d+)(?:_round_[^.]+)?\.mp3$/);
+                            const timestamp = timestampMatch ? parseInt(timestampMatch[1]) : 0;
+                            
+                            pendingAudioUrls.push({
+                                url: url,
+                                text: "",
+                                isFinal: index === filesToAdd.length - 1,
+                                timestamp: timestamp,
+                                id: totalAudioReceived + index + 1,
+                                receivedAt: Date.now(),
+                                roundId: fileRoundId // 使用文件名中的轮次ID
+                            });
+                        });
+                        
+                        totalAudioReceived += filesToAdd.length;
+                        
+                        // 按时间戳排序队列
+                        pendingAudioUrls.sort((a, b) => a.timestamp - b.timestamp);
+                        
+                        // 如果当前没有正在处理音频，开始处理
+                        if (!isProcessingAudio) {
+                            processNextAudio();
+                        }
+                    } else {
+                        console.log('没有发现未处理的音频文件');
+                    }
+                })
+                .catch(error => {
+                    console.error('检查音频文件失败:', error);
+                });
+        }
+
+        // 删除音频文件
+        async function deleteAudioFile(filename) {
+            try {
+                // 检查文件是否已经被删除
+                if (deletedFiles.has(filename)) {
+                    console.log(`文件已被删除，跳过: ${filename}`);
+                    return;
+                }
+                
+                console.log(`正在删除音频文件: ${filename}`);
+                const response = await fetch(`/api/audio/delete/${filename}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    console.log(`音频文件删除成功: ${filename}`);
+                    deletedFiles.add(filename);
+                } else {
+                    console.log(`音频文件删除失败: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('删除音频文件失败:', error);
+            }
+        }
+        
+        // 批量清理旧音频文件
+        async function cleanupOldAudioFiles(sessionStartTime) {
+            try {
+                console.log(`正在清理旧音频文件...`);
+                const response = await fetch('/api/audio/cleanup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ sessionStartTime })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    console.log(`清理完成: 已删除${result.deletedCount}个旧文件`);
+                    
+                    // 将删除的文件记录到deletedFiles集合中
+                    if (result.deletedFiles && Array.isArray(result.deletedFiles)) {
+                        result.deletedFiles.forEach(file => deletedFiles.add(file));
+                    }
+                } else {
+                    console.log(`清理失败: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('清理旧音频文件失败:', error);
+            }
+        }
+
+        // 重置对话
+        function resetConversation() {
+            console.log('========== 重置对话开始 ==========');
+            console.log(`用户标识: ${userId} (保持不变)`);
+            console.log(`旧会话ID: ${conversationId || '无'}`);
+            
+            // 生成新的对话轮次ID
+            currentConversationRoundId = 'round_' + Date.now();
+            console.log(`生成新的对话轮次ID: ${currentConversationRoundId}`);
+            
+            // 停止所有音频播放
+            stopAllAudio();
+            
+            // 清空消息容器
+            chatMessages.innerHTML = '';
+            
+            // 清除会话ID和相关localStorage记录，但保留用户标识
+            conversationId = '';
+            localStorage.removeItem('lastSessionId');
+            localStorage.removeItem('lastSessionDate');
+            console.log('已清除会话ID和localStorage记录');
+            
+            // 重新初始化会话ID
+            checkAndUpdateConversationId();
+            console.log(`新会话ID: ${conversationId}`);
+            
+            // 添加欢迎消息
+            addMessage('您好！我是智能助手，有什么可以帮您的吗？', 'bot');
+            
+            // 重置全局变量
+            audioQueue = [];
+            pendingAudioUrls = [];
+            processedUrls = new Set();
+            // 保留删除文件记录
+            currentPlayingAudio = null;
+            totalAudioPlayed = 0;
+            totalAudioReceived = 0;
+            isProcessingAudio = false;
+            
+            // 更新当前会话时间戳
+            sessionStartTime = Date.now();
+            
+            // 清理旧音频文件
+            cleanupOldAudioFiles(sessionStartTime);
+            
+            console.log('对话已重置，所有音频相关变量已清零');
+            console.log('========== 重置对话完成 ==========');
+        }
+
+        // 获取当天日期字符串
+        function getCurrentDateString() {
+            const today = new Date();
+            return today.getFullYear() +
+                   String(today.getMonth() + 1).padStart(2, '0') +
+                   String(today.getDate()).padStart(2, '0');
+        }
+
+        // 生成基于日期的会话ID
+        function generateConversationId() {
+            return `chat_session_${getCurrentDateString()}`;
+        }
+
+        // 生成唯一用户ID
+        function generateUserId() {
+            return 'user-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        }
+
+        // 检查会话ID是否需要更新（不同日期）
+        function checkAndUpdateConversationId() {
+            console.log('检查会话ID是否需要更新...');
+            console.log(`当前会话ID: ${conversationId || '无'}`);
+            
+            // 生成基于日期的新ID
+            const newId = generateConversationId();
+            
+            // 检查会话ID类型
+            const isCustomId = conversationId && conversationId.startsWith('chat_session_');
+            const isUUID = conversationId && !isCustomId; // 非自定义ID视为UUID
+            
+            // 如果会话ID为空，或者是自定义格式但不是今天的日期，则更新
+            if (!conversationId) {
+                console.log(`会话ID为空，初始化为: ${newId}`);
+                conversationId = newId;
+                return true; // 表示ID已更新
+            } else if (isCustomId && conversationId !== newId) {
+                console.log(`会话ID是过期的自定义ID，更新为今天的ID: ${conversationId} -> ${newId}`);
+                conversationId = newId;
+                return true; // 表示ID已更新 
+            } else if (isUUID) {
+                console.log(`会话ID是UUID格式，保持不变: ${conversationId}`);
+                // 如果是UUID格式，保留不变
+                return false; // 表示ID未更新
+            } else {
+                console.log(`会话ID是最新的自定义ID，无需更新: ${conversationId}`);
+                return false; // 表示ID未更新
+            }
+        }
+
+        // 更新语音识别文本到输入框
+        function updateRecognitionText(data) {
+            console.log('收到WebSocket语音识别结果:', data);
+            
+            // 检查是否来自WebSocket的实时更新
+            const isWebSocketUpdate = true;
+            
+            // 如果正在进行AJAX识别请求处理，跳过WebSocket更新
+            if (window.isProcessingAjaxRecognition === true) {
+                console.log('AJAX识别请求正在处理中，跳过WebSocket更新');
+                return;
+            }
+            
+            // 将识别文本填充到消息输入框
+            messageInput.value = data.text;
+            
+            // 如果是最终结果，更新状态
+            if (data.isFinal) {
+                // 显示录音状态为"识别完成"
+                recordingStatus.textContent = '句子识别完成';
+                setTimeout(() => {
+                    if (recordingStatus.textContent === '句子识别完成') {
+                        recordingStatus.style.display = 'none';
+                    }
+                }, 1500);
+            }
+        }
+        
+        // 处理语音识别完成
+        function handleRecognitionComplete(data) {
+            console.log('语音识别完成:', data);
+            
+            // 将最终识别文本填充到消息输入框
+            messageInput.value = data.text;
+            
+            // 更新状态
+            recordingStatus.textContent = '识别完成';
+            setTimeout(() => {
+                recordingStatus.style.display = 'none';
+                updateRecordingButtonState('idle');
+                recordButton.disabled = false;
+            }, 1500);
+            
+            // 聚焦输入框
+            messageInput.focus();
+        }
+        
+        // 处理计时器完成事件
+        function handleTimerCompleted(timer) {
+            console.log('计时器完成:', timer);
+            
+            // 可以在这里添加计时器完成的处理逻辑
+            // 例如显示通知或播放提示音等
+            
+            // 如果需要显示通知
+            if (timer && timer.name) {
+                addMessage(`计时器 "${timer.name}" 已完成`, 'bot');
+            } else {
+                addMessage('计时器已完成', 'bot');
+            }
+        }
+
+        // ... existing code ...
+        ws.onopen = () => {
+            console.log('WebSocket连接已建立');
+        };
+        
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                
+                // 处理语音识别结果
+                if (data.type === 'asr_result') {
+                    updateRecognitionText(data);
+                }
+                // 处理语音识别完成事件
+                else if (data.type === 'asr_complete') {
+                    handleRecognitionComplete(data);
+                }
+                // 处理计时器完成事件
+                else if (data.type === 'timer_completed') {
+                    // 计时器完成
+                    handleTimerCompleted(data.timer);
+                }
+            } catch (error) {
+                console.error('解析WebSocket消息失败:', error);
+            }
+        };
+        
+        ws.onclose = () => {
+            console.log('WebSocket连接已关闭，尝试重连...');
+            setTimeout(connectWebSocket, 3000);
+        };
+        // ... existing code ...
+
+        // 下面的函数已被禁用，不再使用实时流式识别
+        /*
+        function sendAudioChunkForRecognition(audioBlob) {
+            // 函数内容被禁用
+        }
+        */
+
+        // ... existing code ...
+
+        // 初始化全局变量
+        window.currentResponseReader = null;
+        window.currentBotMessageElement = null;
+        window.currentSynthesisRequests = [];
+    </script>
+</body>
+</html>

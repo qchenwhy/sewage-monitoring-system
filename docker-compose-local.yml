@@ -1,0 +1,85 @@
+services:
+  # 应用服务
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    ports:
+      - "3000:3000"
+      - "1883:1883"  # MQTT 端口
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=wzh123456
+      - DB_NAME=mqtt_data
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=wzh123456
+      - MYSQL_DATABASE=mqtt_data
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+      - ./downloads:/app/downloads
+      - ./backups:/app/backups
+      - ./audio:/app/audio
+      - ./temp:/app/temp
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - wzh_network
+
+  # MySQL 数据库服务 - 使用网易镜像
+  mysql:
+    image: hub.c.163.com/library/mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: wzh123456
+      MYSQL_DATABASE: mqtt_data
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - wzh_network
+
+  # Redis 缓存服务 - 使用网易镜像
+  redis:
+    image: hub.c.163.com/library/redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - wzh_network
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  wzh_network:
+    driver: bridge 

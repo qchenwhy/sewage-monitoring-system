@@ -1,0 +1,104 @@
+/* 告警消息样式 */
+.message-alarm {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.alarm-notification {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #856404;
+}
+
+.alarm-notification i {
+    font-size: 1.2em;
+}
+
+.alarm-notification strong {
+    color: #dc3545;
+}
+
+/* 告警显示组件样式 */
+.alarm-container {
+    margin-top: 10px;
+    border-top: 1px solid #eee;
+    padding-top: 5px;
+    max-height: 120px;
+    overflow-y: auto;
+    font-size: 13px;
+    background-color: #fffdf8;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.alarm-title {
+    font-weight: bold;
+    color: #d9534f;
+    margin-bottom: 5px;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5px;
+}
+
+.alarm-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.alarm-item {
+    border-left: 3px solid #d9534f;
+    padding: 4px 6px;
+    margin-bottom: 4px;
+    background-color: #fff5f5;
+    border-radius: 3px;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.alarm-content {
+    flex: 1;
+}
+
+.alarm-time {
+    color: #777;
+    font-size: 12px;
+    white-space: nowrap;
+    margin-left: 10px;
+}
+
+.alarm-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.alarm-controls button {
+    padding: 2px 5px;
+    font-size: 12px;
+    margin-left: 5px;
+    border-radius: 3px;
+    border: none;
+    cursor: pointer;
+}
+
+.alarm-mute-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.alarm-mute-btn.muted {
+    background-color: #dc3545;
+}
+
+.alarm-refresh-btn {
+    background-color: #28a745;
+    color: white;
+} 

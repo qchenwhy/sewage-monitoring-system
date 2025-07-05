@@ -1,0 +1,252 @@
+    <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水质监控系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            max-width: 800px;
+            width: 90%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .nav-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-card:hover::before {
+            left: 100%;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-card .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .nav-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .nav-card p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .system-info {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .system-info h4 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .info-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>水质监控系统</h1>
+            <p>实时监控水质数据，保障水环境安全</p>
+        </div>
+        
+        <div class="nav-grid">
+            <a href="/modbus/dashboard" class="nav-card">
+                <span class="icon">📊</span>
+                <h3>可视化大屏</h3>
+                <p>实时监控大屏，显示设备状态、水质指标、告警信息和趋势图表</p>
+            </a>
+
+            <a href="/modbus.html" class="nav-card">
+                <span class="icon">⚙️</span>
+                <h3>系统配置</h3>
+                <p>Modbus连接配置、数据点管理、轮询设置等系统配置功能</p>
+            </a>
+
+            <a href="/real-time-data.html" class="nav-card">
+                <span class="icon">📈</span>
+                <h3>实时数据</h3>
+                <p>查看实时数据点值、告警状态、数据质量等详细信息</p>
+            </a>
+
+            <a href="/alarm-history.html" class="nav-card">
+                <span class="icon">🚨</span>
+                <h3>告警历史</h3>
+                <p>查看历史告警记录、告警统计分析、告警处理状态</p>
+            </a>
+        </div>
+
+        <div class="system-info">
+            <h4>系统信息</h4>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">系统版本</span>
+                    <span class="info-value" id="systemVersion">v1.0.0</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">连接状态</span>
+                    <span class="info-value" id="connectionStatus">检查中...</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">数据点数量</span>
+                    <span class="info-value" id="dataPointCount">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">最后更新</span>
+                    <span class="info-value" id="lastUpdate">--</span>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取系统状态信息
+        async function updateSystemInfo() {
+            try {
+                // 获取连接状态
+                const statusResponse = await fetch('/api/modbus/status');
+                const status = await statusResponse.json();
+                
+                document.getElementById('connectionStatus').textContent = status.connected ? '已连接' : '未连接';
+                document.getElementById('connectionStatus').style.color = status.connected ? '#28a745' : '#dc3545';
+                
+                // 获取数据点数量
+                const dataPointsResponse = await fetch('/api/modbus/data-points');
+                const dataPoints = await dataPointsResponse.json();
+                
+                document.getElementById('dataPointCount').textContent = dataPoints ? dataPoints.length : 0;
+                
+                // 更新时间
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('zh-CN');
+                
+            } catch (error) {
+                console.error('获取系统信息失败:', error);
+                document.getElementById('connectionStatus').textContent = '获取失败';
+                document.getElementById('connectionStatus').style.color = '#dc3545';
+            }
+        }
+
+        // 页面加载时更新信息
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSystemInfo();
+            
+            // 每30秒更新一次状态
+            setInterval(updateSystemInfo, 30000);
+        });
+    </script>
+</body>
+</html> 

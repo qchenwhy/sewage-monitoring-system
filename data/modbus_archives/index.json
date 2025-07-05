@@ -1,0 +1,218 @@
+{
+  "2025-05-12": {
+    "hour_14": {
+      "timestamp": "2025-05-12T06:52:14.642Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_15": {
+      "timestamp": "2025-05-12T07:48:50.702Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_16": {
+      "timestamp": "2025-05-12T08:56:54.070Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_17": {
+      "timestamp": "2025-05-12T09:12:25.316Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_19": {
+      "timestamp": "2025-05-12T11:41:07.561Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_20": {
+      "timestamp": "2025-05-12T12:20:59.097Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_21": {
+      "timestamp": "2025-05-12T13:54:15.395Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_22": {
+      "timestamp": "2025-05-12T14:06:28.809Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_23": {
+      "timestamp": "2025-05-12T15:01:00.058Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_0": {
+      "timestamp": "2025-05-12T16:36:10.269Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_1": {
+      "timestamp": "2025-05-12T17:43:09.678Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_2": {
+      "timestamp": "2025-05-12T18:01:00.106Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_3": {
+      "timestamp": "2025-05-12T19:01:00.088Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_4": {
+      "timestamp": "2025-05-12T20:01:00.070Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_5": {
+      "timestamp": "2025-05-12T21:01:00.177Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_6": {
+      "timestamp": "2025-05-12T22:01:00.043Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    },
+    "hour_7": {
+      "timestamp": "2025-05-12T23:01:00.049Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-12.json"
+    }
+  },
+  "2025-05-13": {
+    "hour_8": {
+      "timestamp": "2025-05-13T00:01:00.035Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_9": {
+      "timestamp": "2025-05-13T01:01:00.067Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_10": {
+      "timestamp": "2025-05-13T02:01:00.352Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_11": {
+      "timestamp": "2025-05-13T03:01:00.043Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_12": {
+      "timestamp": "2025-05-13T04:21:23.997Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_15": {
+      "timestamp": "2025-05-13T07:12:32.324Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_16": {
+      "timestamp": "2025-05-13T08:01:00.044Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_18": {
+      "timestamp": "2025-05-13T10:01:00.051Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_19": {
+      "timestamp": "2025-05-13T11:01:00.053Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_20": {
+      "timestamp": "2025-05-13T12:01:00.064Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_21": {
+      "timestamp": "2025-05-13T13:01:00.040Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_22": {
+      "timestamp": "2025-05-13T14:28:24.968Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_23": {
+      "timestamp": "2025-05-13T15:50:06.403Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_0": {
+      "timestamp": "2025-05-13T16:01:00.125Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_1": {
+      "timestamp": "2025-05-13T17:01:00.044Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_2": {
+      "timestamp": "2025-05-13T18:01:00.056Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_3": {
+      "timestamp": "2025-05-13T19:01:00.051Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_4": {
+      "timestamp": "2025-05-13T20:01:00.037Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_5": {
+      "timestamp": "2025-05-13T21:01:00.100Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_6": {
+      "timestamp": "2025-05-13T22:01:00.086Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    },
+    "hour_7": {
+      "timestamp": "2025-05-13T23:01:00.065Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-13.json"
+    }
+  },
+  "2025-05-14": {
+    "hour_8": {
+      "timestamp": "2025-05-14T00:01:00.084Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-14.json"
+    },
+    "hour_9": {
+      "timestamp": "2025-05-14T01:01:00.047Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-14.json"
+    },
+    "hour_10": {
+      "timestamp": "2025-05-14T02:01:00.070Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-14.json"
+    },
+    "hour_11": {
+      "timestamp": "2025-05-14T03:01:00.041Z",
+      "recordCount": 22,
+      "fileName": "modbus_data_2025-05-14.json"
+    }
+  }
+}

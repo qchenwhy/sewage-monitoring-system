@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水质监控可视化大屏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #0c1445 0%, #1a2980 100%);
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            grid-template-rows: auto 1fr auto;
+            height: 100vh;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header .time {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .left-panel, .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .center-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(45deg, #00d4ff, #00ff88);
+            border-radius: 2px;
+        }
+
+        /* 设备状态卡片 */
+        .device-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .online { color: #00ff88; }
+        .offline { color: #ff4757; }
+        .warning { color: #ffa502; }
+        .total { color: #00d4ff; }
+
+        /* 设备列表 */
+        .device-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .device-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .device-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .device-name {
+            font-weight: 500;
+        }
+
+        .device-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-online {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            border: 1px solid #00ff88;
+        }
+
+        .status-offline {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+            border: 1px solid #ff4757;
+        }
+
+        .status-warning {
+            background: rgba(255, 165, 2, 0.2);
+            color: #ffa502;
+            border: 1px solid #ffa502;
+        }
+
+        /* 水质指标 */
+        .water-quality {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .quality-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .quality-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .quality-unit {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .quality-trend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .trend-up { color: #ff4757; }
+        .trend-down { color: #00ff88; }
+        .trend-stable { color: #ffa502; }
+
+        /* 报警区域 */
+        .alarm-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .alarm-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 4px solid #ff4757;
+            background: rgba(255, 71, 87, 0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .alarm-time {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .alarm-content {
+            font-weight: 500;
+        }
+
+        /* 图表容器 */
+        .chart-container {
+            height: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+        }
+
+        .chart-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1.1rem;
+        }
+
+        /* 底部状态栏 */
+        .footer {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .system-status {
+            display: flex;
+            gap: 20px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+
+        .status-dot.green { background: #00ff88; }
+        .status-dot.red { background: #ff4757; }
+        .status-dot.yellow { background: #ffa502; }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 212, 255, 0.5);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 212, 255, 0.8);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto auto;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .water-quality {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>水质监控可视化大屏</h1>
+            <div class="time" id="currentTime"></div>
+        </div>
+
+        <!-- 左侧面板 -->
+        <div class="left-panel">
+            <!-- 设备统计 -->
+            <div class="card">
+                <div class="card-title">设备状态统计</div>
+                <div class="device-stats">
+                    <div class="stat-item">
+                        <div class="stat-number online" id="onlineCount">0</div>
+                        <div class="stat-label">在线设备</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number offline" id="offlineCount">0</div>
+                        <div class="stat-label">离线设备</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number warning" id="warningCount">0</div>
+                        <div class="stat-label">告警设备</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number total" id="totalCount">0</div>
+                        <div class="stat-label">设备总数</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 设备列表 -->
+            <div class="card">
+                <div class="card-title">设备列表</div>
+                <div class="device-list" id="deviceList">
+                    <!-- 设备项将通过JavaScript动态添加 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 中间面板 -->
+        <div class="center-panel">
+            <!-- 水质指标 -->
+            <div class="card">
+                <div class="card-title">实时水质指标</div>
+                <div class="water-quality" id="waterQuality">
+                    <!-- 水质指标将通过JavaScript动态添加 -->
+                </div>
+            </div>
+
+            <!-- 水质变化曲线 -->
+            <div class="card">
+                <div class="card-title">水质变化趋势</div>
+                <div class="chart-container">
+                    <canvas id="waterQualityChart"></canvas>
+                    <div class="chart-placeholder" id="chartPlaceholder">
+                        正在加载图表数据...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧面板 -->
+        <div class="right-panel">
+            <!-- 实时告警 -->
+            <div class="card">
+                <div class="card-title">实时告警</div>
+                <div class="alarm-list" id="alarmList">
+                    <!-- 告警项将通过JavaScript动态添加 -->
+                </div>
+            </div>
+
+            <!-- 系统信息 -->
+            <div class="card">
+                <div class="card-title">系统信息</div>
+                <div class="system-info">
+                    <div class="info-item">
+                        <span>数据更新时间：</span>
+                        <span id="lastUpdateTime">--</span>
+                    </div>
+                    <div class="info-item" style="margin-top: 10px;">
+                        <span>连接状态：</span>
+                        <span id="connectionStatus">--</span>
+                    </div>
+                    <div class="info-item" style="margin-top: 10px;">
+                        <span>数据点总数：</span>
+                        <span id="dataPointCount">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部状态栏 -->
+        <div class="footer">
+            <div class="system-status">
+                <div class="status-indicator">
+                    <div class="status-dot green" id="modbusStatus"></div>
+                    <span>Modbus连接</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot green" id="databaseStatus"></div>
+                    <span>数据库连接</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot yellow" id="alarmStatus"></div>
+                    <span>告警系统</span>
+                </div>
+            </div>
+            <div class="footer-info">
+                <span>© 2024 水质监控系统 | 最后更新: <span id="footerUpdateTime">--</span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js库 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        class WaterQualityDashboard {
+            constructor() {
+                this.chart = null;
+                this.chartData = {
+                    labels: [],
+                    datasets: []
+                };
+                this.updateInterval = 5000; // 5秒更新一次
+                this.maxDataPoints = 20; // 最多显示20个数据点
+                
+                this.init();
+            }
+
+            init() {
+                this.updateTime();
+                this.initChart();
+                this.loadInitialData();
+                this.startAutoUpdate();
+                
+                // 每秒更新时间
+                setInterval(() => this.updateTime(), 1000);
+            }
+
+            updateTime() {
+                const now = new Date();
+                const timeString = now.toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                
+                document.getElementById('currentTime').textContent = timeString;
+                document.getElementById('footerUpdateTime').textContent = now.toLocaleTimeString('zh-CN');
+            }
+
+            async loadInitialData() {
+                try {
+                    // 加载设备状态
+                    await this.updateDeviceStatus();
+                    
+                    // 加载水质数据
+                    await this.updateWaterQuality();
+                    
+                    // 加载告警信息
+                    await this.updateAlarms();
+                    
+                    // 加载系统信息
+                    await this.updateSystemInfo();
+                    
+                } catch (error) {
+                    console.error('加载初始数据失败:', error);
+                }
+            }
+
+            async updateDeviceStatus() {
+                try {
+                    // 获取连接状态
+                    const response = await fetch('/api/modbus/status');
+                    const status = await response.json();
+                    
+                    // 模拟设备数据（实际应用中应该从API获取）
+                    const deviceData = {
+                        online: status.connected ? 1 : 0,
+                        offline: status.connected ? 0 : 1,
+                        warning: 0,
+                        total: 1
+                    };
+                    
+                    // 更新设备统计
+                    document.getElementById('onlineCount').textContent = deviceData.online;
+                    document.getElementById('offlineCount').textContent = deviceData.offline;
+                    document.getElementById('warningCount').textContent = deviceData.warning;
+                    document.getElementById('totalCount').textContent = deviceData.total;
+                    
+                    // 更新设备列表
+                    this.updateDeviceList([{
+                        name: 'Modbus设备',
+                        status: status.connected ? 'online' : 'offline',
+                        ip: status.config?.host || '--',
+                        port: status.config?.port || '--'
+                    }]);
+                    
+                    // 更新连接状态指示器
+                    const modbusStatusDot = document.getElementById('modbusStatus');
+                    if (status.connected) {
+                        modbusStatusDot.className = 'status-dot green';
+                    } else {
+                        modbusStatusDot.className = 'status-dot red';
+                    }
+                    
+                } catch (error) {
+                    console.error('更新设备状态失败:', error);
+                }
+            }
+
+            updateDeviceList(devices) {
+                const deviceList = document.getElementById('deviceList');
+                deviceList.innerHTML = '';
+                
+                devices.forEach(device => {
+                    const deviceItem = document.createElement('div');
+                    deviceItem.className = 'device-item';
+                    
+                    const statusClass = device.status === 'online' ? 'status-online' : 
+                                       device.status === 'warning' ? 'status-warning' : 'status-offline';
+                    const statusText = device.status === 'online' ? '在线' : 
+                                      device.status === 'warning' ? '告警' : '离线';
+                    
+                    deviceItem.innerHTML = `
+                        <div>
+                            <div class="device-name">${device.name}</div>
+                            <div style="font-size: 0.8rem; opacity: 0.7;">${device.ip}:${device.port}</div>
+                        </div>
+                        <div class="device-status ${statusClass}">${statusText}</div>
+                    `;
+                    
+                    deviceList.appendChild(deviceItem);
+                });
+            }
+
+            async updateWaterQuality() {
+                try {
+                    // 获取所有数据点的值
+                    const response = await fetch('/api/modbus/data-values');
+                    const dataValues = await response.json();
+                    
+                    const waterQualityContainer = document.getElementById('waterQuality');
+                    waterQualityContainer.innerHTML = '';
+                    
+                    // 定义水质指标映射
+                    const qualityIndicators = {
+                        'pH': { unit: 'pH', trend: 'stable', color: '#00d4ff' },
+                        '溶解氧': { unit: 'mg/L', trend: 'up', color: '#00ff88' },
+                        '浊度': { unit: 'NTU', trend: 'down', color: '#ffa502' },
+                        '温度': { unit: '°C', trend: 'stable', color: '#ff6b6b' },
+                        '电导率': { unit: 'μS/cm', trend: 'stable', color: '#4ecdc4' },
+                        '氨氮': { unit: 'mg/L', trend: 'down', color: '#45b7d1' }
+                    };
+                    
+                    // 如果有实际数据，使用实际数据，否则使用模拟数据
+                    let displayData = {};
+                    
+                    if (dataValues && Object.keys(dataValues).length > 0) {
+                        // 使用实际数据
+                        Object.entries(dataValues).forEach(([key, data]) => {
+                            if (data && data.value !== null && data.value !== undefined) {
+                                displayData[key] = {
+                                    value: data.formatted || data.value,
+                                    unit: '',
+                                    trend: 'stable'
+                                };
+                            }
+                        });
+                    } else {
+                        // 使用模拟数据
+                        displayData = {
+                            'pH值': { value: '7.2', unit: 'pH', trend: 'stable' },
+                            '溶解氧': { value: '8.5', unit: 'mg/L', trend: 'up' },
+                            '浊度': { value: '2.1', unit: 'NTU', trend: 'down' },
+                            '温度': { value: '23.5', unit: '°C', trend: 'stable' },
+                            '电导率': { value: '450', unit: 'μS/cm', trend: 'stable' },
+                            '氨氮': { value: '0.8', unit: 'mg/L', trend: 'down' }
+                        };
+                    }
+                    
+                    // 创建水质指标卡片
+                    Object.entries(displayData).forEach(([name, data]) => {
+                        const qualityItem = document.createElement('div');
+                        qualityItem.className = 'quality-item';
+                        
+                        const trendIcon = data.trend === 'up' ? '↗' : 
+                                         data.trend === 'down' ? '↘' : '→';
+                        const trendClass = `trend-${data.trend}`;
+                        
+                        qualityItem.innerHTML = `
+                            <div class="quality-trend ${trendClass}">${trendIcon}</div>
+                            <div class="quality-value">${data.value}</div>
+                            <div class="quality-unit">${name} ${data.unit}</div>
+                        `;
+                        
+                        waterQualityContainer.appendChild(qualityItem);
+                    });
+                    
+                    // 更新图表数据
+                    this.updateChartData(displayData);
+                    
+                } catch (error) {
+                    console.error('更新水质数据失败:', error);
+                    // 显示错误状态
+                    const waterQualityContainer = document.getElementById('waterQuality');
+                    waterQualityContainer.innerHTML = '<div style="text-align: center; color: #ff4757;">数据加载失败</div>';
+                }
+            }
+
+            async updateAlarms() {
+                try {
+                    // 获取活跃告警
+                    const response = await fetch('/api/modbus/alarms/active-db');
+                    const alarms = await response.json();
+                    
+                    const alarmList = document.getElementById('alarmList');
+                    alarmList.innerHTML = '';
+                    
+                    if (alarms && alarms.length > 0) {
+                        alarms.forEach(alarm => {
+                            const alarmItem = document.createElement('div');
+                            alarmItem.className = 'alarm-item';
+                            
+                            const alarmTime = new Date(alarm.triggered_time).toLocaleString('zh-CN');
+                            
+                            alarmItem.innerHTML = `
+                                <div class="alarm-time">${alarmTime}</div>
+                                <div class="alarm-content">${alarm.alarm_content}</div>
+                            `;
+                            
+                            alarmList.appendChild(alarmItem);
+                        });
+                        
+                        // 更新告警状态指示器
+                        document.getElementById('alarmStatus').className = 'status-dot red';
+                    } else {
+                        alarmList.innerHTML = '<div style="text-align: center; opacity: 0.6;">暂无告警信息</div>';
+                        document.getElementById('alarmStatus').className = 'status-dot green';
+                    }
+                    
+                } catch (error) {
+                    console.error('更新告警信息失败:', error);
+                    const alarmList = document.getElementById('alarmList');
+                    alarmList.innerHTML = '<div style="text-align: center; color: #ff4757;">告警数据加载失败</div>';
+                }
+            }
+
+            async updateSystemInfo() {
+                try {
+                    // 获取数据点信息
+                    const dataPointsResponse = await fetch('/api/modbus/data-points');
+                    const dataPoints = await dataPointsResponse.json();
+                    
+                    // 获取连接状态
+                    const statusResponse = await fetch('/api/modbus/status');
+                    const status = await statusResponse.json();
+                    
+                    // 更新系统信息
+                    document.getElementById('lastUpdateTime').textContent = new Date().toLocaleTimeString('zh-CN');
+                    document.getElementById('connectionStatus').textContent = status.connected ? '已连接' : '未连接';
+                    document.getElementById('dataPointCount').textContent = dataPoints ? dataPoints.length : 0;
+                    
+                    // 更新数据库状态指示器（假设数据库总是连接的）
+                    document.getElementById('databaseStatus').className = 'status-dot green';
+                    
+                } catch (error) {
+                    console.error('更新系统信息失败:', error);
+                }
+            }
+
+            initChart() {
+                const ctx = document.getElementById('waterQualityChart').getContext('2d');
+                
+                this.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: []
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    color: '#ffffff',
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: '#ffffff',
+                                    font: {
+                                        size: 10
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#ffffff',
+                                    font: {
+                                        size: 10
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            }
+                        },
+                        elements: {
+                            line: {
+                                tension: 0.4
+                            },
+                            point: {
+                                radius: 3,
+                                hoverRadius: 6
+                            }
+                        }
+                    }
+                });
+                
+                // 隐藏占位符
+                document.getElementById('chartPlaceholder').style.display = 'none';
+            }
+
+            updateChartData(waterQualityData) {
+                const now = new Date();
+                const timeLabel = now.toLocaleTimeString('zh-CN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                // 添加时间标签
+                this.chartData.labels.push(timeLabel);
+                
+                // 限制数据点数量
+                if (this.chartData.labels.length > this.maxDataPoints) {
+                    this.chartData.labels.shift();
+                }
+                
+                // 更新数据集
+                const colors = ['#00d4ff', '#00ff88', '#ffa502', '#ff6b6b', '#4ecdc4', '#45b7d1'];
+                let colorIndex = 0;
+                
+                Object.entries(waterQualityData).forEach(([name, data]) => {
+                    let dataset = this.chartData.datasets.find(ds => ds.label === name);
+                    
+                    if (!dataset) {
+                        dataset = {
+                            label: name,
+                            data: [],
+                            borderColor: colors[colorIndex % colors.length],
+                            backgroundColor: colors[colorIndex % colors.length] + '20',
+                            fill: false,
+                            tension: 0.4
+                        };
+                        this.chartData.datasets.push(dataset);
+                        colorIndex++;
+                    }
+                    
+                    // 添加数据点（只取数值部分）
+                    const numericValue = parseFloat(data.value) || 0;
+                    dataset.data.push(numericValue);
+                    
+                    // 限制数据点数量
+                    if (dataset.data.length > this.maxDataPoints) {
+                        dataset.data.shift();
+                    }
+                });
+                
+                // 更新图表
+                this.chart.update('none');
+            }
+
+            startAutoUpdate() {
+                // 立即执行一次更新
+                this.updateAll();
+                
+                // 设置定时更新
+                setInterval(() => {
+                    this.updateAll();
+                }, this.updateInterval);
+            }
+
+            async updateAll() {
+                try {
+                    await Promise.all([
+                        this.updateDeviceStatus(),
+                        this.updateWaterQuality(),
+                        this.updateAlarms(),
+                        this.updateSystemInfo()
+                    ]);
+                } catch (error) {
+                    console.error('更新数据失败:', error);
+                }
+            }
+        }
+
+        // 页面加载完成后初始化仪表板
+        document.addEventListener('DOMContentLoaded', () => {
+            new WaterQualityDashboard();
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>告警存储测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .log {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>告警数据库存储测试</h1>
+    
+    <div class="test-section">
+        <h2>1. 测试存储告警</h2>
+        <button onclick="testStoreAlarm()">存储测试告警</button>
+        <div id="storeResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 测试解除告警</h2>
+        <button onclick="testClearAlarm()">解除测试告警</button>
+        <div id="clearResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 查询活跃告警</h2>
+        <button onclick="testGetActiveAlarms()">查询活跃告警</button>
+        <div id="activeResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 完整流程测试</h2>
+        <button onclick="testFullFlow()">测试完整流程（存储→解除）</button>
+        <div id="fullFlowResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试日志</h2>
+        <button onclick="clearLog()">清空日志</button>
+        <div id="testLog" class="log"></div>
+    </div>
+
+    <script>
+        let testAlarmId = 'TEST_ALARM_' + Date.now();
+        
+        function log(message) {
+            const logDiv = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.textContent += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('testLog').textContent = '';
+        }
+        
+        function showResult(elementId, success, message, data = null) {
+            const element = document.getElementById(elementId);
+            element.className = success ? 'success' : 'error';
+            element.innerHTML = `<strong>${success ? '成功' : '失败'}:</strong> ${message}`;
+            if (data) {
+                element.innerHTML += `<br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+        }
+        
+        async function testStoreAlarm() {
+            log('开始测试存储告警...');
+            
+            const alarmData = {
+                identifier: testAlarmId,
+                content: '这是一个测试告警，用于验证数据库存储功能',
+                triggerTime: new Date().toISOString(),
+                dataPointName: '测试数据点'
+            };
+            
+            try {
+                const response = await fetch('/api/modbus/alarms/store', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(alarmData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    log('告警存储成功');
+                    showResult('storeResult', true, '告警已成功存储到数据库', result);
+                } else {
+                    log('告警存储失败: ' + (result.error || '未知错误'));
+                    showResult('storeResult', false, result.error || '未知错误', result);
+                }
+            } catch (error) {
+                log('告警存储请求失败: ' + error.message);
+                showResult('storeResult', false, '请求失败: ' + error.message);
+            }
+        }
+        
+        async function testClearAlarm() {
+            log('开始测试解除告警...');
+            
+            const clearData = {
+                identifier: testAlarmId,
+                clearedTime: new Date().toISOString()
+            };
+            
+            try {
+                const response = await fetch('/api/modbus/alarms/clear', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clearData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    log('告警解除成功');
+                    showResult('clearResult', true, '告警已成功解除', result);
+                } else {
+                    log('告警解除失败: ' + (result.error || '未知错误'));
+                    showResult('clearResult', false, result.error || '未知错误', result);
+                }
+            } catch (error) {
+                log('告警解除请求失败: ' + error.message);
+                showResult('clearResult', false, '请求失败: ' + error.message);
+            }
+        }
+        
+        async function testGetActiveAlarms() {
+            log('开始查询活跃告警...');
+            
+            try {
+                const response = await fetch('/api/modbus/alarms/active');
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const alarmCount = Array.isArray(result) ? result.length : 0;
+                    log(`查询到 ${alarmCount} 个活跃告警`);
+                    showResult('activeResult', true, `找到 ${alarmCount} 个活跃告警`, result);
+                } else {
+                    log('查询活跃告警失败: ' + (result.error || '未知错误'));
+                    showResult('activeResult', false, result.error || '未知错误', result);
+                }
+            } catch (error) {
+                log('查询活跃告警请求失败: ' + error.message);
+                showResult('activeResult', false, '请求失败: ' + error.message);
+            }
+        }
+        
+        async function testFullFlow() {
+            log('开始完整流程测试...');
+            
+            const flowAlarmId = 'FLOW_TEST_' + Date.now();
+            
+            try {
+                // 第一步：存储告警
+                log('第一步：存储告警');
+                const alarmData = {
+                    identifier: flowAlarmId,
+                    content: '完整流程测试告警，用于验证存储和解除功能',
+                    triggerTime: new Date().toISOString(),
+                    dataPointName: '流程测试数据点'
+                };
+                
+                const storeResponse = await fetch('/api/modbus/alarms/store', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(alarmData)
+                });
+                
+                const storeResult = await storeResponse.json();
+                
+                if (!storeResponse.ok || !storeResult.success) {
+                    throw new Error('存储告警失败: ' + (storeResult.error || '未知错误'));
+                }
+                
+                log('✅ 告警存储成功');
+                
+                // 第二步：等待2秒
+                log('第二步：等待2秒...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // 第三步：解除告警
+                log('第三步：解除告警');
+                const clearData = {
+                    identifier: flowAlarmId,
+                    clearedTime: new Date().toISOString()
+                };
+                
+                const clearResponse = await fetch('/api/modbus/alarms/clear', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clearData)
+                });
+                
+                const clearResult = await clearResponse.json();
+                
+                if (clearResponse.ok && clearResult.success) {
+                    log('✅ 告警解除成功');
+                    showResult('fullFlowResult', true, '完整流程测试成功', {
+                        store: storeResult,
+                        clear: clearResult
+                    });
+                } else {
+                    log('❌ 告警解除失败: ' + (clearResult.error || '未知错误'));
+                    showResult('fullFlowResult', false, '告警解除失败: ' + (clearResult.error || '未知错误'), {
+                        store: storeResult,
+                        clear: clearResult
+                    });
+                }
+                
+            } catch (error) {
+                log('❌ 完整流程测试失败: ' + error.message);
+                showResult('fullFlowResult', false, '完整流程测试失败: ' + error.message);
+            }
+        }
+        
+        // 页面加载时显示测试信息
+        window.onload = function() {
+            log('告警存储测试页面已加载');
+            log('测试告警ID: ' + testAlarmId);
+        };
+    </script>
+</body>
+</html> 

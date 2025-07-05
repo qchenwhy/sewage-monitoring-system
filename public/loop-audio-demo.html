@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>循环音频播放演示</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #45a049;
+        }
+        
+        .btn-stop {
+            background-color: #f44336;
+        }
+        
+        .btn-stop:hover {
+            background-color: #d32f2f;
+        }
+        
+        .btn-toggle {
+            background-color: #2196F3;
+        }
+        
+        .btn-toggle:hover {
+            background-color: #1976D2;
+        }
+        
+        .control-group {
+            margin: 15px 0;
+        }
+        
+        select, input[type="range"] {
+            padding: 5px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .status {
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+        }
+        
+        .code-block {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .tab {
+            padding: 8px 15px;
+            background-color: #eee;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        
+        .tab.active {
+            background-color: #fff;
+            border-bottom: 1px solid white;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 0 4px 4px 4px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>循环音频播放演示</h1>
+        
+        <div class="section">
+            <h2>关于音频循环播放</h2>
+            <p>这个演示展示了如何使用<code>AudioHelper</code>工具进行循环音频播放。该工具是基于<code>AudioAutoplay</code>库开发的，提供了更便捷的音频循环播放控制能力，并添加了一些高级功能如淡入淡出和音量控制。</p>
+            <p>循环音频播放在以下场景非常有用：</p>
+            <ul>
+                <li>计时器完成时的提醒音效</li>
+                <li>需要用户注意的重要通知</li>
+                <li>背景音乐循环</li>
+                <li>等待操作响应的提示音</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>演示控制</h2>
+            <div class="tabs">
+                <div class="tab active" data-tab="basic">基本演示</div>
+                <div class="tab" data-tab="advanced">高级功能</div>
+            </div>
+            
+            <div class="tab-content active" data-tab="basic">
+                <div class="control-group">
+                    <label for="audioSelect">选择音频文件：</label>
+                    <select id="audioSelect">
+                        <option value="/audio/alert.mp3">提醒音效</option>
+                        <option value="/audio/notification.mp3">通知音效</option>
+                        <option value="/audio/complete.mp3">完成音效</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <button id="startLoopBtn" class="btn">开始循环播放</button>
+                    <button id="stopLoopBtn" class="btn btn-stop">停止</button>
+                </div>
+                
+                <div class="status" id="basicStatus">状态：准备就绪</div>
+            </div>
+            
+            <div class="tab-content" data-tab="advanced">
+                <div class="control-group">
+                    <label for="audioSelectAdv">选择音频文件：</label>
+                    <select id="audioSelectAdv">
+                        <option value="/audio/alert.mp3">提醒音效</option>
+                        <option value="/audio/notification.mp3">通知音效</option>
+                        <option value="/audio/complete.mp3">完成音效</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="fadeInTime">淡入时间 (毫秒)：</label>
+                    <input type="range" id="fadeInTime" min="0" max="5000" step="100" value="1000">
+                    <span id="fadeInValue">1000ms</span>
+                </div>
+                
+                <div class="control-group">
+                    <label for="fadeOutTime">淡出时间 (毫秒)：</label>
+                    <input type="range" id="fadeOutTime" min="0" max="5000" step="100" value="1000">
+                    <span id="fadeOutValue">1000ms</span>
+                </div>
+                
+                <div class="control-group">
+                    <label for="volumeControl">音量：</label>
+                    <input type="range" id="volumeControl" min="0" max="1" step="0.1" value="0.5">
+                    <span id="volumeValue">50%</span>
+                </div>
+                
+                <div class="control-group">
+                    <button id="startAdvLoopBtn" class="btn">开始循环播放</button>
+                    <button id="stopAdvLoopBtn" class="btn btn-stop">停止</button>
+                    <button id="toggleLoopBtn" class="btn btn-toggle">切换播放状态</button>
+                </div>
+                
+                <div class="status" id="advancedStatus">状态：准备就绪</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>代码示例</h2>
+            <div class="code-block">
+<pre>// 基本使用 - 开始循环播放
+AudioHelper.startLoop('/audio/alert.mp3');
+
+// 基本使用 - 停止循环播放
+AudioHelper.stopLoop();
+
+// 高级使用 - 带淡入效果的循环播放
+AudioHelper.startLoop('/audio/alert.mp3', { 
+  fadeIn: 1000,  // 1秒淡入
+  volume: 0.7    // 音量70%
+});
+
+// 高级使用 - 带淡出效果的停止
+AudioHelper.stopLoop({ 
+  fadeOut: 3000  // 3秒淡出
+});
+
+// 切换播放状态
+AudioHelper.toggleLoop('/audio/alert.mp3', { 
+  fadeIn: 1000, 
+  fadeOut: 1000 
+});
+
+// 控制音量
+AudioHelper.setVolume(0.5); // 设置为50%音量</pre>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>注意事项</h2>
+            <ul>
+                <li>为了符合浏览器策略，音频播放通常需要用户交互才能开始</li>
+                <li>首次播放前可能需要点击页面或按钮来解锁音频播放</li>
+                <li>音频循环可能会在手机熄屏状态下被中断</li>
+                <li>使用淡入淡出效果可以提供更好的用户体验</li>
+                <li>为节省资源，不再使用时请及时调用<code>stopLoop</code>方法停止播放</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 引入AudioAutoplay基础库 -->
+    <script src="/js/audio-autoplay.js"></script>
+    
+    <!-- 引入AudioHelper辅助工具 -->
+    <script src="/js/audio-helper.js"></script>
+    
+    <!-- 演示脚本 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 函数：更新基本状态显示
+            function updateBasicStatus(text) {
+                document.getElementById('basicStatus').textContent = '状态：' + text;
+            }
+            
+            // 函数：更新高级状态显示
+            function updateAdvancedStatus(text) {
+                document.getElementById('advancedStatus').textContent = '状态：' + text;
+            }
+            
+            // 初始化范围输入值显示
+            document.getElementById('fadeInValue').textContent = document.getElementById('fadeInTime').value + 'ms';
+            document.getElementById('fadeOutValue').textContent = document.getElementById('fadeOutTime').value + 'ms';
+            document.getElementById('volumeValue').textContent = (document.getElementById('volumeControl').value * 100) + '%';
+            
+            // 监听范围输入变化
+            document.getElementById('fadeInTime').addEventListener('input', function() {
+                document.getElementById('fadeInValue').textContent = this.value + 'ms';
+            });
+            
+            document.getElementById('fadeOutTime').addEventListener('input', function() {
+                document.getElementById('fadeOutValue').textContent = this.value + 'ms';
+            });
+            
+            document.getElementById('volumeControl').addEventListener('input', function() {
+                const percent = Math.round(this.value * 100);
+                document.getElementById('volumeValue').textContent = percent + '%';
+                
+                // 如果正在播放，立即应用音量
+                if (window.AudioHelper && window.AudioHelper.isLooping()) {
+                    window.AudioHelper.setVolume(this.value);
+                }
+            });
+            
+            // 基本演示 - 开始循环播放按钮
+            document.getElementById('startLoopBtn').addEventListener('click', function() {
+                const audioUrl = document.getElementById('audioSelect').value;
+                
+                if (window.AudioHelper) {
+                    const success = window.AudioHelper.startLoop(audioUrl);
+                    
+                    if (success) {
+                        updateBasicStatus('正在循环播放 ' + audioUrl);
+                    } else {
+                        updateBasicStatus('开始播放失败');
+                    }
+                } else {
+                    updateBasicStatus('错误：AudioHelper未加载');
+                    alert('AudioHelper未加载，请检查脚本引用');
+                }
+            });
+            
+            // 基本演示 - 停止按钮
+            document.getElementById('stopLoopBtn').addEventListener('click', function() {
+                if (window.AudioHelper) {
+                    window.AudioHelper.stopLoop();
+                    updateBasicStatus('已停止播放');
+                } else {
+                    updateBasicStatus('错误：AudioHelper未加载');
+                }
+            });
+            
+            // 高级演示 - 开始循环播放按钮
+            document.getElementById('startAdvLoopBtn').addEventListener('click', function() {
+                const audioUrl = document.getElementById('audioSelectAdv').value;
+                const fadeIn = parseInt(document.getElementById('fadeInTime').value);
+                const volume = parseFloat(document.getElementById('volumeControl').value);
+                
+                if (window.AudioHelper) {
+                    const options = {
+                        fadeIn: fadeIn,
+                        volume: volume
+                    };
+                    
+                    const success = window.AudioHelper.startLoop(audioUrl, options);
+                    
+                    if (success) {
+                        updateAdvancedStatus(`正在播放 ${audioUrl}，淡入: ${fadeIn}ms，音量: ${Math.round(volume * 100)}%`);
+                    } else {
+                        updateAdvancedStatus('开始播放失败');
+                    }
+                } else {
+                    updateAdvancedStatus('错误：AudioHelper未加载');
+                    alert('AudioHelper未加载，请检查脚本引用');
+                }
+            });
+            
+            // 高级演示 - 停止按钮
+            document.getElementById('stopAdvLoopBtn').addEventListener('click', function() {
+                if (window.AudioHelper) {
+                    const fadeOut = parseInt(document.getElementById('fadeOutTime').value);
+                    
+                    window.AudioHelper.stopLoop({
+                        fadeOut: fadeOut
+                    });
+                    
+                    updateAdvancedStatus(`正在停止播放，淡出: ${fadeOut}ms`);
+                } else {
+                    updateAdvancedStatus('错误：AudioHelper未加载');
+                }
+            });
+            
+            // 高级演示 - 切换播放状态按钮
+            document.getElementById('toggleLoopBtn').addEventListener('click', function() {
+                if (window.AudioHelper) {
+                    const audioUrl = document.getElementById('audioSelectAdv').value;
+                    const fadeIn = parseInt(document.getElementById('fadeInTime').value);
+                    const fadeOut = parseInt(document.getElementById('fadeOutTime').value);
+                    const volume = parseFloat(document.getElementById('volumeControl').value);
+                    
+                    const isPlaying = window.AudioHelper.toggleLoop(audioUrl, {
+                        fadeIn: fadeIn,
+                        fadeOut: fadeOut,
+                        volume: volume
+                    });
+                    
+                    if (isPlaying) {
+                        updateAdvancedStatus(`切换为播放状态，淡入: ${fadeIn}ms，音量: ${Math.round(volume * 100)}%`);
+                    } else {
+                        updateAdvancedStatus(`切换为停止状态，淡出: ${fadeOut}ms`);
+                    }
+                } else {
+                    updateAdvancedStatus('错误：AudioHelper未加载');
+                }
+            });
+            
+            // 标签切换功能
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // 移除所有激活状态
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // 添加当前激活状态
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.querySelector(`.tab-content[data-tab="${tabId}"]`).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单点报警系统调试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+        }
+        .status.success { background-color: #28a745; }
+        .status.error { background-color: #dc3545; }
+        .status.warning { background-color: #ffc107; color: #212529; }
+        .status.info { background-color: #17a2b8; }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+        button:hover { background-color: #0056b3; }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 5px;
+            border-radius: 2px;
+        }
+        .log-entry.info { background-color: #d1ecf1; }
+        .log-entry.success { background-color: #d4edda; }
+        .log-entry.error { background-color: #f8d7da; }
+        .log-entry.warning { background-color: #fff3cd; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>单点报警系统调试</h1>
+    
+    <div class="container">
+        <h2>系统状态</h2>
+        <p>监控状态: <span id="monitoringStatus" class="status info">检查中...</span></p>
+        <p>API连接: <span id="apiStatus" class="status info">检查中...</span></p>
+        <p>WebSocket连接: <span id="wsStatus" class="status info">连接中...</span></p>
+        <button onclick="checkSystemStatus()">刷新状态</button>
+        <button onclick="toggleMonitoring()">启动/停止监控</button>
+    </div>
+    
+    <div class="container">
+        <h2>API测试</h2>
+        <button onclick="testGetRules()">获取报警规则</button>
+        <button onclick="testGetHistory()">获取报警历史</button>
+        <button onclick="testCreateRule()">创建测试规则</button>
+        <button onclick="testCreateTriggerRule()">创建立即触发规则</button>
+        <button onclick="testManualCheck()">手动触发检查</button>
+        <button onclick="testDataPoints()">测试数据点API</button>
+        <button onclick="testCacheStatus()">查看缓存状态</button>
+        <button onclick="testCacheUpdate()">测试缓存更新</button>
+        <button onclick="clearLogs()">清空日志</button>
+    </div>
+    
+    <div class="container">
+        <h2>报警规则</h2>
+        <div id="rulesContainer">加载中...</div>
+    </div>
+    
+    <div class="container">
+        <h2>WebSocket消息</h2>
+        <div id="wsMessages" class="log"></div>
+    </div>
+    
+    <div class="container">
+        <h2>调试日志</h2>
+        <div id="debugLog" class="log"></div>
+    </div>
+
+    <script>
+        let ws = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        
+        // 日志函数
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            const debugLog = document.getElementById('debugLog');
+            debugLog.appendChild(logEntry);
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+        
+        function logWs(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            const wsMessages = document.getElementById('wsMessages');
+            wsMessages.appendChild(logEntry);
+            wsMessages.scrollTop = wsMessages.scrollHeight;
+        }
+        
+        // WebSocket连接
+        function connectWebSocket() {
+            try {
+                ws = new WebSocket('ws://localhost:3000/ws');
+                
+                ws.onopen = function() {
+                    document.getElementById('wsStatus').textContent = '已连接';
+                    document.getElementById('wsStatus').className = 'status success';
+                    logWs('WebSocket连接成功', 'success');
+                    reconnectAttempts = 0;
+                };
+                
+                ws.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        logWs(`收到消息: ${data.type}`, 'info');
+                        
+                        if (data.type === 'single_point_alarm') {
+                            logWs(`🚨 单点报警: ${JSON.stringify(data.data)}`, 'error');
+                            // 可以在这里添加声音提示
+                            if (window.speechSynthesis) {
+                                const utterance = new SpeechSynthesisUtterance('收到单点报警');
+                                window.speechSynthesis.speak(utterance);
+                            }
+                        } else if (data.type === 'single_point_alarm_cleared') {
+                            logWs(`✅ 单点报警解除: ${JSON.stringify(data.data)}`, 'success');
+                        } else {
+                            logWs(`其他消息: ${JSON.stringify(data)}`, 'info');
+                        }
+                    } catch (error) {
+                        logWs(`解析消息失败: ${event.data}`, 'error');
+                    }
+                };
+                
+                ws.onclose = function() {
+                    document.getElementById('wsStatus').textContent = '已断开';
+                    document.getElementById('wsStatus').className = 'status error';
+                    logWs('WebSocket连接断开', 'warning');
+                    
+                    // 自动重连
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        logWs(`尝试重连 (${reconnectAttempts}/${maxReconnectAttempts})`, 'warning');
+                        setTimeout(connectWebSocket, 3000);
+                    }
+                };
+                
+                ws.onerror = function(error) {
+                    logWs(`WebSocket错误: ${error}`, 'error');
+                };
+            } catch (error) {
+                logWs(`WebSocket连接失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // API请求函数
+        async function apiRequest(url, options = {}) {
+            try {
+                log(`发起API请求: ${url}`);
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`API请求成功: ${url}`, 'success');
+                    return { success: true, data };
+                } else {
+                    log(`API请求失败: ${url} - ${data.message || data.error}`, 'error');
+                    return { success: false, error: data.message || data.error };
+                }
+            } catch (error) {
+                log(`API请求异常: ${url} - ${error.message}`, 'error');
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // 检查系统状态
+        async function checkSystemStatus() {
+            log('检查系统状态...');
+            
+            // 检查监控状态
+            const statusResult = await apiRequest('/api/single-point-alarm/monitoring/status');
+            if (statusResult.success) {
+                const isActive = statusResult.data.data.active;
+                document.getElementById('monitoringStatus').textContent = isActive ? '运行中' : '已停止';
+                document.getElementById('monitoringStatus').className = `status ${isActive ? 'success' : 'warning'}`;
+                log(`监控状态: ${isActive ? '运行中' : '已停止'}`, isActive ? 'success' : 'warning');
+            } else {
+                document.getElementById('monitoringStatus').textContent = '检查失败';
+                document.getElementById('monitoringStatus').className = 'status error';
+            }
+            
+            // 检查API连接
+            const apiResult = await apiRequest('/api/single-point-alarm/rules');
+            if (apiResult.success) {
+                document.getElementById('apiStatus').textContent = '正常';
+                document.getElementById('apiStatus').className = 'status success';
+                log('API连接正常', 'success');
+            } else {
+                document.getElementById('apiStatus').textContent = '失败';
+                document.getElementById('apiStatus').className = 'status error';
+            }
+        }
+        
+        // 切换监控
+        async function toggleMonitoring() {
+            const result = await apiRequest('/api/single-point-alarm/monitoring/toggle', {
+                method: 'POST'
+            });
+            
+            if (result.success) {
+                log('监控状态切换成功', 'success');
+                await checkSystemStatus();
+            } else {
+                log('监控状态切换失败', 'error');
+            }
+        }
+        
+        // 测试获取规则
+        async function testGetRules() {
+            const result = await apiRequest('/api/single-point-alarm/rules');
+            if (result.success) {
+                const rules = result.data.data;
+                log(`获取到 ${rules.length} 个报警规则`, 'success');
+                displayRules(rules);
+            }
+        }
+        
+        // 显示规则
+        function displayRules(rules) {
+            const container = document.getElementById('rulesContainer');
+            
+            if (rules.length === 0) {
+                container.innerHTML = '<p>暂无报警规则</p>';
+                return;
+            }
+            
+            let html = '<table><tr><th>ID</th><th>名称</th><th>数据点</th><th>类型</th><th>状态</th><th>配置</th></tr>';
+            rules.forEach(rule => {
+                const config = typeof rule.config === 'string' ? JSON.parse(rule.config) : rule.config;
+                html += `<tr>
+                    <td>${rule.id}</td>
+                    <td>${rule.name}</td>
+                    <td>${rule.dataPointId}</td>
+                    <td>${rule.alarmType}</td>
+                    <td>${rule.enabled ? '启用' : '禁用'}</td>
+                    <td>${JSON.stringify(config)}</td>
+                </tr>`;
+            });
+            html += '</table>';
+            container.innerHTML = html;
+        }
+        
+        // 测试获取历史
+        async function testGetHistory() {
+            const result = await apiRequest('/api/single-point-alarm/history');
+            if (result.success) {
+                const history = result.data.data;
+                log(`获取到 ${history.length} 条报警历史`, 'success');
+                
+                if (history.length > 0) {
+                    log('最近5条报警记录:', 'info');
+                    history.slice(0, 5).forEach((record, index) => {
+                        const status = record.triggered ? '🚨 触发' : '✅ 解除';
+                        const time = new Date(record.timestamp).toLocaleString('zh-CN');
+                        log(`  ${index + 1}. ${status} - ${record.ruleName} (${record.dataPointId}) - ${time}`, 
+                            record.triggered ? 'error' : 'success');
+                    });
+                } else {
+                    log('暂无报警历史记录', 'warning');
+                }
+            }
+        }
+        
+        // 创建测试规则
+        async function testCreateRule() {
+            const testRule = {
+                name: '测试无更新报警_' + Date.now(),
+                dataPointId: 'test_sensor_' + Math.floor(Math.random() * 1000),
+                dataPointName: '测试传感器',
+                alarmType: 'no_update',
+                config: {
+                    timeout: 30
+                },
+                level: 'medium',
+                content: '测试传感器数据超过30秒未更新',
+                notifications: {
+                    page: true,
+                    sound: true
+                }
+            };
+            
+            const result = await apiRequest('/api/single-point-alarm/rules', {
+                method: 'POST',
+                body: JSON.stringify(testRule)
+            });
+            
+            if (result.success) {
+                log('测试规则创建成功', 'success');
+                await testGetRules(); // 刷新规则列表
+            }
+        }
+        
+        // 创建立即触发的测试规则
+        async function testCreateTriggerRule() {
+            log('创建立即触发的测试规则...', 'info');
+            
+            const result = await apiRequest('/api/single-point-alarm/test/create-trigger-rule', {
+                method: 'POST'
+            });
+            
+            if (result.success) {
+                log('立即触发测试规则创建成功，应该会在1秒内触发报警', 'success');
+                log(`规则信息: ${result.data.message}`, 'info');
+                await testGetRules(); // 刷新规则列表
+                
+                // 10秒后自动检查历史记录
+                setTimeout(async () => {
+                    log('10秒后自动检查报警历史...', 'info');
+                    await testGetHistory();
+                }, 10000);
+            }
+        }
+        
+        // 手动触发检查
+        async function testManualCheck() {
+            log('手动触发报警规则检查...', 'info');
+            
+            const result = await apiRequest('/api/single-point-alarm/test/manual-check', {
+                method: 'POST'
+            });
+            
+            if (result.success) {
+                log('手动检查触发成功，请查看下方的日志输出', 'success');
+                
+                // 5秒后自动检查历史记录
+                setTimeout(async () => {
+                    log('5秒后自动检查报警历史...', 'info');
+                    await testGetHistory();
+                }, 5000);
+            }
+        }
+        
+        // 测试数据点API
+        async function testDataPoints() {
+            const endpoints = [
+                '/api/modbus/latest-values',
+                '/api/modbus/values/latest', 
+                '/api/modbus/values'
+            ];
+            
+            for (const endpoint of endpoints) {
+                const result = await apiRequest(endpoint);
+                if (result.success) {
+                    let dataCount = 0;
+                    if (result.data.data && typeof result.data.data === 'object') {
+                        dataCount = Object.keys(result.data.data).length;
+                    } else if (Array.isArray(result.data)) {
+                        dataCount = result.data.length;
+                    }
+                    log(`${endpoint}: 找到 ${dataCount} 个数据点`, 'success');
+                } else {
+                    log(`${endpoint}: 失败`, 'error');
+                }
+            }
+        }
+        
+        // 测试缓存状态
+        async function testCacheStatus() {
+            log('获取缓存状态...', 'info');
+            
+            const result = await apiRequest('/api/single-point-alarm/cache/status');
+            if (result.success) {
+                const cache = result.data.data;
+                log(`缓存状态:`, 'success');
+                log(`  - 活跃数据点: ${cache.activeDataPoints.length} 个`, 'info');
+                log(`  - 已缓存数据点: ${cache.cachedDataPoints.length} 个`, 'info');
+                
+                // 显示活跃数据点列表
+                if (cache.activeDataPoints.length > 0) {
+                    log(`活跃数据点列表: ${cache.activeDataPoints.slice(0, 10).join(', ')}${cache.activeDataPoints.length > 10 ? '...' : ''}`, 'info');
+                }
+                
+                // 显示缓存详情
+                const cachedCount = Object.keys(cache.cacheDetails).length;
+                if (cachedCount > 0) {
+                    log(`缓存详情 (前5个):`, 'info');
+                    let count = 0;
+                    for (const [dataPointId, details] of Object.entries(cache.cacheDetails)) {
+                        if (count >= 5) break;
+                        const timeAgo = Math.floor(details.timeSinceUpdate / 1000);
+                        log(`  - ${dataPointId}: ${details.value} (${timeAgo}秒前更新)`, 'info');
+                        count++;
+                    }
+                } else {
+                    log('暂无缓存数据', 'warning');
+                }
+            } else {
+                log('获取缓存状态失败', 'error');
+            }
+        }
+        
+        // 测试缓存更新
+        async function testCacheUpdate() {
+            log('测试缓存更新...', 'info');
+            
+            // 先获取缓存状态，找到一个活跃的数据点
+            const statusResult = await apiRequest('/api/single-point-alarm/cache/status');
+            if (!statusResult.success || statusResult.data.data.activeDataPoints.length === 0) {
+                log('没有活跃的数据点可供测试', 'warning');
+                return;
+            }
+            
+            const testDataPointId = statusResult.data.data.activeDataPoints[0];
+            const testValue = Math.random() * 100;
+            
+            log(`测试更新数据点: ${testDataPointId} = ${testValue.toFixed(2)}`, 'info');
+            
+            const updateResult = await apiRequest(`/api/single-point-alarm/cache/update/${testDataPointId}`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    value: testValue,
+                    timestamp: new Date().toISOString()
+                })
+            });
+            
+            if (updateResult.success) {
+                log('缓存更新成功', 'success');
+                
+                // 等待2秒后再次检查缓存状态
+                setTimeout(async () => {
+                    log('2秒后检查缓存状态...', 'info');
+                    await testCacheStatus();
+                }, 2000);
+            } else {
+                log(`缓存更新失败: ${updateResult.error}`, 'error');
+            }
+        }
+        
+        // 清空日志
+        function clearLogs() {
+            document.getElementById('debugLog').innerHTML = '';
+            document.getElementById('wsMessages').innerHTML = '';
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = function() {
+            log('页面加载完成，开始初始化...', 'info');
+            connectWebSocket();
+            checkSystemStatus();
+            testGetRules();
+        };
+    </script>
+</body>
+</html> 

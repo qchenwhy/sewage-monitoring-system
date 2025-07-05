@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计时器管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 14px;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-link {
+            padding: 6px 12px;
+            text-decoration: none;
+            color: white;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .home-link {
+            background-color: #007AFF;
+        }
+        
+        .timer-container {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .timer-form {
+            flex: 0 0 350px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .timer-list {
+            flex: 1;
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .form-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+            color: #333;
+            font-size: 13px;
+        }
+        
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-actions {
+            margin-top: 15px;
+        }
+        
+        .create-btn {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .create-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .timer-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .timer-table th {
+            background-color: #f8f8f8;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        
+        .timer-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        
+        .timer-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .timer-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .timer-status {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .status-active {
+            background-color: #007AFF;
+            color: white;
+        }
+        
+        .status-completed {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .cancel-btn {
+            background-color: #FF3B30;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        
+        .cancel-btn:hover {
+            background-color: #d9342b;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close-btn:hover {
+            color: #555;
+        }
+        
+        .settings-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+        }
+        
+        .save-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        .test-btn {
+            background-color: #2196F3;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .settings-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #555;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">计时器管理</h1>
+            <div class="nav-links">
+                <a href="/" class="nav-link home-link">返回首页</a>
+            </div>
+        </div>
+        
+        <div class="timer-container">
+            <div class="timer-form">
+                <h2 class="form-title">创建新计时器</h2>
+                <form id="timerForm">
+                    <div class="form-group">
+                        <label class="form-label" for="timerTitle">计时器标题</label>
+                        <input type="text" class="form-input" id="timerTitle" required placeholder="输入计时器标题">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="timerDuration">计时时长(秒)</label>
+                        <input type="number" class="form-input" id="timerDuration" min="1" value="60" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="timerMessage">计时结束消息</label>
+                        <textarea class="form-textarea" id="timerMessage" required placeholder="输入计时结束后要播报的消息"></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="create-btn">创建计时器</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="timer-list">
+                <h2 class="form-title">活动计时器</h2>
+                <table class="timer-table">
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>剩余时间</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timerTableBody">
+                        <!-- 计时器列表将在这里动态生成 -->
+                    </tbody>
+                </table>
+                <div id="emptyTimers" class="empty-message">暂无活动计时器</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification"></div>
+    
+    <script>
+        // DOM元素
+        const timerForm = document.getElementById('timerForm');
+        const timerTitleInput = document.getElementById('timerTitle');
+        const timerDurationInput = document.getElementById('timerDuration');
+        const timerMessageInput = document.getElementById('timerMessage');
+        const timerTableBody = document.getElementById('timerTableBody');
+        const emptyTimersEl = document.getElementById('emptyTimers');
+        const notificationEl = document.getElementById('notification');
+        const pauseAllBtn = document.getElementById('pauseAllBtn');
+        const resumeAllBtn = document.getElementById('resumeAllBtn');
+        const cancelAllBtn = document.getElementById('cancelAllBtn');
+        
+        // 存储活动计时器
+        let activeTimers = [];
+        let intervalId = null;
+        
+        // 存储已删除的音频文件
+        let deletedFiles = new Set();
+        let sessionStartTime = Date.now(); // 记录会话开始时间
+        
+        // WebSocket连接
+        let ws = null;
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', () => {
+            // 加载活动计时器
+            loadActiveTimers();
+            
+            // 连接WebSocket
+            connectWebSocket();
+            
+            // 添加事件监听器
+            timerForm.addEventListener('submit', createTimer);
+            
+            // 检测浏览器对MediaSource API和各种媒体格式的支持情况
+            checkMediaSourceSupport();
+            
+            // 清理旧的音频文件
+            cleanupOldAudioFiles(sessionStartTime);
+            
+            // 立即尝试解锁音频播放
+            autoUnlockAudio();
+            
+            // 设置解锁音频播放功能（备用方案）
+            setupAudioUnlock();
+        });
+        
+        // 连接WebSocket
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                console.log('WebSocket连接已建立');
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'timer_completed') {
+                        // 计时器完成
+                        handleTimerCompleted(data.timer);
+                    }
+                } catch (error) {
+                    console.error('解析WebSocket消息失败:', error);
+                }
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket连接已关闭，尝试重连...');
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket错误:', error);
+            };
+        }
+        
+        // 加载活动计时器
+        async function loadActiveTimers() {
+            try {
+                const response = await fetch('/api/timers');
+                if (response.ok) {
+                    activeTimers = await response.json();
+                    renderTimers();
+                    
+                    // 开始更新剩余时间
+                    updateRemainingTime();
+                } else {
+                    console.error('加载计时器失败:', await response.text());
+                }
+            } catch (error) {
+                console.error('加载计时器错误:', error);
+            }
+        }
+        
+        // 创建计时器
+        async function createTimer(event) {
+            event.preventDefault();
+            
+            const title = timerTitleInput.value.trim();
+            const duration = parseInt(timerDurationInput.value);
+            const message = timerMessageInput.value.trim();
+            
+            if (!title || !duration || !message) {
+                alert('请填写所有必填字段');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/timers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title, duration, message })
+                });
+                
+                if (response.ok) {
+                    const timer = await response.json();
+                    activeTimers.push(timer);
+                    renderTimers();
+                    
+                    // 清空表单
+                    timerTitleInput.value = '';
+                    timerDurationInput.value = '60';
+                    timerMessageInput.value = '';
+                } else {
+                    alert('创建计时器失败: ' + (await response.text()));
+                }
+            } catch (error) {
+                console.error('创建计时器错误:', error);
+                alert('创建计时器失败，请稍后重试');
+            }
+        }
+        
+        // 取消计时器
+        async function cancelTimer(id) {
+            if (!confirm('确定要取消这个计时器吗？')) return;
+            
+            try {
+                const response = await fetch(`/api/timers/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    activeTimers = activeTimers.filter(timer => timer.id !== id);
+                    renderTimers();
+                } else {
+                    alert('取消计时器失败: ' + (await response.text()));
+                }
+            } catch (error) {
+                console.error('取消计时器错误:', error);
+                alert('取消计时器失败，请稍后重试');
+            }
+        }
+        
+        // 渲染计时器列表
+        function renderTimers() {
+            timerTableBody.innerHTML = '';
+            
+            if (activeTimers.length === 0) {
+                emptyTimersEl.style.display = 'block';
+                return;
+            }
+            
+            emptyTimersEl.style.display = 'none';
+            
+            activeTimers.forEach(timer => {
+                const remainingTime = Math.max(0, Math.floor((timer.endTime - Date.now()) / 1000));
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${timer.title}</td>
+                    <td class="remaining-time" data-end="${timer.endTime}">${formatTime(remainingTime)}</td>
+                    <td><span class="timer-status status-${timer.status}">${timer.status === 'active' ? '进行中' : '已完成'}</span></td>
+                    <td>
+                        ${timer.status === 'active' ? `<button class="cancel-btn" data-id="${timer.id}">取消</button>` : ''}
+                    </td>
+                `;
+                
+                timerTableBody.appendChild(row);
+                
+                // 添加取消按钮事件
+                const cancelBtn = row.querySelector('.cancel-btn');
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', () => cancelTimer(timer.id));
+                }
+            });
+        }
+        
+        // 更新剩余时间
+        function updateRemainingTime() {
+            const timeElements = document.querySelectorAll('.remaining-time');
+            
+            timeElements.forEach(el => {
+                const endTime = parseInt(el.dataset.end);
+                const remainingTime = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+                el.textContent = formatTime(remainingTime);
+            });
+            
+            setTimeout(updateRemainingTime, 1000);
+        }
+        
+        // 格式化时间
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+        
+        // 处理计时器完成
+        function handleTimerCompleted(timer) {
+            // 更新计时器状态
+            const index = activeTimers.findIndex(t => t.id === timer.id);
+            if (index !== -1) {
+                activeTimers[index].status = 'completed';
+                renderTimers();
+            }
+            
+            // 显示通知
+            showNotification(`计时器 "${timer.title}" 已完成`);
+            
+            // 先播放广播提示音，然后再播放计时器消息
+            playWithAlertSound(timer.message);
+        }
+        
+        // 自动解锁音频播放功能（无需用户交互）
+        function autoUnlockAudio() {
+            console.log('尝试自动解锁音频播放...');
+            
+            // 创建可靠的静音音频（使用更短且更兼容的base64编码）
+            const silentAudio = document.createElement('audio');
+            // 使用更短和更可靠的MP3静音音频base64编码
+            silentAudio.src = 'data:audio/mp3;base64,SUQzAwAAAAABEVRYWFgAAAABAAAASW5mb0FQSUMAAAABAAAAVElUMgAAAAEAAABUWUVSAAAACAAAAOkA/wD/ABtJbmZvAAAAAA8AAABUZW1wbywgUmFpbiBBUEkAAA==';
+            silentAudio.autoplay = true;
+            silentAudio.muted = true;
+            silentAudio.setAttribute('playsinline', '');
+            silentAudio.volume = 0;
+            
+            // 设置音频属性以提高兼容性
+            silentAudio.setAttribute('webkit-playsinline', ''); // 兼容旧版iOS
+            silentAudio.setAttribute('controls', ''); // 添加控件可能会提高一些浏览器的自动播放支持
+            silentAudio.setAttribute('preload', 'auto');
+            silentAudio.style.display = 'none'; // 隐藏控件但保留功能
+            
+            // 添加到DOM
+            document.body.appendChild(silentAudio);
+            
+            // 尝试创建音频上下文，这对Chrome也有帮助
+            try {
+                // 创建一个AudioContext
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    let audioCtx = new AudioContext();
+                    console.log('AudioContext创建成功:', audioCtx.state);
+                    // 如果是suspended状态，尝试恢复
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume().then(() => {
+                            console.log('AudioContext恢复成功');
+                        }).catch(e => {
+                            console.warn('AudioContext恢复失败:', e);
+                        });
+                    }
+                    
+                    // 保存到window对象供后续使用
+                    window.audioCtx = audioCtx;
+                }
+            } catch (e) {
+                console.warn('创建AudioContext失败:', e);
+            }
+            
+            // 尝试自动播放
+            let playPromise = silentAudio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log('静音自动播放成功，音频API已解锁');
+                    window.audioUnlocked = true;
+                    
+                    // 通过修改媒体策略解锁音频播放
+                    if (navigator.mediaSession) {
+                        navigator.mediaSession.playbackState = "playing";
+                    }
+                    
+                    // 创建媒体元素以解锁媒体权限
+                    createFakeMediaElements();
+                    
+                    // 延迟移除元素，确保解锁生效
+                    setTimeout(() => {
+                        if (document.body.contains(silentAudio)) {
+                            document.body.removeChild(silentAudio);
+                        }
+                    }, 3000);
+                    
+                    // 创建并尝试播放另一个极短的非静音音频
+                    setTimeout(() => {
+                        tryPlayNonMutedAudio();
+                    }, 1000);
+                }).catch(error => {
+                    console.warn('自动解锁失败:', error);
+                    // 保留备用解锁方法，失败时等待用户交互
+                    if (document.body.contains(silentAudio)) {
+                        document.body.removeChild(silentAudio);
+                    }
+                    
+                    // 异步创建一个按钮以解锁音频
+                    setTimeout(createAudioUnlockButton, 1000);
+                });
+            } else {
+                console.warn('浏览器不支持自动播放Promise API');
+                // 移除音频元素
+                if (document.body.contains(silentAudio)) {
+                    document.body.removeChild(silentAudio);
+                }
+                // 创建解锁按钮
+                createAudioUnlockButton();
+            }
+        }
+        
+        // 创建假媒体元素以解锁更多媒体权限
+        function createFakeMediaElements() {
+            // 创建一个视频元素尝试解锁
+            const video = document.createElement('video');
+            video.setAttribute('playsinline', '');
+            video.setAttribute('webkit-playsinline', '');
+            video.muted = true;
+            video.autoplay = true;
+            video.style.width = '1px';
+            video.style.height = '1px';
+            video.style.position = 'absolute';
+            video.style.opacity = '0.01';
+            document.body.appendChild(video);
+            
+            // 常见视频格式的空视频
+            video.src = 'data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAu1tZGF0AAACrQYF//+p3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE1NSByMjkwMSA3ZDBmZjIyIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxOCAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTMgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0zIGJfcHlyYW1pZD0yIGJfYWRhcHQ9MSBiX2JpYXM9MCBkaXJlY3Q9MSB3ZWlnaHRiPTEgb3Blbl9nb3A9MCB3ZWlnaHRwPTIga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTI4LjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAwZYiEAD//8m+P5OXfBeLGOfKE3xQxy6dZVJvhAHF3CJyPSQQQlEAAAAMAAAMAAAMAAAMAAAMYzgAAAA==';
+        
+        video.play().then(() => {
+            console.log('视频元素解锁成功');
+            window.videoUnlocked = true;
+            setTimeout(() => {
+                if (document.body.contains(video)) {
+                    document.body.removeChild(video);
+                }
+            }, 2000);
+        }).catch(e => {
+            console.warn('视频元素解锁失败:', e);
+            if (document.body.contains(video)) {
+                document.body.removeChild(video);
+            }
+        });
+        
+        // 还可以尝试创建一个GIF动画，某些浏览器会接受这个
+        const img = document.createElement('img');
+        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        img.style.width = '1px';
+        img.style.height = '1px';
+        img.style.position = 'absolute';
+        img.style.opacity = '0.01';
+        document.body.appendChild(img);
+        
+        // 2秒后移除图片
+        setTimeout(() => {
+            if (document.body.contains(img)) {
+                document.body.removeChild(img);
+            }
+        }, 2000);
+    }
+    
+    // 创建临时的音频解锁按钮
+    function createAudioUnlockButton() {
+        if (window.audioUnlockButtonCreated) return;
+        window.audioUnlockButtonCreated = true;
+        
+        console.log('创建临时音频解锁按钮');
+        const button = document.createElement('button');
+        button.textContent = '点击启用音频播放';
+        button.style.position = 'fixed';
+        button.style.top = '10px';
+        button.style.left = '10px';
+        button.style.zIndex = '9999';
+        button.style.padding = '10px';
+        button.style.backgroundColor = '#f44336';
+        button.style.color = 'white';
+        button.style.border = 'none';
+        button.style.borderRadius = '4px';
+        button.style.cursor = 'pointer';
+        button.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
+        
+        button.onclick = function() {
+            console.log('解锁按钮被点击');
+            
+            // 创建多种解锁尝试方法
+            tryUnlockMultipleWays(() => {
+                // 解锁成功回调
+                console.log('通过按钮解锁音频成功');
+                window.audioUnlocked = true;
+                window.fullAudioUnlocked = true;
+                
+                // 移除按钮
+                if (document.body.contains(button)) {
+                    document.body.removeChild(button);
+                }
+                
+                // 显示成功通知
+                showNotification('音频已成功启用');
+            });
+        };
+        
+        document.body.appendChild(button);
+        
+        // 10秒后自动隐藏按钮
+        setTimeout(() => {
+            if (document.body.contains(button)) {
+                button.style.opacity = '0.5';
+                button.style.transform = 'scale(0.8)';
+                button.style.transition = 'opacity 0.5s, transform 0.5s';
+            }
+        }, 10000);
+    }
+    
+    // 尝试多种解锁方式
+    function tryUnlockMultipleWays(successCallback) {
+        console.log('尝试多种方式解锁音频...');
+        
+        // 1. 先尝试使用 AudioContext 解锁
+        try {
+            if (!window.audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    window.audioCtx = new AudioContext();
+                }
+            }
+            
+            if (window.audioCtx) {
+                if (window.audioCtx.state === 'suspended') {
+                    window.audioCtx.resume().then(() => {
+                        console.log('AudioContext恢复成功');
+                        // 继续尝试其他方法确保完全解锁
+                        tryPlayActualAudioFile(successCallback);
+                    }).catch(e => {
+                        console.warn('AudioContext恢复失败:', e);
+                        // 继续尝试其他方法
+                        tryPlayActualAudioFile(successCallback);
+                    });
+                } else {
+                    // 如果已经是running状态，继续尝试其他方法
+                    tryPlayActualAudioFile(successCallback);
+                }
+                
+                // 额外尝试用AudioContext播放短音频
+                const oscillator = window.audioCtx.createOscillator();
+                const gainNode = window.audioCtx.createGain();
+                gainNode.gain.value = 0.01; // 极低音量
+                oscillator.connect(gainNode);
+                gainNode.connect(window.audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(window.audioCtx.currentTime + 0.1); // 播放0.1秒
+            } else {
+                // 如果不支持AudioContext，直接尝试播放实际音频
+                tryPlayActualAudioFile(successCallback);
+            }
+        } catch (e) {
+            console.warn('AudioContext方法解锁失败:', e);
+            // 继续尝试其他方法
+            tryPlayActualAudioFile(successCallback);
+        }
+    }
+    
+    // 尝试播放实际存在的音频文件
+    function tryPlayActualAudioFile(successCallback) {
+        // 尝试播放实际存在的音频文件而不是base64数据
+        const alertSoundUrl = '/audio/Broadcastalert.mp3';
+        
+        // 先检查文件是否存在
+        fetch(alertSoundUrl, { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    console.log('广播提示音文件存在，使用它解锁音频');
+                    playAudioForUnlock(alertSoundUrl, successCallback);
+                } else {
+                    console.log('广播提示音不可用，尝试其他方式解锁');
+                    createAndPlayAudioElement(successCallback);
+                }
+            })
+            .catch(error => {
+                console.error('检查音频文件存在时出错:', error);
+                createAndPlayAudioElement(successCallback);
+            });
+    }
+    
+    // 使用现有音频文件解锁
+    function playAudioForUnlock(audioUrl, successCallback) {
+        const audio = new Audio();
+        audio.src = audioUrl;
+        audio.volume = 0.01; // 极低音量
+        audio.setAttribute('playsinline', '');
+        audio.setAttribute('webkit-playsinline', '');
+        
+        // 添加加载事件
+        audio.onloadeddata = function() {
+            console.log('解锁音频数据已加载');
+            
+            // 添加事件监听器以检测播放成功
+            audio.onplay = function() {
+                console.log('解锁音频开始播放');
+                audio.pause(); // 立即暂停
+                audio.currentTime = 0;
+                
+                // 调用成功回调
+                if (successCallback) {
+                    successCallback();
+                }
+                
+                // 稍后移除元素
+                setTimeout(() => {
+                    if (document.body.contains(audio)) {
+                        document.body.removeChild(audio);
+                    }
+                }, 100);
+            };
+            
+            // 尝试播放
+            audio.play().then(() => {
+                console.log('解锁音频播放成功');
+                // onplay事件会处理后续操作
+            }).catch(error => {
+                console.error('解锁音频播放失败:', error);
+                // 尝试最后的解锁方法
+                useHtmlAudioElementWithUserGesture(successCallback);
+            });
+        };
+        
+        // 错误处理
+        audio.onerror = function(e) {
+            console.error('解锁音频加载错误:', e);
+            // 尝试最后的解锁方法
+            useHtmlAudioElementWithUserGesture(successCallback);
+        };
+        
+        // 添加到DOM以确保事件正常触发
+        audio.style.display = 'none';
+        document.body.appendChild(audio);
+    }
+    
+    // 创建并播放内置的HTML5音频元素
+    function createAndPlayAudioElement(successCallback) {
+        console.log('尝试使用HTML5 Audio API解锁');
+        
+        // 创建一个使用单击事件解锁的空白音频元素
+        const audio = document.createElement('audio');
+        audio.controls = true; // 显示控件可能有助于解锁
+        audio.style.position = 'absolute';
+        audio.style.left = '-9999px'; // 放在屏幕外
+        audio.style.top = '-9999px';
+        audio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"; // 超短无声音频
+        audio.volume = 0.01; // 极低音量
+        
+        // 添加到DOM
+        document.body.appendChild(audio);
+        
+        // 尝试播放
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                console.log('HTML5音频解锁成功');
+                setTimeout(() => {
+                    if (document.body.contains(audio)) {
+                        document.body.removeChild(audio);
+                    }
+                    if (successCallback) successCallback();
+                }, 100);
+            }).catch(error => {
+                console.error('HTML5音频解锁失败:', error);
+                if (document.body.contains(audio)) {
+                    document.body.removeChild(audio);
+                }
+                // 最后的解锁方法
+                useHtmlAudioElementWithUserGesture(successCallback);
+            });
+        }
+    }
+    
+    // 最后的解锁方法：使用用户手势播放SpeechSynthesis
+    function useHtmlAudioElementWithUserGesture(successCallback) {
+        console.log('尝试使用SpeechSynthesis API解锁');
+        
+        // 尝试使用语音合成API（这通常不受自动播放策略限制）
+        if ('speechSynthesis' in window) {
+            try {
+                // 创建一个极短的语音合成
+                const utterance = new SpeechSynthesisUtterance('');
+                utterance.volume = 0.01;
+                utterance.rate = 10; // 超快速度
+                
+                utterance.onend = function() {
+                    console.log('语音合成播放完成，尝试解锁成功');
+                    if (successCallback) successCallback();
+                };
+                
+                utterance.onerror = function(e) {
+                    console.error('语音合成错误:', e);
+                    // 不再有解锁方法，但仍调用成功回调以继续流程
+                    if (successCallback) successCallback();
+                };
+                
+                // 播放语音合成
+                window.speechSynthesis.speak(utterance);
+            } catch (e) {
+                console.error('语音合成解锁失败:', e);
+                // 不再有解锁方法，但仍调用成功回调以继续流程
+                if (successCallback) successCallback();
+            }
+        } else {
+            console.warn('浏览器不支持SpeechSynthesis API');
+            // 不再有解锁方法，但仍调用成功回调以继续流程
+            if (successCallback) successCallback();
+        }
+    }
+    
+    // 尝试播放非静音的极短音频
+    function tryPlayNonMutedAudio() {
+        console.log('尝试播放非静音音频...');
+        
+        // 创建一个极短的音频
+        const shortAudio = document.createElement('audio');
+        
+        // 使用更短和更可靠的MP3静音音频base64编码
+        shortAudio.src = 'data:audio/mp3;base64,SUQzAwAAAAABEVRYWFgAAAABAAAASW5mb0FQSUMAAAABAAAAVElUMgAAAAEAAABUWUVSAAAACAAAAOkA/wD/ABtJbmZvAAAAAA8AAABUZW1wbywgUmFpbiBBUEkAAA==';
+        shortAudio.volume = 0.01; // 极低音量
+        shortAudio.setAttribute('playsinline', '');
+        shortAudio.setAttribute('webkit-playsinline', '');
+        
+        // 添加到DOM
+        document.body.appendChild(shortAudio);
+        
+        // 添加加载事件
+        shortAudio.onloadeddata = function() {
+            console.log('短音频数据已加载');
+        };
+        
+        // 添加错误事件
+        shortAudio.onerror = function(e) {
+            console.error('短音频加载失败:', e);
+            if (document.body.contains(shortAudio)) {
+                document.body.removeChild(shortAudio);
+            }
+        };
+        
+        // 尝试播放
+        shortAudio.play().then(() => {
+            console.log('非静音音频自动播放成功');
+            window.fullAudioUnlocked = true;
+            
+            // 尝试使用AudioContext播放一个空声音，进一步解锁音频
+            try {
+                if (window.audioCtx) {
+                    const oscillator = window.audioCtx.createOscillator();
+                    const gainNode = window.audioCtx.createGain();
+                    gainNode.gain.value = 0.01; // 极低音量
+                    oscillator.connect(gainNode);
+                    gainNode.connect(window.audioCtx.destination);
+                    oscillator.start();
+                    oscillator.stop(window.audioCtx.currentTime + 0.1); // 播放0.1秒
+                    console.log('使用AudioContext播放空声音成功');
+                }
+            } catch (e) {
+                console.warn('使用AudioContext播放空声音失败:', e);
+            }
+            
+            // 立即暂停
+            shortAudio.pause();
+            shortAudio.currentTime = 0;
+            
+            // 移除元素
+            setTimeout(() => {
+                if (document.body.contains(shortAudio)) {
+                    document.body.removeChild(shortAudio);
+                }
+            }, 500);
+            
+        }).catch(error => {
+            console.warn('非静音自动播放失败:', error);
+            // 移除元素
+            if (document.body.contains(shortAudio)) {
+                document.body.removeChild(shortAudio);
+            }
+        });
+    }
+    
+    // 修改设置解锁音频播放功能（作为备用方案）
+    function setupAudioUnlock() {
+        // 如果已经自动解锁成功，则跳过
+        if (window.fullAudioUnlocked) {
+            console.log('音频已完全解锁，无需设置用户交互解锁');
+            return;
+        }
+        
+        console.log('设置用户交互解锁音频（备用方案）');
+        
+        // 静音音频播放器用于解锁
+        const unlockAudio = document.createElement('audio');
+        // 使用更短和更可靠的MP3静音音频base64编码
+        unlockAudio.src = 'data:audio/mp3;base64,SUQzAwAAAAABEVRYWFgAAAABAAAASW5mb0FQSUMAAAABAAAAVElUMgAAAAEAAABUWUVSAAAACAAAAOkA/wD/ABtJbmZvAAAAAA8AAABUZW1wbywgUmFpbiBBUEkAAA==';
+        unlockAudio.setAttribute('playsinline', '');
+        unlockAudio.setAttribute('webkit-playsinline', '');
+        unlockAudio.volume = 0.01; // 几乎静音
+        
+        // 解锁音频播放的函数
+        const unlockAudioPlayback = () => {
+            // 如果已经完全解锁，跳过
+            if (window.fullAudioUnlocked) {
+                return;
+            }
+            
+            console.log('用户交互：尝试解锁音频播放');
+            
+            // 尝试播放一个短的、几乎静音的音频
+            unlockAudio.play()
+                .then(() => {
+                    console.log('音频播放已通过用户交互解锁');
+                    window.audioUnlocked = true;
+                    window.fullAudioUnlocked = true;
+                    
+                    // 立即暂停播放（我们只需要解锁，不需要实际播放）
+                    unlockAudio.pause();
+                    unlockAudio.currentTime = 0;
+                    
+                    // 移除事件监听器
+                    document.removeEventListener('click', unlockAudioPlayback);
+                    document.removeEventListener('touchstart', unlockAudioPlayback);
+                    document.removeEventListener('keydown', unlockAudioPlayback);
+                    
+                    // 再次尝试使用AudioContext解锁
+                    try {
+                        if (window.audioCtx && window.audioCtx.state === 'suspended') {
+                            window.audioCtx.resume().then(() => {
+                                console.log('AudioContext已通过用户交互成功恢复');
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('恢复AudioContext失败:', e);
+                    }
+                })
+                .catch(err => {
+                    console.warn('无法通过用户交互解锁音频播放:', err);
+                    
+                    // 如果第一次尝试失败，创建一个临时按钮让用户明确点击
+                    createAudioUnlockButton();
+                });
+        };
+        
+        // 添加事件监听器以在用户交互时解锁音频
+        document.addEventListener('click', unlockAudioPlayback);
+        document.addEventListener('touchstart', unlockAudioPlayback);
+        document.addEventListener('keydown', unlockAudioPlayback);
+        
+        // 如果用户已经提交表单或点击了某些按钮，也尝试解锁
+        timerForm.addEventListener('submit', unlockAudioPlayback);
+    }
+    
+    // 修改先播放提示音，然后再播放计时器消息的函数
+    function playWithAlertSound(message) {
+        const alertSoundUrl = '/audio/Broadcastalert.mp3';
+        
+        console.log('检查广播提示音文件:', alertSoundUrl);
+        
+        // 检查广播提示音文件是否存在
+        fetch(alertSoundUrl, { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    console.log('广播提示音可用，先播放提示音');
+                    
+                    // 更新检查逻辑，优先使用fullAudioUnlocked标志
+                    if (!window.fullAudioUnlocked && !window.audioUnlocked) {
+                        console.warn('音频播放尚未解锁，重新尝试自动解锁');
+                        
+                        // 再次尝试自动解锁
+                        autoUnlockAudio();
+                        
+                        // 延迟一小段时间后尝试播放
+                        setTimeout(() => {
+                            if (window.audioUnlocked) {
+                                playAlertThenMessage(alertSoundUrl, message);
+                            } else {
+                                // 显示通知同时创建解锁按钮
+                                createAudioUnlockButton();
+                                
+                                // 仍然无法解锁，显示交互通知
+                                showInteractiveNotification(`计时器已完成: ${message}`, () => {
+                                    playAlertThenMessage(alertSoundUrl, message);
+                                });
+                            }
+                        }, 1000);
+                        return;
+                    }
+                    
+                    // 正常播放
+                    playAlertThenMessage(alertSoundUrl, message);
+                } else {
+                    console.log('广播提示音不可用，直接播放计时器消息');
+                    // 直接播放计时器消息
+                    speakMessage(message);
+                }
+            })
+            .catch(error => {
+                console.error('检查广播提示音时出错:', error);
+                // 出错时直接播放计时器消息
+                speakMessage(message);
+            });
+    }
+    
+    // 修改播放提示音然后播放消息的函数
+    function playAlertThenMessage(alertSoundUrl, message) {
+        // 使用更可靠的方式预加载音频
+        console.log('预加载提示音...');
+        
+        // 尝试预加载
+        const preloadRequest = new XMLHttpRequest();
+        preloadRequest.open('GET', alertSoundUrl, true);
+        preloadRequest.responseType = 'arraybuffer';
+        
+        preloadRequest.onload = function() {
+            if (preloadRequest.status >= 200 && preloadRequest.status < 300) {
+                console.log('提示音预加载成功，开始播放');
+                // 直接使用AudioContext播放（如果可用）
+                if (window.audioCtx) {
+                    try {
+                        const arrayBuffer = preloadRequest.response;
+                        window.audioCtx.decodeAudioData(arrayBuffer, (buffer) => {
+                            console.log('音频解码成功，使用AudioContext播放');
+                            playDecodedAudio(buffer, () => {
+                                // 播放完成后，播放消息
+                                console.log('提示音播放完成，开始播放消息');
+                                speakMessage(message);
+                            });
+                        }, (error) => {
+                            console.error('音频解码失败:', error);
+                            // 回退到普通Audio方式
+                            playWithRegularAudio(alertSoundUrl, message);
+                        });
+                    } catch (e) {
+                        console.error('使用AudioContext播放失败:', e);
+                        // 回退到普通Audio方式
+                        playWithRegularAudio(alertSoundUrl, message);
+                    }
+                } else {
+                    // 不支持AudioContext，使用普通Audio方式
+                    playWithRegularAudio(alertSoundUrl, message);
+                }
+            } else {
+                console.error('提示音预加载失败，状态码:', preloadRequest.status);
+                // 直接播放消息
+                speakMessage(message);
+            }
+        };
+        
+        preloadRequest.onerror = function(error) {
+            console.error('提示音预加载失败:', error);
+            // 直接播放消息
+            speakMessage(message);
+        };
+        
+        preloadRequest.send();
+    }
+    
+    // 使用AudioContext播放解码后的音频
+    function playDecodedAudio(buffer, onEnded) {
+        const source = window.audioCtx.createBufferSource();
+        source.buffer = buffer;
+        
+        // 创建增益节点控制音量
+        const gainNode = window.audioCtx.createGain();
+        gainNode.gain.value = 0.1; // 初始音量
+        
+        // 连接节点
+        source.connect(gainNode);
+        gainNode.connect(window.audioCtx.destination);
+        
+        // 注册播放结束事件
+        source.onended = function() {
+            console.log('AudioContext音频播放完成');
+            if (onEnded) onEnded();
+        };
+        
+        // 开始播放
+        source.start();
+        console.log('AudioContext音频开始播放');
+        
+        // 平滑调整音量
+        const now = window.audioCtx.currentTime;
+        gainNode.gain.linearRampToValueAtTime(1.0, now + 1.0); // 1秒内平滑增加到最大音量
+        
+        // 保存引用以便可以停止
+        window.currentAudioSource = source;
+    }
+    
+    // 使用普通Audio元素播放
+    function playWithRegularAudio(alertSoundUrl, message) {
+        console.log('使用普通Audio元素播放提示音');
+        
+        // 创建音频元素并播放提示音
+        const alertAudio = new Audio();
+        // 添加playsinline属性以提高在移动设备上自动播放的成功率
+        alertAudio.setAttribute('playsinline', '');
+        alertAudio.setAttribute('webkit-playsinline', '');
+        alertAudio.preload = 'auto';
+        
+        // 设置音频源
+        alertAudio.src = alertSoundUrl;
+        
+        // 提示音播放完成后，播放计时器消息
+        alertAudio.onended = function() {
+            console.log('广播提示音播放完成，开始播放计时器消息');
+            // 移除提示音元素
+            if (alertAudio.parentNode) {
+                alertAudio.parentNode.removeChild(alertAudio);
+            }
+            // 播放计时器消息
+            speakMessage(message);
+        };
+        
+        // 提示音加载错误时，直接播放计时器消息
+        alertAudio.onerror = function(e) {
+            console.error('广播提示音加载失败:', e);
+            // 移除提示音元素
+            if (alertAudio.parentNode) {
+                alertAudio.parentNode.removeChild(alertAudio);
+            }
+            // 直接播放计时器消息
+            speakMessage(message);
+        };
+        
+        // 添加可以播放检查
+        alertAudio.oncanplay = function() {
+            console.log('提示音可以播放，准备开始播放');
+        };
+        
+        // 添加播放开始事件
+        alertAudio.onplay = function() {
+            console.log('提示音开始播放');
+        };
+        
+        // 将音频元素添加到DOM，以便控制播放和处理事件
+        alertAudio.style.display = 'none'; // 隐藏元素
+        document.body.appendChild(alertAudio);
+        
+        // 触发播放前先设置较低音量，然后再恢复
+        alertAudio.volume = 0.1;
+        
+        // 开始播放提示音
+        alertAudio.play().then(() => {
+            console.log('广播提示音开始播放');
+            // 播放成功后平滑恢复音量
+            setTimeout(() => {
+                // 使用定时器平滑调整音量
+                let vol = 0.1;
+                const interval = setInterval(() => {
+                    if (vol < 1.0) {
+                        vol += 0.1;
+                        alertAudio.volume = vol > 1.0 ? 1.0 : vol;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 100);
+            }, 100);
+        }).catch(err => {
+            console.error('广播提示音播放失败:', err);
+            
+            // 如果音频未完全解锁，尝试再次解锁
+            if (!window.fullAudioUnlocked) {
+                console.log('尝试再次解锁音频播放');
+                autoUnlockAudio();
+                
+                // 创建一个解锁按钮
+                createAudioUnlockButton();
+                
+                // 显示需要用户交互的通知
+                showInteractiveNotification(`计时器已完成: ${message}`, () => {
+                    // 用户交互后直接播放消息
+                    speakMessage(message);
+                });
+            } else {
+                // 音频应该已解锁但仍然失败，尝试直接播放消息
+                speakMessage(message);
+            }
+        });
+    }
+    
+    // 显示需要用户交互的通知
+    function showInteractiveNotification(message, callback) {
+        // 创建一个需要用户点击的通知元素
+        const notification = document.createElement('div');
+        notification.style.position = 'fixed';
+        notification.style.top = '20px';
+        notification.style.right = '20px';
+        notification.style.backgroundColor = '#f44336';
+        notification.style.color = 'white';
+        notification.style.padding = '15px';
+        notification.style.borderRadius = '4px';
+        notification.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+        notification.style.zIndex = '2000';
+        notification.style.cursor = 'pointer';
+        notification.innerHTML = `
+            <div>${message}</div>
+            <div style="margin-top: 10px; font-size: 12px;">点击此处播放提示音</div>
+        `;
+        
+        // 点击通知时执行回调
+        notification.addEventListener('click', () => {
+            if (callback) callback();
+            document.body.removeChild(notification);
+        });
+        
+        // 添加到页面
+        document.body.appendChild(notification);
+        
+        // 10秒后自动移除（如果用户未点击）
+        setTimeout(() => {
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
+        }, 10000);
+    }
+    
+    // 显示通知
+    function showNotification(message) {
+        notificationEl.textContent = message;
+        notificationEl.style.display = 'block';
+        
+        setTimeout(() => {
+            notificationEl.style.display = 'none';
+        }, 5000);
+    }
+    
+    // 语音播报
+    function speakMessage(message) {
+        // 使用阿里云CosyVoice模型进行语音合成
+        fetch('/api/tts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text: message })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.audioUrl) {
+                if (data.streaming) {
+                    // 使用MediaSource API播放流式音频
+                    playStreamingAudio(data.audioUrl, message);
+                } else {
+                    // 创建音频元素并播放
+                    const audio = new Audio(data.audioUrl);
+                    
+                    // 添加加载错误处理
+                    audio.onerror = function(e) {
+                        console.error('音频加载失败:', e);
+                        useBrowserTTS(message);
+                    };
+                    
+                    // 添加可以播放检查
+                    audio.oncanplay = function() {
+                        console.log('音频可以播放');
+                    };
+                    
+                    // 添加音频播放完成事件
+                    audio.onended = function() {
+                        console.log('音频播放完成');
+                        
+                        // 删除音频文件
+                        if (data.audioUrl && data.audioUrl.startsWith('/audio/')) {
+                            const filename = data.audioUrl.split('/').pop();
+                            if (filename && filename.startsWith('tts_') && filename.endsWith('.mp3')) {
+                                deleteAudioFile(filename);
+                            }
+                        }
+                        
+                        // 如果音频元素已添加到DOM，则移除
+                        if (audio.parentNode) {
+                            audio.parentNode.removeChild(audio);
+                        }
+                    };
+                    
+                    // 添加音频播放开始事件
+                    audio.onplay = function() {
+                        console.log('音频播放开始');
+                    };
+                    
+                    // 添加音频播放暂停事件
+                    audio.onpause = function() {
+                        console.log('音频播放暂停');
+                    };
+                    
+                    audio.play().catch(err => {
+                        console.error('音频播放失败:', err);
+                        // 降级到浏览器原生语音合成
+                        useBrowserTTS(message);
+                    });
+                }
+            } else if (data.fallback) {
+                console.error('服务器语音合成失败，降级到浏览器原生语音合成');
+                useBrowserTTS(message);
+            } else {
+                console.error('语音合成失败:', data.error);
+                // 降级到浏览器原生语音合成
+                useBrowserTTS(message);
+            }
+        })
+        .catch(error => {
+            console.error('语音合成请求失败:', error);
+            // 降级到浏览器原生语音合成
+            useBrowserTTS(message);
+        });
+    }
+    
+    // 使用MediaSource API播放流式音频
+    function playStreamingAudio(audioUrl, fallbackText) {
+        console.log('使用MediaSource播放流式音频:', audioUrl);
+        
+        // 检查浏览器是否支持MediaSource
+        if (!window.MediaSource) {
+            console.error('浏览器不支持MediaSource API，降级到浏览器原生语音合成');
+            useBrowserTTS(fallbackText);
+            return;
+        }
+        
+        // 创建MediaSource实例
+        const mediaSource = new MediaSource();
+        const audio = new Audio();
+        
+        // 设置音频源
+        audio.src = URL.createObjectURL(mediaSource);
+        
+        // 添加事件监听器
+        mediaSource.addEventListener('sourceopen', async function() {
+            console.log('MediaSource已打开');
+            
+            // 尝试不同的MIME类型
+            const mimeTypes = [
+                'audio/mpeg',
+                'audio/mp3',
+                'audio/mp4; codecs="mp4a.40.2"',
+                'audio/aac',
+                'audio/webm; codecs="opus"'
+            ];
+            
+            let sourceBuffer = null;
+            let mimeTypeSupported = false;
+            
+            for (const mimeType of mimeTypes) {
+                if (MediaSource.isTypeSupported(mimeType)) {
+                    try {
+                        sourceBuffer = mediaSource.addSourceBuffer(mimeType);
+                        console.log(`使用MIME类型: ${mimeType}`);
+                        mimeTypeSupported = true;
+                        break;
+                    } catch (e) {
+                        console.log(`尝试添加SourceBuffer失败 (${mimeType}):`, e.message);
+                    }
+                }
+            }
+            
+            if (!mimeTypeSupported || !sourceBuffer) {
+                console.error('浏览器不支持任何可用的音频MIME类型，降级到浏览器原生语音合成');
+                mediaSource.endOfStream('decode');
+                URL.revokeObjectURL(audio.src);
+                useBrowserTTS(fallbackText);
+                return;
+            }
+            
+            // 获取音频数据
+            try {
+                const response = await fetch(audioUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+                
+                const arrayBuffer = await response.arrayBuffer();
+                
+                // 检查数据是否为空
+                if (arrayBuffer.byteLength === 0) {
+                    throw new Error('音频数据为空');
+                }
+                
+                console.log(`获取到音频数据: ${arrayBuffer.byteLength} 字节`);
+                
+                // 添加音频数据到SourceBuffer
+                sourceBuffer.addEventListener('updateend', function() {
+                    if (!sourceBuffer.updating && mediaSource.readyState === 'open') {
+                        mediaSource.endOfStream();
+                        console.log('音频数据加载完成');
+                    }
+                });
+                
+                // 添加错误处理
+                sourceBuffer.addEventListener('error', function(e) {
+                    console.error('SourceBuffer错误:', e);
+                    useBrowserTTS(fallbackText);
+                });
+                
+                sourceBuffer.appendBuffer(arrayBuffer);
+                
+                // 播放音频
+                audio.play().catch(err => {
+                    console.error('MediaSource音频播放失败:', err);
+                    useBrowserTTS(fallbackText);
+                });
+            } catch (error) {
+                console.error('获取或处理音频数据失败:', error);
+                mediaSource.endOfStream('network');
+                URL.revokeObjectURL(audio.src);
+                useBrowserTTS(fallbackText);
+            }
+        });
+        
+        // 错误处理
+        audio.onerror = function(e) {
+            console.error('MediaSource音频加载失败:', e);
+            if (mediaSource.readyState === 'open') {
+                mediaSource.endOfStream('decode');
+            }
+            URL.revokeObjectURL(audio.src);
+            useBrowserTTS(fallbackText);
+        };
+        
+        // 添加可以播放检查
+        audio.oncanplay = function() {
+            console.log('MediaSource音频可以播放');
+        };
+        
+        // 添加音频播放完成事件
+        audio.onended = function() {
+            console.log('MediaSource音频播放完成');
+            URL.revokeObjectURL(audio.src); // 释放资源
+            
+            // 删除音频文件
+            if (audioUrl && audioUrl.startsWith('/audio/')) {
+                const filename = audioUrl.split('/').pop();
+                if (filename && filename.startsWith('tts_') && filename.endsWith('.mp3')) {
+                    deleteAudioFile(filename);
+                }
+            }
+            
+            // 如果音频元素已添加到DOM，则移除
+            if (audio.parentNode) {
+                audio.parentNode.removeChild(audio);
+            }
+        };
+        
+        // 添加音频播放开始事件
+        audio.onplay = function() {
+            console.log('MediaSource音频播放开始');
+        };
+        
+        // 添加超时处理
+        setTimeout(() => {
+            if (audio.readyState < 3) { // HAVE_FUTURE_DATA
+                console.error('MediaSource加载超时');
+                if (mediaSource.readyState === 'open') {
+                    mediaSource.endOfStream('network');
+                }
+                URL.revokeObjectURL(audio.src);
+                useBrowserTTS(fallbackText);
+            }
+        }, 5000);
+    }
+    
+    // 使用浏览器原生语音合成
+    function useBrowserTTS(message) {
+        if ('speechSynthesis' in window) {
+            const speech = new SpeechSynthesisUtterance(message);
+            speech.lang = 'zh-CN';
+            window.speechSynthesis.speak(speech);
+        } else {
+            console.warn('浏览器不支持语音合成');
+        }
+    }
+    
+    // 删除音频文件
+    async function deleteAudioFile(filename) {
+        try {
+            // 检查文件是否已经被删除
+            if (deletedFiles.has(filename)) {
+                console.log(`文件已被删除，跳过: ${filename}`);
+                return;
+            }
+            
+            console.log(`正在删除音频文件: ${filename}`);
+            const response = await fetch(`/api/audio/delete/${filename}`, {
+                method: 'DELETE'
+            });
+            const result = await response.json();
+            if (result.success) {
+                console.log(`音频文件删除成功: ${filename}`);
+                deletedFiles.add(filename);
+            } else {
+                console.log(`音频文件删除失败: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('删除音频文件失败:', error);
+        }
+    }
+    
+    // 批量清理旧音频文件
+    async function cleanupOldAudioFiles(sessionStartTime) {
+        try {
+            console.log(`正在清理旧音频文件...`);
+            const response = await fetch('/api/audio/cleanup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ sessionStartTime })
+            });
+            const result = await response.json();
+            if (result.success) {
+                console.log(`清理完成: 已删除${result.deletedCount}个旧文件`);
+                
+                // 将删除的文件记录到deletedFiles集合中
+                if (result.deletedFiles && Array.isArray(result.deletedFiles)) {
+                    result.deletedFiles.forEach(file => deletedFiles.add(file));
+                }
+            } else {
+                console.log(`清理失败: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('清理旧音频文件失败:', error);
+        }
+    }
+    
+    // 检测浏览器对MediaSource API和各种媒体格式的支持情况
+    function checkMediaSourceSupport() {
+        if (!window.MediaSource) {
+            console.log('浏览器不支持MediaSource API');
+            return false;
+        }
+        
+        console.log('浏览器支持MediaSource API');
+        
+        const mimeTypes = [
+            'audio/mpeg',
+            'audio/mp3',
+            'audio/mp4; codecs="mp4a.40.2"',
+            'audio/aac',
+            'audio/webm; codecs="opus"'
+        ];
+        
+        for (const mimeType of mimeTypes) {
+            const isSupported = MediaSource.isTypeSupported(mimeType);
+            console.log(`MIME类型 ${mimeType} 支持: ${isSupported}`);
+        }
+        
+        return true;
+    }
+    </script>
+    
+    <!-- 计时器设置模态框 -->
+    <div id="timerSettingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>计时器音频设置</h2>
+            <form id="timerSettingsForm">
+                <div class="settings-section">
+                    <h3>提醒重复设置</h3>
+                    <div class="form-group">
+                        <label for="notificationSound">提醒音效:</label>
+                        <select id="notificationSound" name="notificationSound">
+                            <option value="default">默认提示音</option>
+                            <option value="alert.mp3">警报声</option>
+                            <option value="Broadcastalert.mp3">广播提示音</option>
+                            <option value="notification.mp3">通知声</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="notificationVolume">音量:</label>
+                        <input type="range" id="notificationVolume" name="notificationVolume" min="0" max="1" step="0.1" value="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="loopNotification" name="loopNotification"> 循环播放提醒音效
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>语音提醒设置</h3>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="useVoiceNotification" name="useVoiceNotification"> 使用语音提醒
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="voiceLanguage">语音语言:</label>
+                        <select id="voiceLanguage" name="voiceLanguage">
+                            <option value="zh-CN">中文（普通话）</option>
+                            <option value="en-US">英语（美国）</option>
+                            <option value="ja-JP">日语</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" id="saveTimerSettings" class="save-btn">保存设置</button>
+                    <button type="button" id="testAudioBtn" class="test-btn">测试音频</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 计时器设置按钮 -->
+    <button id="timerSettingsBtn" class="settings-btn">计时器设置</button>
+    
+    <!-- 引入计时器设置修复脚本 -->
+    <script src="/js/timer-settings-fix.js"></script>
+</body>
+</html> 

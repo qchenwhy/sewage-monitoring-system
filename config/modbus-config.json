@@ -1,0 +1,51 @@
+{
+  "connection": {
+    "host": "127.0.0.1",
+    "port": 502,
+    "unitId": 1,
+    "timeout": 5000,
+    "autoConnect": true,
+    "autoReconnect": true,
+    "maxReconnectAttempts": 5,
+    "keepAliveEnabled": true,
+    "keepAliveInterval": 20000,
+    "keepAliveAddress": 12,
+    "keepAliveFunctionCode": 3,
+    "dataSourceType": "mqtt",
+    "mqtt": {
+      "url": "mqtt://localhost:1883",
+      "options": {
+        "clientId": "modbus_mqtt_d11563f3",
+        "clean": true
+      }
+    }
+  },
+  "polling": {
+    "interval": 5000,
+    "enabled": false
+  },
+  "mqtt": {
+    "url": "mqtt://localhost:1883",
+    "options": {
+      "clientId": "modbus_mqtt_d11563f3",
+      "clean": true
+    },
+    "autoReconnect": true,
+    "maxReconnectAttempts": 5
+  },
+  "dataSourceType": "mqtt",
+  "dify": {
+    "enabled": false,
+    "apiEndpoint": "https://api.dify.ai/v1",
+    "apiKey": "",
+    "conversationId": "",
+    "feedbackEnabled": false
+  },
+  "database": {
+    "host": "localhost",
+    "user": "root",
+    "password": "753456Chen*",
+    "database": "mqtt_data",
+    "connectionLimit": 10
+  }
+}

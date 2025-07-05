@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据模型管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 14px;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-link {
+            padding: 6px 12px;
+            text-decoration: none;
+            color: white;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .home-link {
+            background-color: #007AFF;
+        }
+        
+        .chat-link {
+            background-color: #4CAF50;
+        }
+        
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .add-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .add-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .btn-icon {
+            margin-right: 5px;
+        }
+        
+        .return-btn, .export-btn, .import-btn {
+            background-color: #f0f0f0;
+            color: #333;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .return-btn:hover, .export-btn:hover, .import-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .data-table th {
+            background-color: #f8f8f8;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        
+        .data-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .search-box {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+            margin-right: auto;
+            font-size: 13px;
+        }
+        
+        .action-cell {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .edit-btn, .delete-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        
+        .edit-btn {
+            background-color: #007AFF;
+            color: white;
+        }
+        
+        .delete-btn {
+            background-color: #FF3B30;
+            color: white;
+        }
+        
+        .edit-btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .delete-btn:hover {
+            background-color: #d9342b;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 900px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .modal-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+            width: 100%;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -8px;
+        }
+        
+        .form-col {
+            flex: 0 0 50%;
+            padding: 0 8px;
+            box-sizing: border-box;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+            color: #333;
+            font-size: 13px;
+        }
+        
+        .form-input, .form-select {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .cancel-btn {
+            background-color: #f0f0f0;
+            color: #333;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .save-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .cancel-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .save-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .required {
+            color: #FF3B30;
+        }
+        
+        hr {
+            margin: 15px 0;
+            border: none;
+            border-top: 1px solid #eee;
+        }
+        
+        .form-actions .save-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">数据模型管理</h1>
+            <div class="nav-links">
+                <a href="/" class="nav-link home-link">首页</a>
+                <a href="/chat.html" class="nav-link chat-link">AI对话</a>
+            </div>
+        </div>
+        
+        <div class="action-bar">
+            <input type="text" class="search-box" id="searchBox" placeholder="搜索数据名称...">
+            <button class="add-btn" id="addBtn">
+                <span class="btn-icon">+</span> 添加数据项
+            </button>
+            <button class="return-btn" id="returnBtn">返回</button>
+            <button class="export-btn" id="exportBtn">Excel导出</button>
+            <button class="import-btn" id="importBtn">Excel导入</button>
+        </div>
+        
+        <table class="data-table" id="dataTable">
+            <thead>
+                <tr>
+                    <th>数据名称</th>
+                    <th>数据标识符</th>
+                    <th>数据类型</th>
+                    <th>访问权限</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="dataTableBody">
+                <!-- 数据行将通过JavaScript动态添加 -->
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- 添加/编辑数据模型的模态框 -->
+    <div class="modal" id="dataModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">添加数据项</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <form id="dataForm">
+                <input type="hidden" id="dataId">
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label" for="dataName">数据名称 <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="dataName" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label" for="dataIdentifier">标识符 <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="dataIdentifier" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label" for="dataType">数据类型 <span class="required">*</span></label>
+                            <select class="form-select" id="dataType" required>
+                                <option value="Float">Float</option>
+                                <option value="Int">Int</option>
+                                <option value="String">String</option>
+                                <option value="Boolean">Boolean</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label" for="accessType">访问权限 <span class="required">*</span></label>
+                            <select class="form-select" id="accessType" required>
+                                <option value="ReadWrite">读写</option>
+                                <option value="ReadOnly">只读</option>
+                                <option value="WriteOnly">只写</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label" for="isStored">是否存储 <span class="required">*</span></label>
+                            <select class="form-select" id="isStored" required>
+                                <option value="true">是</option>
+                                <option value="false">否</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group storage-options">
+                            <label class="form-label" for="storageType">存储方式 <span class="required">*</span></label>
+                            <select class="form-select" id="storageType" required>
+                                <option value="timed">定时存储</option>
+                                <option value="change">变化存储</option>
+                                <option value="immediate">即时存储</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group storage-options" id="intervalGroup">
+                            <label class="form-label" for="storageInterval">存储间隔(秒) <span class="required">*</span></label>
+                            <input type="number" class="form-input" id="storageInterval" min="1" value="60" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label" for="hasAlarm">是否告警 <span class="required">*</span></label>
+                            <select class="form-select" id="hasAlarm" required>
+                                <option value="false">否</option>
+                                <option value="true">是</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group alarm-options" style="display: none;">
+                            <label class="form-label" for="alarmCondition">告警条件</label>
+                            <select class="form-select" id="alarmCondition">
+                                <option value="gt">大于</option>
+                                <option value="lt">小于</option>
+                                <option value="eq">等于</option>
+                                <option value="neq">不等于</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group alarm-options" style="display: none;">
+                            <label class="form-label" for="alarmValue">告警阈值</label>
+                            <input type="number" class="form-input" id="alarmValue" step="0.01">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" id="cancelBtn">取消</button>
+                    <button type="submit" class="save-btn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // DOM元素
+        const dataTable = document.getElementById('dataTableBody');
+        const addBtn = document.getElementById('addBtn');
+        const searchBox = document.getElementById('searchBox');
+        const dataModal = document.getElementById('dataModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const dataForm = document.getElementById('dataForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const dataIdInput = document.getElementById('dataId');
+        const dataNameInput = document.getElementById('dataName');
+        const dataIdentifierInput = document.getElementById('dataIdentifier');
+        const dataTypeInput = document.getElementById('dataType');
+        const accessTypeInput = document.getElementById('accessType');
+        const isStoredInput = document.getElementById('isStored');
+        const storageTypeInput = document.getElementById('storageType');
+        const storageIntervalInput = document.getElementById('storageInterval');
+        const hasAlarmInput = document.getElementById('hasAlarm');
+        const alarmConditionInput = document.getElementById('alarmCondition');
+        const alarmValueInput = document.getElementById('alarmValue');
+        const intervalGroup = document.getElementById('intervalGroup');
+        const alarmOptions = document.querySelectorAll('.alarm-options');
+        const storageOptions = document.querySelectorAll('.storage-options');
+        const returnBtn = document.getElementById('returnBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const importBtn = document.getElementById('importBtn');
+        
+        // 数据模型数组
+        let dataModels = [];
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', () => {
+            // 加载数据模型
+            loadDataModels();
+            
+            // 添加事件监听器
+            addBtn.addEventListener('click', openAddModal);
+            closeModalBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            dataForm.addEventListener('submit', saveDataModel);
+            searchBox.addEventListener('input', () => {
+                renderDataModels(); // 当搜索框内容变化时重新渲染表格
+            });
+            isStoredInput.addEventListener('change', toggleStorageOptions);
+            storageTypeInput.addEventListener('change', toggleIntervalGroup);
+            hasAlarmInput.addEventListener('change', toggleAlarmOptions);
+            returnBtn.addEventListener('click', () => window.location.href = '/');
+            exportBtn.addEventListener('click', exportToExcel);
+            importBtn.addEventListener('click', importFromExcel);
+        });
+        
+        // 加载数据模型
+        async function loadDataModels() {
+            try {
+                const response = await fetch('/api/datamodels');
+                if (response.ok) {
+                    dataModels = await response.json();
+                    renderDataModels();
+                } else {
+                    console.error('加载数据模型失败');
+                }
+            } catch (error) {
+                console.error('加载数据模型错误:', error);
+            }
+        }
+        
+        // 修改过滤数据模型函数
+        function filterDataModels() {
+            const searchTerm = searchBox.value.toLowerCase();
+            
+            // 如果没有搜索词，返回所有数据模型
+            if (!searchTerm) {
+                return dataModels;
+            }
+            
+            // 根据搜索词过滤数据模型
+            return dataModels.filter(model => 
+                model.name.toLowerCase().includes(searchTerm) || 
+                model.identifier.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        // 修改渲染数据模型表格函数
+        function renderDataModels() {
+            dataTable.innerHTML = '';
+            
+            const filteredModels = filterDataModels();
+            
+            if (filteredModels.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `<td colspan="5" style="text-align: center;">暂无数据</td>`;
+                dataTable.appendChild(emptyRow);
+                return;
+            }
+            
+            filteredModels.forEach(model => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${model.name}</td>
+                    <td>${model.identifier}</td>
+                    <td>${model.type}</td>
+                    <td>${getAccessTypeDisplay(model.accessType)}</td>
+                    <td class="action-cell">
+                        <button class="edit-btn" data-id="${model.id}">编辑</button>
+                        <button class="delete-btn" data-id="${model.id}">删除</button>
+                    </td>
+                `;
+                dataTable.appendChild(row);
+                
+                // 添加编辑和删除按钮的事件监听器
+                row.querySelector('.edit-btn').addEventListener('click', () => openEditModal(model.id));
+                row.querySelector('.delete-btn').addEventListener('click', () => deleteDataModel(model.id));
+            });
+        }
+        
+        // 获取访问权限显示文本
+        function getAccessTypeDisplay(accessType) {
+            switch (accessType) {
+                case 'ReadWrite': return '读写';
+                case 'ReadOnly': return '只读';
+                case 'WriteOnly': return '只写';
+                default: return accessType;
+            }
+        }
+        
+        // 打开添加模态框
+        function openAddModal() {
+            modalTitle.textContent = '添加数据项';
+            dataIdInput.value = '';
+            dataNameInput.value = '';
+            dataIdentifierInput.value = '';
+            dataTypeInput.value = 'Float';
+            accessTypeInput.value = 'ReadWrite';
+            isStoredInput.value = 'true';
+            storageTypeInput.value = 'timed';
+            storageIntervalInput.value = '60';
+            hasAlarmInput.value = 'false';
+            alarmConditionInput.value = 'gt';
+            alarmValueInput.value = '';
+            
+            // 初始化显示状态
+            toggleStorageOptions();
+            toggleAlarmOptions();
+            
+            dataModal.style.display = 'flex';
+        }
+        
+        // 打开编辑模态框
+        function openEditModal(id) {
+            const model = dataModels.find(m => m.id === id);
+            if (!model) return;
+            
+            modalTitle.textContent = '编辑数据项';
+            dataIdInput.value = model.id;
+            dataNameInput.value = model.name;
+            dataIdentifierInput.value = model.identifier;
+            dataTypeInput.value = model.type;
+            accessTypeInput.value = model.accessType;
+            isStoredInput.value = model.isStored || 'true';
+            storageTypeInput.value = model.storageType || 'timed';
+            storageIntervalInput.value = model.storageInterval || '60';
+            hasAlarmInput.value = model.hasAlarm || 'false';
+            alarmConditionInput.value = model.alarmCondition || 'gt';
+            alarmValueInput.value = model.alarmValue || '';
+            
+            // 初始化显示状态
+            toggleStorageOptions();
+            toggleAlarmOptions();
+            
+            dataModal.style.display = 'flex';
+        }
+        
+        // 关闭模态框
+        function closeModal() {
+            dataModal.style.display = 'none';
+        }
+        
+        // 保存数据模型
+        async function saveDataModel(event) {
+            event.preventDefault();
+            
+            const model = {
+                id: dataIdInput.value || Date.now().toString(),
+                name: dataNameInput.value,
+                identifier: dataIdentifierInput.value,
+                type: dataTypeInput.value,
+                accessType: accessTypeInput.value,
+                isStored: isStoredInput.value,
+                storageType: storageTypeInput.value,
+                storageInterval: isStoredInput.value === 'true' && storageTypeInput.value === 'timed' ? storageIntervalInput.value : null,
+                hasAlarm: hasAlarmInput.value,
+                alarmCondition: hasAlarmInput.value === 'true' ? alarmConditionInput.value : null,
+                alarmValue: hasAlarmInput.value === 'true' ? alarmValueInput.value : null
+            };
+            
+            try {
+                const isEditing = !!dataIdInput.value;
+                const url = isEditing ? `/api/datamodels/${model.id}` : '/api/datamodels';
+                const method = isEditing ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(model)
+                });
+                
+                if (response.ok) {
+                    if (isEditing) {
+                        const index = dataModels.findIndex(m => m.id === model.id);
+                        if (index !== -1) {
+                            dataModels[index] = model;
+                        }
+                    } else {
+                        dataModels.push(model);
+                    }
+                    
+                    renderDataModels();
+                    closeModal();
+                } else {
+                    alert('保存失败: ' + (await response.text()));
+                }
+            } catch (error) {
+                console.error('保存数据模型错误:', error);
+                alert('保存失败，请稍后重试');
+            }
+        }
+        
+        // 删除数据模型
+        async function deleteDataModel(id) {
+            if (!confirm('确定要删除这个数据项吗？')) return;
+            
+            try {
+                const response = await fetch(`/api/datamodels/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    dataModels = dataModels.filter(model => model.id !== id);
+                    renderDataModels();
+                } else {
+                    alert('删除失败: ' + (await response.text()));
+                }
+            } catch (error) {
+                console.error('删除数据模型错误:', error);
+                alert('删除失败，请稍后重试');
+            }
+        }
+        
+        // 导出到Excel
+        function exportToExcel() {
+            alert('Excel导出功能尚未实现');
+            // 这里可以实现Excel导出功能
+        }
+        
+        // 从Excel导入
+        function importFromExcel() {
+            alert('Excel导入功能尚未实现');
+            // 这里可以实现Excel导入功能
+        }
+        
+        // 切换存储选项显示
+        function toggleStorageOptions() {
+            const isStored = isStoredInput.value === 'true';
+            storageOptions.forEach(el => {
+                el.style.display = isStored ? 'block' : 'none';
+            });
+            
+            if (isStored) {
+                toggleIntervalGroup();
+            }
+        }
+        
+        // 切换存储间隔显示
+        function toggleIntervalGroup() {
+            const storageType = storageTypeInput.value;
+            intervalGroup.style.display = storageType === 'timed' ? 'block' : 'none';
+            storageIntervalInput.required = storageType === 'timed';
+        }
+        
+        // 切换告警选项显示
+        function toggleAlarmOptions() {
+            const hasAlarm = hasAlarmInput.value === 'true';
+            alarmOptions.forEach(el => {
+                el.style.display = hasAlarm ? 'block' : 'none';
+            });
+            alarmConditionInput.required = hasAlarm;
+            alarmValueInput.required = hasAlarm;
+        }
+    </script>
+</body>
+</html> 

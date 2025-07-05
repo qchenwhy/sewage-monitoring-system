@@ -1,0 +1,29 @@
+services:
+  # 应用服务 - 使用本地构建
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    ports:
+      - "3000:3000"
+      - "1883:1883"  # MQTT 端口
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - USE_SQLITE=true
+      - DB_FILE=/app/data/mqtt_data.db
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+      - ./downloads:/app/downloads
+      - ./backups:/app/backups
+      - ./audio:/app/audio
+      - ./temp:/app/temp
+    restart: unless-stopped
+    networks:
+      - wzh_network
+
+networks:
+  wzh_network:
+    driver: bridge 

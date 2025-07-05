@@ -1,0 +1,39 @@
+{
+  "document": {
+    "id": "be33ddb8-88e5-464c-a287-a3cf2a59071b",
+    "position": 2,
+    "data_source_type": "upload_file",
+    "data_source_info": {
+      "upload_file_id": "97ac2afa-39fb-467d-afaa-c1b526a22f87"
+    },
+    "data_source_detail_dict": {
+      "upload_file": {
+        "id": "97ac2afa-39fb-467d-afaa-c1b526a22f87",
+        "name": "测试文档_1747205338774",
+        "size": 75,
+        "extension": "txt",
+        "mime_type": "text/plain",
+        "created_by": "6dc11794-7d4e-4ac7-8fbf-1bff6d5b208c",
+        "created_at": 1747205338.948328
+      }
+    },
+    "dataset_process_rule_id": "6f95dc59-23e8-45e2-82fe-0a43cb3694b2",
+    "name": "测试文档_1747205338774",
+    "created_from": "api",
+    "created_by": "6dc11794-7d4e-4ac7-8fbf-1bff6d5b208c",
+    "created_at": 1747205339,
+    "tokens": 0,
+    "indexing_status": "splitting",
+    "error": null,
+    "enabled": true,
+    "disabled_at": null,
+    "disabled_by": null,
+    "archived": false,
+    "display_status": "indexing",
+    "word_count": 75,
+    "hit_count": 0,
+    "doc_form": "text_model",
+    "doc_metadata": null
+  },
+  "batch": "20250514064858582579"
+}

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据源设置</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/toastify.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">数据源设置</h1>
+    
+    <div class="row">
+      <div class="col-lg-12">
+        <!-- 数据源类型选择 -->
+        <div class="card shadow mb-4">
+          <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">数据源类型</h6>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <div class="custom-control custom-radio">
+                <input type="radio" id="data-source-modbus" name="data-source-type" value="modbus" class="custom-control-input">
+                <label class="custom-control-label" for="data-source-modbus">Modbus TCP</label>
+              </div>
+              <div class="custom-control custom-radio">
+                <input type="radio" id="data-source-mqtt" name="data-source-type" value="mqtt" class="custom-control-input">
+                <label class="custom-control-label" for="data-source-mqtt">MQTT</label>
+              </div>
+              <small class="form-text text-muted">选择数据源类型将决定系统如何获取数据点值</small>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Modbus设置面板 -->
+        <div id="modbus-settings-panel" class="card shadow mb-4">
+          <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Modbus设置</h6>
+          </div>
+          <div class="card-body">
+            <form id="modbus-settings-form">
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="modbus-host">主机地址</label>
+                  <input type="text" class="form-control" id="modbus-host" placeholder="例如：192.168.1.100">
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="modbus-port">端口</label>
+                  <input type="number" class="form-control" id="modbus-port" placeholder="例如：502" min="1" max="65535">
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="modbus-unit-id">单元ID</label>
+                  <input type="number" class="form-control" id="modbus-unit-id" placeholder="例如：1" min="0" max="255">
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="modbus-timeout">超时 (毫秒)</label>
+                  <input type="number" class="form-control" id="modbus-timeout" placeholder="例如：5000" min="1000" max="60000">
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="modbus-auto-reconnect">
+                    <label class="custom-control-label" for="modbus-auto-reconnect">自动重连</label>
+                  </div>
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="modbus-max-reconnect-attempts">最大重连次数</label>
+                  <input type="number" class="form-control" id="modbus-max-reconnect-attempts" min="1" max="100">
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="modbus-keep-alive-enabled">
+                  <label class="custom-control-label" for="modbus-keep-alive-enabled">启用保活</label>
+                </div>
+              </div>
+              
+              <div class="form-row keep-alive-settings">
+                <div class="form-group col-md-4">
+                  <label for="modbus-keep-alive-interval">保活间隔 (毫秒)</label>
+                  <input type="number" class="form-control" id="modbus-keep-alive-interval" min="1000" max="60000">
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="modbus-keep-alive-address">保活地址</label>
+                  <input type="number" class="form-control" id="modbus-keep-alive-address" min="0" max="65535">
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="modbus-keep-alive-function-code">功能码</label>
+                  <select class="form-control" id="modbus-keep-alive-function-code">
+                    <option value="3">3 - 读保持寄存器</option>
+                    <option value="4">4 - 读输入寄存器</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <button type="button" id="test-modbus-connection" class="btn btn-info mr-2">测试连接</button>
+                <button type="submit" class="btn btn-primary">保存设置</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <!-- MQTT设置面板 -->
+        <div id="mqtt-settings-panel" class="card shadow mb-4" style="display: none;">
+          <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">MQTT设置</h6>
+          </div>
+          <div class="card-body">
+            <form id="mqtt-settings-form">
+              <div class="form-group">
+                <label for="mqtt-url">MQTT服务器URL</label>
+                <input type="text" class="form-control" id="mqtt-url" placeholder="mqtt://localhost:1883" required>
+                <small class="form-text text-muted">MQTT服务器地址，例如：mqtt://localhost:1883</small>
+              </div>
+              
+              <div class="form-group">
+                <label for="mqtt-client-id">客户端ID</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="mqtt-client-id" placeholder="客户端唯一标识">
+                  <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="generate-client-id">生成随机ID</button>
+                  </div>
+                </div>
+                <small class="form-text text-muted">客户端的唯一标识，如不填写将自动生成</small>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="mqtt-username">用户名</label>
+                  <input type="text" class="form-control" id="mqtt-username" placeholder="用户名">
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="mqtt-password">密码</label>
+                  <input type="password" class="form-control" id="mqtt-password" placeholder="密码">
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group col-md-4">
+                  <label for="mqtt-keepalive">保活间隔 (秒)</label>
+                  <input type="number" class="form-control" id="mqtt-keepalive" value="60" min="5" max="300">
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="mqtt-reconnect-period">重连间隔 (毫秒)</label>
+                  <input type="number" class="form-control" id="mqtt-reconnect-period" value="5000" min="1000" max="60000">
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="mqtt-connect-timeout">连接超时 (毫秒)</label>
+                  <input type="number" class="form-control" id="mqtt-connect-timeout" value="30000" min="5000" max="60000">
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="mqtt-clean" checked>
+                    <label class="custom-control-label" for="mqtt-clean">清除会话</label>
+                    <small class="form-text text-muted">断开连接时清除会话状态</small>
+                  </div>
+                </div>
+                <div class="form-group col-md-6">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="mqtt-auto-reconnect" checked>
+                    <label class="custom-control-label" for="mqtt-auto-reconnect">自动重连</label>
+                    <small class="form-text text-muted">断开连接时自动尝试重连</small>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="mqtt-max-reconnect-attempts">最大重连次数</label>
+                <input type="number" class="form-control" id="mqtt-max-reconnect-attempts" value="5" min="1" max="100">
+                <small class="form-text text-muted">连接失败后最多尝试重连的次数</small>
+              </div>
+              
+              <div class="form-group">
+                <button type="button" id="test-mqtt-connection" class="btn btn-info mr-2">测试连接</button>
+                <button type="submit" class="btn btn-primary">保存设置</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <!-- 轮询设置面板 -->
+        <div class="card shadow mb-4">
+          <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">轮询设置</h6>
+          </div>
+          <div class="card-body">
+            <form id="polling-settings-form">
+              <div class="form-group">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="polling-enabled">
+                  <label class="custom-control-label" for="polling-enabled">启用自动轮询</label>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="polling-interval">轮询间隔 (毫秒)</label>
+                <input type="number" class="form-control" id="polling-interval" min="1000" max="300000">
+                <small class="form-text text-muted">建议根据数据点数量选择合适的间隔，过短可能导致PLC负载过高</small>
+              </div>
+              
+              <div class="form-group">
+                <button type="submit" class="btn btn-primary">保存设置</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/axios.min.js"></script>
+  <script src="/js/toastify.min.js"></script>
+  <script src="/js/mqtt-settings.js"></script>
+  <script src="/js/modbus-settings.js"></script>
+  <script>
+    $(document).ready(function() {
+      // API基础URL
+      const API_BASE_URL = '/api/modbus';
+      
+      // 加载当前数据源类型
+      function loadDataSourceType() {
+        axios.get(`${API_BASE_URL}/connection/config`)
+          .then(response => {
+            if (response.data.success) {
+              const config = response.data.data;
+              const dataSourceType = config.dataSourceType || 'modbus';
+              
+              // 更新界面显示
+              if (dataSourceType === 'mqtt') {
+                $('#data-source-mqtt').prop('checked', true);
+                $('#mqtt-settings-panel').show();
+                $('#modbus-settings-panel').hide();
+              } else {
+                $('#data-source-modbus').prop('checked', true);
+                $('#mqtt-settings-panel').hide();
+                $('#modbus-settings-panel').show();
+              }
+              
+              console.log(`当前数据源类型: ${dataSourceType}`);
+            }
+          })
+          .catch(error => {
+            console.error('加载数据源类型出错:', error);
+          });
+      }
+      
+      // 加载轮询设置
+      function loadPollingSettings() {
+        axios.get(`${API_BASE_URL}/polling/config`)
+          .then(response => {
+            if (response.data.success) {
+              const config = response.data.data;
+              
+              // 填充表单
+              $('#polling-enabled').prop('checked', config.enabled);
+              $('#polling-interval').val(config.interval);
+              
+              console.log('轮询配置已加载');
+            } else {
+              showToast('加载轮询配置失败: ' + response.data.error, 'error');
+            }
+          })
+          .catch(error => {
+            console.error('加载轮询配置出错:', error);
+            showToast('加载轮询配置出错: ' + (error.response?.data?.error || error.message), 'error');
+          });
+      }
+      
+      // 保存轮询设置
+      function savePollingSettings() {
+        const config = {
+          enabled: $('#polling-enabled').prop('checked'),
+          interval: parseInt($('#polling-interval').val())
+        };
+        
+        axios.put(`${API_BASE_URL}/polling/config`, config)
+          .then(response => {
+            if (response.data.success) {
+              showToast('轮询配置已保存', 'success');
+            } else {
+              showToast('保存轮询配置失败: ' + response.data.error, 'error');
+            }
+          })
+          .catch(error => {
+            console.error('保存轮询配置出错:', error);
+            showToast('保存轮询配置出错: ' + (error.response?.data?.error || error.message), 'error');
+          });
+      }
+      
+      // 显示提示信息
+      function showToast(message, type = 'info') {
+        if (typeof Toastify === 'function') {
+          Toastify({
+            text: message,
+            duration: 3000,
+            gravity: 'top',
+            position: 'right',
+            backgroundColor: type === 'success' ? '#4CAF50' : 
+                            type === 'error' ? '#F44336' : 
+                            type === 'warning' ? '#FF9800' : '#2196F3'
+          }).showToast();
+        } else {
+          alert(message);
+        }
+      }
+      
+      // 数据源类型切换
+      $('input[name="data-source-type"]').on('change', function() {
+        const type = $(this).val();
+        
+        axios.put(`${API_BASE_URL}/data-source/type`, { type })
+          .then(response => {
+            if (response.data.success) {
+              showToast(`已切换到${type === 'mqtt' ? 'MQTT' : 'Modbus'}数据源`, 'success');
+              
+              if (type === 'mqtt') {
+                $('#mqtt-settings-panel').show();
+                $('#modbus-settings-panel').hide();
+              } else {
+                $('#mqtt-settings-panel').hide();
+                $('#modbus-settings-panel').show();
+              }
+            } else {
+              showToast('切换数据源失败: ' + response.data.error, 'error');
+            }
+          })
+          .catch(error => {
+            console.error('切换数据源出错:', error);
+            showToast('切换数据源出错: ' + (error.response?.data?.error || error.message), 'error');
+          });
+      });
+      
+      // 轮询设置表单提交
+      $('#polling-settings-form').on('submit', function(e) {
+        e.preventDefault();
+        savePollingSettings();
+      });
+      
+      // 初始化加载
+      loadDataSourceType();
+      loadPollingSettings();
+    });
+  </script>
+</body>
+</html> 

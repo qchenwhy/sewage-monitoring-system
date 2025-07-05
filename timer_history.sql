@@ -1,0 +1,9 @@
+-- 创建计时器历史记录表
+CREATE TABLE IF NOT EXISTS timer_history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  timer_id VARCHAR(255) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  message TEXT NOT NULL,
+  completed_at DATETIME NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+); 

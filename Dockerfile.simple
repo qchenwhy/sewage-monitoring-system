@@ -1,0 +1,39 @@
+# 如果可以访问镜像仓库，使用Node.js官方镜像
+# 如果不能访问，请手动下载node:18-alpine镜像后导入
+FROM node:18-alpine
+
+# 设置工作目录
+WORKDIR /app
+
+# 如果网络有问题，跳过某些可选的包安装
+RUN apk update || true
+RUN apk add --no-cache python3 make g++ sqlite || \
+    apk add --no-cache --allow-untrusted python3 make g++ sqlite || \
+    echo "某些包安装失败，继续构建..."
+
+# 复制 package.json 和 package-lock.json
+COPY package*.json ./
+
+# 安装项目依赖（如果网络有问题，使用缓存的node_modules）
+RUN npm ci --only=production || \
+    npm install --only=production || \
+    echo "npm安装失败，请确保node_modules存在"
+
+# 复制项目文件
+COPY . .
+
+# 创建必要的目录
+RUN mkdir -p logs uploads downloads temp data backups audio public/recordings
+
+# 设置目录权限
+RUN chmod -R 755 logs uploads downloads temp data backups audio public/recordings
+
+# 暴露端口
+EXPOSE 3000
+
+# 设置环境变量
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# 启动应用
+CMD ["npm", "start"] 

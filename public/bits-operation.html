@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modbus 多位操作测试</title>
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      padding-top: 56px;
+      font-family: "Microsoft YaHei", sans-serif;
+    }
+    .bit-cell {
+      width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 2px;
+      border: 1px solid #dee2e6;
+      cursor: pointer;
+      font-weight: bold;
+      user-select: none;
+      transition: all 0.2s;
+    }
+    .bit-cell:hover {
+      background-color: #f8f9fa;
+    }
+    .bit-cell.selected {
+      background-color: #ffc107;
+      color: #212529;
+    }
+    .bit-cell.active {
+      background-color: #198754;
+      color: white;
+    }
+    .bit-cell.active.selected {
+      background-color: #dc3545;
+      color: white;
+    }
+    .bit-labels {
+      display: flex;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
+    }
+    .bit-label {
+      width: 40px;
+      text-align: center;
+      font-size: 0.8rem;
+      margin: 2px;
+    }
+    .result-box {
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="#">Modbus 多位操作测试</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" href="#">多位操作</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="bit-operations.html">单位操作</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="modbus.html">Modbus管理</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <div class="row">
+      <!-- 寄存器多位可视化 -->
+      <div class="col-md-12 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">寄存器位状态可视化</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3 row">
+              <div class="col-md-6">
+                <label for="registerAddress" class="form-label">寄存器地址</label>
+                <div class="input-group">
+                  <input type="number" class="form-control" id="registerAddress" value="100">
+                  <button class="btn btn-primary" id="readAllBitsBtn">读取所有位</button>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">当前寄存器值</label>
+                <div class="d-flex align-items-center">
+                  <input type="text" class="form-control" id="registerValue" readonly>
+                  <span class="ms-2" id="registerHexValue">(0x0000)</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bit-labels">
+              <div class="bit-label">Bit15</div>
+              <div class="bit-label">Bit14</div>
+              <div class="bit-label">Bit13</div>
+              <div class="bit-label">Bit12</div>
+              <div class="bit-label">Bit11</div>
+              <div class="bit-label">Bit10</div>
+              <div class="bit-label">Bit9</div>
+              <div class="bit-label">Bit8</div>
+              <div class="bit-label">Bit7</div>
+              <div class="bit-label">Bit6</div>
+              <div class="bit-label">Bit5</div>
+              <div class="bit-label">Bit4</div>
+              <div class="bit-label">Bit3</div>
+              <div class="bit-label">Bit2</div>
+              <div class="bit-label">Bit1</div>
+              <div class="bit-label">Bit0</div>
+            </div>
+            <div id="bitGrid">
+              <!-- 位单元格将通过JavaScript动态生成 -->
+            </div>
+            
+            <div class="alert alert-info mt-3">
+              <strong>提示：</strong> 
+              <div>1. 点击位单元格可切换选中状态（黄色背景表示已选中）</div>
+              <div>2. 选中多个位后，可以一次性设置它们为0或1</div>
+            </div>
+            
+            <div class="d-flex mt-3">
+              <button class="btn btn-success me-2" id="setSelectedBitsBtn">设置选中的位为1</button>
+              <button class="btn btn-danger me-2" id="clearSelectedBitsBtn">设置选中的位为0</button>
+              <button class="btn btn-warning me-2" id="toggleSelectedBitsBtn">切换选中的位</button>
+              <button class="btn btn-secondary" id="clearSelectionBtn">清除选择</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 多位读写测试 -->
+      <div class="col-md-12 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">多位读写测试</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="readBitsAddress" class="form-label">读取指定位</label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="readBitsAddress" placeholder="寄存器地址" value="100">
+                <input type="text" class="form-control" id="readBitPositions" placeholder="位位置，用逗号分隔，如：0,1,2,8" value="0,1,2,8">
+                <button class="btn btn-primary" id="readSpecificBitsBtn">读取</button>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="writeBitsAddress" class="form-label">写入多个位</label>
+              <div class="input-group mb-2">
+                <input type="number" class="form-control" id="writeBitsAddress" placeholder="寄存器地址" value="100">
+              </div>
+              <div class="input-group">
+                <textarea class="form-control" id="writeBitValues" rows="3" placeholder='位值JSON，例如：[{"position":0,"value":1},{"position":2,"value":0}]'>[{"position":0,"value":1},{"position":2,"value":0}]</textarea>
+                <button class="btn btn-primary" id="writeMultipleBitsBtn">写入</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 操作结果 -->
+      <div class="col-md-12 mb-4">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">操作结果</h5>
+            <button id="clearResultsBtn" class="btn btn-sm btn-outline-danger">清空</button>
+          </div>
+          <div class="card-body result-box" id="resultsContainer">
+            <div class="text-muted">操作结果将显示在这里...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加测试连接按钮 -->
+  <div class="mt-4 text-center">
+    <button id="testConnectionBtn" class="btn btn-secondary">测试Modbus连接</button>
+    <div id="connectionStatus" class="mt-2 small"></div>
+  </div>
+
+  <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 全局变量
+    let currentRegisterValue = 0;
+    let selectedBits = new Set();
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      // 初始化位网格
+      initBitGrid();
+      
+      // 绑定事件处理器
+      document.getElementById('readAllBitsBtn').addEventListener('click', readAllBits);
+      document.getElementById('setSelectedBitsBtn').addEventListener('click', () => updateSelectedBits(1));
+      document.getElementById('clearSelectedBitsBtn').addEventListener('click', () => updateSelectedBits(0));
+      document.getElementById('toggleSelectedBitsBtn').addEventListener('click', toggleSelectedBits);
+      document.getElementById('clearSelectionBtn').addEventListener('click', clearSelection);
+      document.getElementById('readSpecificBitsBtn').addEventListener('click', readSpecificBits);
+      document.getElementById('writeMultipleBitsBtn').addEventListener('click', writeMultipleBits);
+      document.getElementById('clearResultsBtn').addEventListener('click', clearResults);
+    });
+
+    // 初始化位网格
+    function initBitGrid() {
+      const grid = document.getElementById('bitGrid');
+      grid.innerHTML = '';
+      
+      // 创建16个位单元格（从高位到低位）
+      for (let i = 15; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'bit-cell';
+        cell.dataset.bit = i;
+        cell.textContent = '0';
+        cell.addEventListener('click', toggleBitSelection);
+        grid.appendChild(cell);
+      }
+    }
+
+    // 切换位的选中状态
+    function toggleBitSelection(e) {
+      const bitPosition = parseInt(e.target.dataset.bit, 10);
+      
+      if (selectedBits.has(bitPosition)) {
+        selectedBits.delete(bitPosition);
+        e.target.classList.remove('selected');
+      } else {
+        selectedBits.add(bitPosition);
+        e.target.classList.add('selected');
+      }
+    }
+
+    // 读取所有位
+    async function readAllBits() {
+      const address = parseInt(document.getElementById('registerAddress').value, 10);
+      
+      if (isNaN(address)) {
+        showResult('无效的寄存器地址', 'danger');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/modbus/bits/read', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            address: address,
+            readAll: true
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          currentRegisterValue = data.registerValue;
+          updateRegisterDisplay(data);
+          showResult(`读取寄存器地址 ${address} 的所有位成功，值: ${data.registerValue} (${data.hexValue})，二进制: ${data.binaryString}`, 'success');
+        } else {
+          showResult(`读取失败: ${data.error}`, 'danger');
+        }
+      } catch (error) {
+        showResult(`读取错误: ${error.message}`, 'danger');
+      }
+    }
+
+    // 读取特定位
+    async function readSpecificBits() {
+      const address = parseInt(document.getElementById('readBitsAddress').value, 10);
+      const bitPositionsText = document.getElementById('readBitPositions').value;
+      
+      if (isNaN(address)) {
+        showResult('无效的寄存器地址', 'danger');
+        return;
+      }
+      
+      try {
+        // 解析位位置
+        const bitPositions = bitPositionsText.split(',')
+          .map(p => parseInt(p.trim(), 10))
+          .filter(p => !isNaN(p) && p >= 0 && p <= 15);
+          
+        if (bitPositions.length === 0) {
+          showResult('没有有效的位位置', 'warning');
+          return;
+        }
+        
+        const response = await fetch('/api/modbus/bits/read', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            address: address,
+            bitPositions: bitPositions
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showResult(`读取寄存器地址 ${address} 的特定位成功，值: ${data.registerValue} (${data.hexValue})`, 'success');
+          
+          let bitsDetail = document.createElement('div');
+          bitsDetail.className = 'mt-2';
+          bitsDetail.innerHTML = '<strong>读取的位值:</strong><ul class="mb-0">';
+          
+          data.bits.forEach(bit => {
+            bitsDetail.innerHTML += `<li>位 ${bit.position}: ${bit.value}</li>`;
+          });
+          
+          bitsDetail.innerHTML += '</ul>';
+          showResult(bitsDetail.outerHTML, 'info', false);
+        } else {
+          showResult(`读取失败: ${data.error}`, 'danger');
+        }
+      } catch (error) {
+        showResult(`读取错误: ${error.message}`, 'danger');
+      }
+    }
+
+    // 更新选中的位值
+    async function updateSelectedBits(value) {
+      if (selectedBits.size === 0) {
+        showResult('请先选择要操作的位', 'warning');
+        return;
+      }
+      
+      const address = parseInt(document.getElementById('registerAddress').value, 10);
+      
+      if (isNaN(address)) {
+        showResult('无效的寄存器地址', 'danger');
+        return;
+      }
+      
+      // 构建位值数组
+      const bitValues = Array.from(selectedBits).map(position => ({
+        position,
+        value
+      }));
+      
+      try {
+        const response = await fetch('/api/modbus/bits/write', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            address: address,
+            bitValues: bitValues
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          currentRegisterValue = data.newValue;
+          
+          // 更新位显示
+          const cells = document.querySelectorAll('.bit-cell');
+          cells.forEach(cell => {
+            const bitPosition = parseInt(cell.dataset.bit, 10);
+            const bitValue = (currentRegisterValue >> bitPosition) & 1;
+            cell.textContent = bitValue;
+            
+            if (bitValue === 1) {
+              cell.classList.add('active');
+            } else {
+              cell.classList.remove('active');
+            }
+          });
+          
+          // 更新寄存器值显示
+          document.getElementById('registerValue').value = currentRegisterValue;
+          document.getElementById('registerHexValue').textContent = `(0x${currentRegisterValue.toString(16).padStart(4, '0')})`;
+          
+          showResult(`设置寄存器地址 ${address} 的选中位成功，原值: ${data.originalValue} (${data.originalHex})，新值: ${data.newValue} (${data.newHex})`, 'success');
+        } else {
+          showResult(`设置失败: ${data.error}`, 'danger');
+        }
+      } catch (error) {
+        showResult(`设置错误: ${error.message}`, 'danger');
+      }
+    }
+
+    // 切换选中的位
+    async function toggleSelectedBits() {
+      if (selectedBits.size === 0) {
+        showResult('请先选择要操作的位', 'warning');
+        return;
+      }
+      
+      const address = parseInt(document.getElementById('registerAddress').value, 10);
+      
+      if (isNaN(address)) {
+        showResult('无效的寄存器地址', 'danger');
+        return;
+      }
+      
+      // 首先读取当前值
+      try {
+        const readResponse = await fetch('/api/modbus/bits/read', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            address: address,
+            readAll: true
+          })
+        });
+        
+        const readData = await readResponse.json();
+        
+        if (!readData.success) {
+          showResult(`读取当前值失败: ${readData.error}`, 'danger');
+          return;
+        }
+        
+        // 构建位值数组，切换每个选中位的值
+        const bitValues = Array.from(selectedBits).map(position => {
+          const currentValue = (readData.registerValue >> position) & 1;
+          return {
+            position,
+            value: currentValue === 1 ? 0 : 1
+          };
+        });
+        
+        // 写入切换后的值
+        const writeResponse = await fetch('/api/modbus/bits/write', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            address: address,
+            bitValues: bitValues
+          })
+        });
+        
+        const writeData = await writeResponse.json();
+        
+        if (writeData.success) {
+          currentRegisterValue = writeData.newValue;
+          
+          // 更新位显示
+          updateRegisterDisplay({
+            registerValue: currentRegisterValue,
+            hexValue: writeData.newHex,
+            binaryString: writeData.binaryAfter
+          });
+          
+          showResult(`切换寄存器地址 ${address} 的选中位成功，原值: ${writeData.originalValue} (${writeData.originalHex})，新值: ${writeData.newValue} (${writeData.newHex})`, 'success');
+        } else {
+          showResult(`切换失败: ${writeData.error}`, 'danger');
+        }
+      } catch (error) {
+        showResult(`操作错误: ${error.message}`, 'danger');
+      }
+    }
+
+    // 写入多个位
+    async function writeMultipleBits() {
+      const address = parseInt(document.getElementById('writeBitsAddress').value, 10);
+      const bitValuesText = document.getElementById('writeBitValues').value;
+      
+      if (isNaN(address)) {
+        showResult('无效的寄存器地址', 'danger');
+        return;
+      }
+      
+      try {
+        // 解析位值JSON
+        const bitValues = JSON.parse(bitValuesText);
+        
+        if (!Array.isArray(bitValues) || bitValues.length === 0) {
+          showResult('位值必须是一个非空数组', 'warning');
+          return;
+        }
+        
+        // 验证位值格式
+        for (const bit of bitValues) {
+          if (typeof bit.position !== 'number' || bit.position < 0 || bit.position > 15) {
+            showResult(`位位置 ${bit.position} 无效，必须是0-15之间的整数`, 'warning');
+            return;
+          }
+          
+          if (bit.value !== 0 && bit.value !== 1) {
+            showResult(`位值 ${bit.value} 无效，必须是0或1`, 'warning');
+            return;
+          }
+        }
+        
+        const response = await fetch('/api/modbus/bits/write', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            address: address,
+            bitValues: bitValues
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showResult(`写入寄存器地址 ${address} 的多个位成功，原值: ${data.originalValue} (${data.originalHex})，新值: ${data.newValue} (${data.newHex})`, 'success');
+          
+          let bitsDetail = document.createElement('div');
+          bitsDetail.className = 'mt-2';
+          bitsDetail.innerHTML = '<strong>写入的位值:</strong><ul class="mb-0">';
+          
+          data.bitValues.forEach(bit => {
+            bitsDetail.innerHTML += `<li>位 ${bit.position}: ${bit.value}</li>`;
+          });
+          
+          bitsDetail.innerHTML += '</ul>';
+          showResult(bitsDetail.outerHTML, 'info', false);
+        } else {
+          showResult(`写入失败: ${data.error}`, 'danger');
+        }
+      } catch (error) {
+        if (error instanceof SyntaxError) {
+          showResult('位值JSON格式错误，请检查语法', 'danger');
+        } else {
+          showResult(`写入错误: ${error.message}`, 'danger');
+        }
+      }
+    }
+
+    // 更新寄存器显示
+    function updateRegisterDisplay(data) {
+      // 更新寄存器值显示
+      document.getElementById('registerValue').value = data.registerValue;
+      document.getElementById('registerHexValue').textContent = data.hexValue;
+      
+      // 更新位网格
+      const cells = document.querySelectorAll('.bit-cell');
+      cells.forEach(cell => {
+        const bitPosition = parseInt(cell.dataset.bit, 10);
+        const bitValue = (data.registerValue >> bitPosition) & 1;
+        cell.textContent = bitValue;
+        
+        if (bitValue === 1) {
+          cell.classList.add('active');
+        } else {
+          cell.classList.remove('active');
+        }
+      });
+    }
+
+    // 清除选择
+    function clearSelection() {
+      selectedBits.clear();
+      
+      const cells = document.querySelectorAll('.bit-cell');
+      cells.forEach(cell => {
+        cell.classList.remove('selected');
+      });
+      
+      showResult('已清除所有选择', 'info');
+    }
+
+    // 显示结果
+    function showResult(message, type, isNewEntry = true) {
+      const container = document.getElementById('resultsContainer');
+      const timestamp = new Date().toLocaleTimeString();
+      
+      if (isNewEntry) {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} mb-2`;
+        
+        if (typeof message === 'string') {
+          alert.innerHTML = `<div class="d-flex justify-content-between">
+            <span>${message}</span>
+            <small class="text-muted">${timestamp}</small>
+          </div>`;
+        } else {
+          // 处理HTML内容
+          const header = document.createElement('div');
+          header.className = 'd-flex justify-content-between';
+          
+          const timeElement = document.createElement('small');
+          timeElement.className = 'text-muted';
+          timeElement.textContent = timestamp;
+          
+          header.appendChild(timeElement);
+          
+          alert.appendChild(header);
+          alert.innerHTML += message;
+        }
+        
+        container.appendChild(alert);
+      } else {
+        // 追加到最后一个alert
+        const alerts = container.querySelectorAll('.alert');
+        if (alerts.length > 0) {
+          const lastAlert = alerts[alerts.length - 1];
+          lastAlert.innerHTML += message;
+        } else {
+          // 如果没有alert，则创建一个新的
+          const alert = document.createElement('div');
+          alert.className = `alert alert-${type} mb-2`;
+          alert.innerHTML = message;
+          container.appendChild(alert);
+        }
+      }
+      
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // 清空结果
+    function clearResults() {
+      document.getElementById('resultsContainer').innerHTML = '';
+    }
+
+    // 添加测试连接函数
+    async function testConnection() {
+      try {
+        document.getElementById('testConnectionBtn').disabled = true;
+        document.getElementById('connectionStatus').innerHTML = '正在测试连接...';
+        
+        const response = await fetch('/api/modbus/connection/test');
+        const data = await response.json();
+        
+        if (data.success) {
+          if (data.connected) {
+            document.getElementById('connectionStatus').innerHTML = 
+              `<div class="alert alert-success">连接正常 - 主机: ${data.config.host}:${data.config.port}</div>`;
+          } else {
+            document.getElementById('connectionStatus').innerHTML = 
+              `<div class="alert alert-warning">未连接到Modbus设备 - 主机: ${data.config.host}:${data.config.port}</div>`;
+          }
+        } else {
+          document.getElementById('connectionStatus').innerHTML = 
+            `<div class="alert alert-danger">连接测试失败: ${data.error}</div>`;
+        }
+      } catch (error) {
+        document.getElementById('connectionStatus').innerHTML = 
+          `<div class="alert alert-danger">连接测试出错: ${error.message}</div>`;
+      } finally {
+        document.getElementById('testConnectionBtn').disabled = false;
+      }
+    }
+
+    // 绑定测试连接按钮事件
+    document.getElementById('testConnectionBtn').addEventListener('click', testConnection);
+  </script>
+</body>
+</html> 

@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dify知识库管理</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .status-badge {
+            margin-left: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .logs {
+            height: 300px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+            border-radius: 5px;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 5px;
+        }
+        .log-time {
+            color: #6c757d;
+            margin-right: 8px;
+        }
+        .btn-action {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="d-flex justify-content-between mb-4">
+            <h1>Dify知识库管理
+                <span id="status-badge" class="badge bg-secondary status-badge">未知</span>
+            </h1>
+            <div>
+                <a href="/dify-task-manager" class="btn btn-primary">定时任务管理</a>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>配置信息</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="config-form">
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="enabled" name="enabled">
+                                <label class="form-check-label" for="enabled">启用Dify知识库同步</label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="apiEndpoint">API地址</label>
+                                <input type="text" class="form-control" id="apiEndpoint" name="apiEndpoint" placeholder="例如：https://api.dify.ai/v1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="apiKey">API密钥</label>
+                                <input type="password" class="form-control" id="apiKey" name="apiKey" placeholder="Dify API密钥">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="datasetId">知识库ID</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="datasetId" name="datasetId" placeholder="知识库ID">
+                                    <button class="btn btn-outline-secondary" type="button" id="createKnowledge">创建知识库</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="syncInterval">同步间隔 (毫秒)</label>
+                                <input type="number" class="form-control" id="syncInterval" name="syncInterval" placeholder="例如：3600000（1小时）">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="documentsPerDay">每天文档数量</label>
+                                <input type="number" class="form-control" id="documentsPerDay" name="documentsPerDay" placeholder="例如：24">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">保存配置</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>知识库状态</h5>
+                        <button id="refresh-status" class="btn btn-sm btn-outline-secondary" onclick="loadConfig()">
+                            <i class="fas fa-sync-alt"></i> 刷新状态
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-2">
+                            <div class="col-4">名称:</div>
+                            <div class="col-8" id="knowledge-name">-</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-4">文档数量:</div>
+                            <div class="col-8" id="document-count">-</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-4">最后更新:</div>
+                            <div class="col-8" id="last-updated">-</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-4">同步状态:</div>
+                            <div class="col-8" id="sync-status">-</div>
+                        </div>
+                        <div class="d-flex mt-3">
+                            <button class="btn btn-success me-2" onclick="startSync()">启动同步</button>
+                            <button class="btn btn-warning me-2" onclick="stopSync()">停止同步</button>
+                            <button class="btn btn-primary me-2" onclick="manualSync()">手动同步</button>
+                            <button class="btn btn-secondary" onclick="refreshKnowledge()">刷新知识库</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5>创建知识库</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="create-knowledge-form">
+                            <div class="form-group">
+                                <label for="knowledge-name-input">知识库名称</label>
+                                <input type="text" class="form-control" id="knowledge-name-input" name="name" placeholder="请输入知识库名称">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="knowledge-description">知识库描述</label>
+                                <textarea class="form-control" id="knowledge-description" name="description" rows="2" placeholder="请输入知识库描述（可选）"></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">创建知识库</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5>操作日志</h5>
+            </div>
+            <div class="card-body">
+                <div id="logs" class="logs"></div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>知识库文档列表</h5>
+                <button id="btn-refresh-documents" class="btn btn-info">刷新文档列表</button>
+            </div>
+            <div class="card-body">
+                <div id="documents-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>文档名称</th>
+                                    <th>词数</th>
+                                    <th>创建时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="documents-list">
+                                <!-- 文档列表会被动态添加在这里 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="no-documents" class="alert alert-info" style="display: none;">
+                        <i class="bi bi-info-circle me-2"></i>知识库中暂无文档
+                    </div>
+                    <div id="documents-loading" class="text-center py-3" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">加载中...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 文档查看模态框 -->
+    <div class="modal fade" id="documentModal" tabindex="-1" aria-labelledby="documentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="documentModalLabel">文档内容</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="document-content-loading" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">加载中...</span>
+                        </div>
+                    </div>
+                    <div id="document-content" style="display: none;">
+                        <h3 id="document-title"></h3>
+                        <div id="document-metadata" class="text-muted small mb-3"></div>
+                        <div id="document-text" class="border p-3 rounded" style="white-space: pre-wrap;"></div>
+                    </div>
+                    <div id="document-error" class="alert alert-danger" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 日志函数
+        function addLog(message, type = 'info') {
+            const logsElement = document.getElementById('logs');
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            
+            const logElement = document.createElement('div');
+            logElement.classList.add('log-entry');
+            
+            const timeElement = document.createElement('span');
+            timeElement.classList.add('log-time');
+            timeElement.textContent = `[${timeString}]`;
+            
+            const messageElement = document.createElement('span');
+            messageElement.classList.add(`text-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'dark'}`);
+            messageElement.textContent = message;
+            
+            logElement.appendChild(timeElement);
+            logElement.appendChild(messageElement);
+            
+            logsElement.appendChild(logElement);
+            logsElement.scrollTop = logsElement.scrollHeight;
+        }
+        
+        // 加载配置
+        async function loadConfig() {
+            try {
+                addLog('正在加载配置...');
+                
+                const response = await fetch('/api/dify/status');
+                
+                // 检查响应状态
+                if (!response.ok) {
+                    // 服务器错误
+                    let errorText = '';
+                    try {
+                        // 克隆响应以避免多次读取响应体
+                        const responseClone = response.clone();
+                        const errorData = await responseClone.json();
+                        errorText = errorData.error || response.statusText;
+                    } catch (e) {
+                        // 如果不是JSON响应，读取为文本
+                        try {
+                            // 再次克隆响应
+                            const textClone = response.clone();
+                            const text = await textClone.text();
+                            errorText = `${response.status} ${response.statusText} - ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`;
+                        } catch (textError) {
+                            // 如果再次失败，就使用状态信息
+                            errorText = `${response.status} ${response.statusText} - 无法读取响应体`;
+                        }
+                    }
+                    
+                    addLog(`加载配置失败: ${errorText}`, 'error');
+                    return;
+                }
+                
+                // 尝试解析JSON - 先克隆响应
+                let data;
+                try {
+                    const jsonClone = response.clone();
+                    data = await jsonClone.json();
+                } catch (error) {
+                    try {
+                        const textClone = response.clone();
+                        const text = await textClone.text();
+                        addLog(`解析配置响应失败: ${error.message}`, 'error');
+                        addLog(`服务器返回了非JSON数据: ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`, 'error');
+                    } catch (textError) {
+                        addLog(`解析配置响应失败，且无法获取响应内容: ${error.message}`, 'error');
+                    }
+                    return;
+                }
+                
+                // 更新表单
+                document.getElementById('enabled').checked = data.enabled;
+                document.getElementById('apiEndpoint').value = data.config.apiEndpoint || '';
+                document.getElementById('datasetId').value = data.config.datasetId || '';
+                document.getElementById('syncInterval').value = data.config.syncInterval || 3600000;
+                document.getElementById('documentsPerDay').value = data.config.documentsPerDay || 3;
+                
+                // 更新状态
+                updateStatus(data);
+                
+                addLog('配置已加载', 'success');
+                
+                // 如果知识库ID存在，加载文档列表
+                if (data.config.datasetId) {
+                    loadDocuments();
+                }
+            } catch (error) {
+                addLog(`加载配置失败: ${error.message}`, 'error');
+                console.error('加载配置详细错误:', error);
+            }
+        }
+        
+        // 更新状态展示
+        function updateStatus(data) {
+            const statusBadge = document.getElementById('status-badge');
+            const knowledgeName = document.getElementById('knowledge-name');
+            const documentCount = document.getElementById('document-count');
+            const lastUpdated = document.getElementById('last-updated');
+            const syncStatus = document.getElementById('sync-status');
+            
+            // 更新启用状态
+            if (data.enabled) {
+                statusBadge.textContent = '已启用';
+                statusBadge.classList.remove('bg-secondary', 'bg-danger');
+                statusBadge.classList.add('bg-success');
+            } else {
+                statusBadge.textContent = '已禁用';
+                statusBadge.classList.remove('bg-secondary', 'bg-success');
+                statusBadge.classList.add('bg-danger');
+            }
+            
+            // 更新知识库信息
+            if (data.knowledge) {
+                knowledgeName.textContent = data.knowledge.name || '知识库';
+                documentCount.textContent = data.knowledge.documentCount || 0;
+                
+                // 显示更新时间（如果存在）
+                if (data.knowledge.updatedAt) {
+                    const updateDate = new Date(data.knowledge.updatedAt * 1000);
+                    // 检查日期是否有效
+                    if (!isNaN(updateDate.getTime())) {
+                        lastUpdated.textContent = updateDate.toLocaleString();
+                    } else {
+                        lastUpdated.textContent = '未知';
+                    }
+                } else {
+                    lastUpdated.textContent = '未更新';
+                }
+                
+                // 更新同步状态
+                if (data.knowledge.isSynchronized) {
+                    syncStatus.textContent = '已同步化';
+                    syncStatus.classList.add('text-success');
+                    syncStatus.classList.remove('text-danger', 'text-secondary');
+                } else if (data.knowledge.syncStatus === 'syncing') {
+                    syncStatus.textContent = '同步中';
+                    syncStatus.classList.add('text-primary');
+                    syncStatus.classList.remove('text-success', 'text-danger', 'text-secondary');
+                } else if (data.knowledge.syncStatus === 'initialized') {
+                    syncStatus.textContent = '已初始化但未同步';
+                    syncStatus.classList.add('text-secondary');
+                    syncStatus.classList.remove('text-success', 'text-danger', 'text-primary');
+                } else {
+                    syncStatus.textContent = '未初始化';
+                    syncStatus.classList.add('text-danger');
+                    syncStatus.classList.remove('text-success', 'text-secondary', 'text-primary');
+                }
+            } else {
+                knowledgeName.textContent = '-';
+                documentCount.textContent = '-';
+                lastUpdated.textContent = '-';
+                
+                // 更新同步状态基于基本信息
+                if (data.syncing) {
+                    syncStatus.textContent = '同步中';
+                    syncStatus.classList.add('text-primary');
+                    syncStatus.classList.remove('text-success', 'text-danger', 'text-secondary');
+                } else if (data.initialized) {
+                    syncStatus.textContent = '已初始化但未同步';
+                    syncStatus.classList.add('text-secondary');
+                    syncStatus.classList.remove('text-success', 'text-danger', 'text-primary');
+                } else {
+                    syncStatus.textContent = '未初始化';
+                    syncStatus.classList.add('text-danger');
+                    syncStatus.classList.remove('text-success', 'text-secondary', 'text-primary');
+                }
+            }
+            
+            // 如果有错误，显示
+            if (data.error) {
+                addLog(`状态错误: ${data.error}`, 'error');
+            }
+            
+            // 如果知识库有错误，显示
+            if (data.knowledge && data.knowledge.error) {
+                addLog(`知识库错误: ${data.knowledge.error}`, 'error');
+            }
+        }
+        
+        // 保存配置
+        async function saveConfig(event) {
+            event.preventDefault();
+            
+            const form = document.getElementById('config-form');
+            const formData = new FormData(form);
+            
+            // 将FormData转换为对象
+            const config = {
+                enabled: formData.get('enabled') === 'on',
+                apiEndpoint: formData.get('apiEndpoint'),
+                apiKey: formData.get('apiKey'),
+                datasetId: formData.get('datasetId'),
+                syncInterval: parseInt(formData.get('syncInterval')),
+                documentsPerDay: parseInt(formData.get('documentsPerDay'))
+            };
+            
+            // 如果API密钥为空，不发送（避免覆盖现有密钥）
+            if (!config.apiKey) {
+                delete config.apiKey;
+            }
+            
+            try {
+                const response = await fetch('/api/dify/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(config)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog('配置已保存', 'success');
+                    await loadConfig();
+                } else {
+                    addLog(`保存配置失败: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`保存配置失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 启动同步
+        async function startSync() {
+            try {
+                const response = await fetch('/api/dify/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'start' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog('同步已启动', 'success');
+                    await loadConfig();
+                } else {
+                    addLog(`启动同步失败: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`启动同步失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 停止同步
+        async function stopSync() {
+            try {
+                const response = await fetch('/api/dify/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'stop' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog('同步已停止', 'success');
+                    await loadConfig();
+                } else {
+                    addLog(`停止同步失败: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`停止同步失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 手动同步
+        async function manualSync() {
+            try {
+                addLog('执行手动同步...');
+                
+                const response = await fetch('/api/dify/sync/manual', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog(`手动同步成功! 文档ID: ${data.document?.id || 'N/A'}`, 'success');
+                    // 刷新状态
+                    await loadConfig();
+                } else {
+                    if (data.pendingIndexing) {
+                        addLog(`文档索引中，等待完成: ${data.error}`, 'warning');
+                    } else {
+                        addLog(`手动同步失败: ${data.error}`, 'error');
+                    }
+                }
+            } catch (error) {
+                addLog(`手动同步出错: ${error.message}`, 'error');
+            }
+        }
+        
+        // 刷新知识库状态
+        async function refreshKnowledge() {
+            try {
+                addLog('刷新知识库状态...');
+                
+                // 尝试重新获取知识库状态
+                const response = await fetch('/api/dify/status');
+                
+                if (!response.ok) {
+                    addLog(`刷新知识库状态失败: ${response.status} ${response.statusText}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                // 更新状态
+                updateStatus(data);
+                
+                addLog('知识库状态已刷新', 'success');
+                
+            } catch (error) {
+                addLog(`刷新知识库状态失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 创建知识库
+        async function createKnowledge(event) {
+            event.preventDefault();
+            
+            const form = document.getElementById('create-knowledge-form');
+            const formData = new FormData(form);
+            
+            const knowledge = {
+                name: formData.get('name'),
+                description: formData.get('description')
+            };
+            
+            if (!knowledge.name) {
+                addLog('知识库名称不能为空', 'error');
+                return;
+            }
+            
+            try {
+                addLog(`开始创建知识库 "${knowledge.name}"...`);
+                
+                const response = await fetch('/api/dify/knowledge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(knowledge)
+                });
+                
+                // 检查响应状态码
+                if (!response.ok) {
+                    let errorText = '';
+                    
+                    if (response.status >= 400 && response.status < 600) {
+                        // 服务器或客户端错误
+                        try {
+                            // 克隆响应避免多次读取
+                            const errClone = response.clone();
+                            const errData = await errClone.json();
+                            errorText = errData.error || '未知错误';
+                        } catch (jsonErr) {
+                            // 如果不是JSON响应
+                            try {
+                                const textClone = response.clone();
+                                const text = await textClone.text();
+                                errorText = `服务器返回了非JSON响应: ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`;
+                            } catch (textErr) {
+                                errorText = '无法读取服务器响应';
+                            }
+                        }
+                    } else {
+                        errorText = `网络错误 (${response.status})`;
+                    }
+                    
+                    addLog(`创建知识库失败(${response.status}): ${errorText}`, 'error');
+                    return;
+                }
+
+                // 尝试解析JSON
+                let data;
+                try {
+                    const jsonClone = response.clone();
+                    data = await jsonClone.json();
+                } catch (jsonError) {
+                    try {
+                        const textClone = response.clone();
+                        const text = await textClone.text();
+                        addLog(`解析响应失败: ${jsonError.message}`, 'error');
+                        addLog(`服务器返回了非JSON数据: ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`, 'error');
+                    } catch (textErr) {
+                        addLog(`解析响应失败，且无法读取响应内容: ${jsonError.message}`, 'error');
+                    }
+                    return;
+                }
+                
+                if (data.success) {
+                    addLog(`知识库 "${knowledge.name}" 创建成功，ID: ${data.dataset.id}`, 'success');
+                    form.reset();
+                    await loadConfig();
+                } else {
+                    addLog(`创建知识库失败: ${data.error || '未知错误'}`, 'error');
+                }
+            } catch (error) {
+                addLog(`创建知识库失败: ${error.message}`, 'error');
+                console.error('创建知识库详细错误:', error);
+            }
+        }
+        
+        // 加载文档列表
+        async function loadDocuments() {
+            try {
+                // 显示加载中
+                document.getElementById('documents-loading').style.display = 'block';
+                document.getElementById('no-documents').style.display = 'none';
+                document.getElementById('documents-list').innerHTML = '';
+                
+                addLog('正在加载文档列表...');
+                
+                const response = await fetch('/api/dify/documents');
+                const data = await response.json();
+                
+                // 隐藏加载中
+                document.getElementById('documents-loading').style.display = 'none';
+                
+                if (data.success && data.documents.length > 0) {
+                    renderDocumentsList(data.documents);
+                    addLog(`成功加载${data.documents.length}个文档`, 'success');
+                } else {
+                    document.getElementById('no-documents').style.display = 'block';
+                    addLog('知识库中暂无文档');
+                }
+            } catch (error) {
+                document.getElementById('documents-loading').style.display = 'none';
+                document.getElementById('no-documents').style.display = 'block';
+                addLog(`加载文档列表失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 渲染文档列表
+        function renderDocumentsList(documents) {
+            const tableBody = document.getElementById('documents-list');
+            tableBody.innerHTML = '';
+            
+            documents.forEach(doc => {
+                const row = document.createElement('tr');
+                
+                // 文档名称
+                const nameCell = document.createElement('td');
+                nameCell.textContent = doc.name;
+                
+                // 词数
+                const wordCountCell = document.createElement('td');
+                wordCountCell.textContent = doc.word_count || '-';
+                
+                // 创建时间
+                const createdAtCell = document.createElement('td');
+                createdAtCell.textContent = doc.created_at ? new Date(doc.created_at * 1000).toLocaleString() : '-';
+                
+                // 状态
+                const statusCell = document.createElement('td');
+                let statusText = '未知';
+                let statusClass = 'secondary';
+                
+                switch (doc.indexing_status) {
+                    case 'completed':
+                        statusText = '已完成';
+                        statusClass = 'success';
+                        break;
+                    case 'indexing':
+                        statusText = '索引中';
+                        statusClass = 'warning';
+                        break;
+                    case 'failed':
+                        statusText = '失败';
+                        statusClass = 'danger';
+                        break;
+                    case 'pending':
+                        statusText = '等待中';
+                        statusClass = 'info';
+                        break;
+                }
+                
+                const statusBadge = document.createElement('span');
+                statusBadge.className = `badge bg-${statusClass}`;
+                statusBadge.textContent = statusText;
+                statusCell.appendChild(statusBadge);
+                
+                // 操作
+                const actionsCell = document.createElement('td');
+                
+                const viewBtn = document.createElement('button');
+                viewBtn.className = 'btn btn-sm btn-primary me-1';
+                viewBtn.textContent = '查看';
+                viewBtn.onclick = () => viewDocument(doc.id);
+                
+                actionsCell.appendChild(viewBtn);
+                
+                // 将所有单元格添加到行
+                row.appendChild(nameCell);
+                row.appendChild(wordCountCell);
+                row.appendChild(createdAtCell);
+                row.appendChild(statusCell);
+                row.appendChild(actionsCell);
+                
+                // 将行添加到表格
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 查看文档内容
+        async function viewDocument(documentId) {
+            try {
+                // 重置模态框状态
+                document.getElementById('document-content').style.display = 'none';
+                document.getElementById('document-error').style.display = 'none';
+                document.getElementById('document-content-loading').style.display = 'block';
+                
+                // 显示模态框
+                const documentModal = new bootstrap.Modal(document.getElementById('documentModal'));
+                documentModal.show();
+                
+                // 加载文档内容
+                const response = await fetch(`/api/dify/documents/${documentId}`);
+                const data = await response.json();
+                
+                // 隐藏加载中
+                document.getElementById('document-content-loading').style.display = 'none';
+                
+                if (data.success && data.document) {
+                    // 显示文档内容
+                    document.getElementById('document-title').textContent = data.document.name;
+                    
+                    // 显示元数据
+                    let metadataText = '';
+                    if (data.document.created_at) {
+                        metadataText += `创建时间: ${new Date(data.document.created_at * 1000).toLocaleString()} | `;
+                    }
+                    if (data.document.word_count) {
+                        metadataText += `词数: ${data.document.word_count} | `;
+                    }
+                    if (data.document.tokens) {
+                        metadataText += `Token数: ${data.document.tokens}`;
+                    }
+                    
+                    document.getElementById('document-metadata').textContent = metadataText;
+                    
+                    // 显示文档文本内容
+                    document.getElementById('document-text').textContent = data.document.content || '(文档内容为空)';
+                    
+                    // 显示内容区域
+                    document.getElementById('document-content').style.display = 'block';
+                } else {
+                    // 显示错误
+                    document.getElementById('document-error').textContent = data.error || '获取文档内容失败';
+                    document.getElementById('document-error').style.display = 'block';
+                }
+            } catch (error) {
+                // 隐藏加载中
+                document.getElementById('document-content-loading').style.display = 'none';
+                
+                // 显示错误
+                document.getElementById('document-error').textContent = `获取文档内容失败: ${error.message}`;
+                document.getElementById('document-error').style.display = 'block';
+            }
+        }
+        
+        // 事件监听
+        document.addEventListener('DOMContentLoaded', () => {
+            // 加载配置
+            loadConfig();
+            
+            // 表单提交
+            document.getElementById('config-form').addEventListener('submit', saveConfig);
+            document.getElementById('create-knowledge-form').addEventListener('submit', createKnowledge);
+            
+            // 按钮点击
+            document.getElementById('btn-start-sync').addEventListener('click', startSync);
+            document.getElementById('btn-stop-sync').addEventListener('click', stopSync);
+            document.getElementById('btn-manual-sync').addEventListener('click', manualSync);
+            document.getElementById('btn-refresh-status').addEventListener('click', loadConfig);
+            document.getElementById('btn-refresh-documents').addEventListener('click', loadDocuments);
+            document.getElementById('createKnowledge').addEventListener('click', () => {
+                // 显示创建知识库表单
+                document.getElementById('create-knowledge-form').scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html> 

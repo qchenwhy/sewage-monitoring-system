@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js本地加载测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #28a745;
+        }
+        .error {
+            background-color: #dc3545;
+        }
+        .warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .info {
+            background-color: #17a2b8;
+        }
+        #log {
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Three.js本地加载测试</h1>
+    
+    <div id="status" class="status info">正在测试...</div>
+    
+    <div id="results">
+        <h3>测试结果：</h3>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        const log = document.getElementById('log');
+        const status = document.getElementById('status');
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            log.textContent += `[${timestamp}] ${message}\n`;
+            log.scrollTop = log.scrollHeight;
+            console.log(message);
+        }
+        
+        function updateStatus(message, className) {
+            status.textContent = message;
+            status.className = `status ${className}`;
+        }
+        
+        // 测试步骤
+        addLog('🎬 开始Three.js本地加载测试');
+        addLog('📍 当前页面URL: ' + window.location.href);
+        addLog('📁 预期Three.js路径: js/libs/three.min.js');
+        
+        // 网络诊断
+        addLog('🔍 网络环境诊断:');
+        addLog('- 在线状态: ' + navigator.onLine);
+        addLog('- 用户代理: ' + navigator.userAgent);
+        addLog('- 协议: ' + window.location.protocol);
+        
+        // 尝试加载本地Three.js
+        addLog('🔄 开始加载本地Three.js文件...');
+        updateStatus('正在加载本地Three.js...', 'warning');
+        
+        const script = document.createElement('script');
+        script.src = 'js/libs/three.min.js';
+        
+        const startTime = Date.now();
+        
+        script.onload = function() {
+            const loadTime = Date.now() - startTime;
+            addLog(`✅ Three.js文件加载成功 (${loadTime}ms)`);
+            
+            // 验证THREE对象
+            if (typeof THREE !== 'undefined') {
+                addLog('✅ THREE对象可用');
+                addLog('📦 Three.js版本: ' + THREE.REVISION);
+                
+                // 测试基本功能
+                try {
+                    const scene = new THREE.Scene();
+                    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+                    const renderer = new THREE.WebGLRenderer();
+                    
+                    addLog('✅ Three.js基本对象创建成功');
+                    addLog('🎉 本地Three.js加载测试完全成功！');
+                    updateStatus('本地Three.js加载成功！', 'success');
+                    
+                } catch (error) {
+                    addLog('❌ Three.js基本功能测试失败: ' + error.message);
+                    updateStatus('Three.js功能测试失败', 'error');
+                }
+                
+            } else {
+                addLog('❌ THREE对象未定义');
+                updateStatus('THREE对象未定义', 'error');
+            }
+        };
+        
+        script.onerror = function(error) {
+            const loadTime = Date.now() - startTime;
+            addLog(`❌ Three.js文件加载失败 (${loadTime}ms)`);
+            addLog('错误详情: ' + JSON.stringify(error));
+            updateStatus('本地Three.js加载失败', 'error');
+            
+            // 诊断可能的问题
+            addLog('🔍 可能的问题:');
+            addLog('- 文件路径不正确');
+            addLog('- 文件损坏或不完整');
+            addLog('- 服务器MIME类型配置问题');
+            addLog('- 浏览器安全策略限制');
+        };
+        
+        // 设置超时
+        setTimeout(function() {
+            if (typeof THREE === 'undefined') {
+                addLog('⏰ 加载超时 (5秒)');
+                updateStatus('加载超时', 'error');
+            }
+        }, 5000);
+        
+        // 添加到页面
+        document.head.appendChild(script);
+        addLog('📤 Three.js script标签已添加到页面');
+    </script>
+</body>
+</html> 

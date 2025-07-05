@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MQTT服务器设置</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    body {
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .card {
+      margin-bottom: 20px;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2 class="mb-0"><i class="bi bi-cloud"></i> MQTT服务器设置</h2>
+      <div>
+        <a href="/modbus" class="btn btn-outline-secondary me-2">
+          <i class="bi bi-arrow-left"></i> 返回主页
+        </a>
+        <button id="saveMQTTSettings" class="btn btn-success">
+          <i class="bi bi-save"></i> MQTT配置已保存
+        </button>
+      </div>
+    </div>
+
+    <div class="card shadow mb-4">
+      <div class="card-header bg-primary text-white">
+        <i class="bi bi-gear"></i> 数据源设置
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i> 您可以选择使用ModbusTCP或MQTT作为数据源。切换数据源类型后，系统将自动重启相关服务。
+        </div>
+        <div class="form-group mb-3">
+          <label class="form-label">数据源类型</label>
+          <div class="form-check">
+            <input type="radio" id="data-source-modbus" name="data-source-type" value="modbus" class="form-check-input">
+            <label class="form-check-label" for="data-source-modbus">ModbusTCP - 直接连接到PLC/设备</label>
+          </div>
+          <div class="form-check">
+            <input type="radio" id="data-source-mqtt" name="data-source-type" value="mqtt" class="form-check-input">
+            <label class="form-check-label" for="data-source-mqtt">MQTT - 通过消息队列获取数据</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow mb-4">
+      <div class="card-header bg-primary text-white">
+        <i class="bi bi-cloud-upload"></i> MQTT服务器连接设置
+      </div>
+      <div class="card-body">
+        <form id="mqtt-settings-form">
+          <div class="mb-3">
+            <label for="mqtt-url" class="form-label">MQTT服务器地址</label>
+            <input type="text" class="form-control" id="mqtt-url" placeholder="mqtt://localhost:1883" required>
+            <div class="form-text">使用mqtt://服务器地址:端口 格式。或使用ws://服务器地址:端口 进行WebSocket连接</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="mqtt-client-id" class="form-label">客户端ID</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="mqtt-client-id" placeholder="客户端唯一标识">
+              <button class="btn btn-outline-secondary" type="button" id="generate-client-id">生成</button>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="mqtt-username" class="form-label">用户名</label>
+              <input type="text" class="form-control" id="mqtt-username" placeholder="留空如果不需要认证">
+            </div>
+            <div class="col-md-6">
+              <label for="mqtt-password" class="form-label">密码</label>
+              <input type="password" class="form-control" id="mqtt-password" placeholder="留空如果不需要认证">
+            </div>
+          </div>
+          
+          <h5 class="border-bottom pb-2 mb-3">高级设置</h5>
+          
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="mqtt-keepalive" class="form-label">保活间隔 (秒)</label>
+              <input type="number" class="form-control" id="mqtt-keepalive" value="60" min="5" max="300">
+            </div>
+            <div class="col-md-4">
+              <label for="mqtt-reconnect-period" class="form-label">重连间隔 (毫秒)</label>
+              <input type="number" class="form-control" id="mqtt-reconnect-period" value="5000" min="1000" max="60000">
+            </div>
+            <div class="col-md-4">
+              <label for="mqtt-connect-timeout" class="form-label">连接超时 (毫秒)</label>
+              <input type="number" class="form-control" id="mqtt-connect-timeout" value="30000" min="5000" max="60000">
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <div class="form-check form-check-inline">
+              <input type="checkbox" class="form-check-input" id="mqtt-clean" checked>
+              <label class="form-check-label" for="mqtt-clean">清除会话</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input type="checkbox" class="form-check-input" id="mqtt-auto-reconnect" checked>
+              <label class="form-check-label" for="mqtt-auto-reconnect">自动重连</label>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <button type="button" id="test-mqtt-connection" class="btn btn-info">
+              <i class="bi bi-plug"></i> 测试连接
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card shadow mb-4">
+      <div class="card-header bg-primary text-white">
+        <i class="bi bi-chat-square-text"></i> MQTT主题设置
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i> 设置全局订阅和发布主题，用于统一管理数据点的数据采集。系统将从订阅主题中提取数据对应标识符的键值作为数值在前端展示。
+        </div>
+        
+        <div class="mb-3">
+          <label for="mqtt-subscribe-topic" class="form-label">全局订阅主题</label>
+          <input type="text" class="form-control" id="mqtt-subscribe-topic" placeholder="例如：data/modbus/# 或 sensors/#">
+          <div class="form-text">系统将订阅此主题接收数据。可以使用通配符 # 和 + 匹配多个主题。</div>
+        </div>
+        
+        <div class="mb-3">
+          <label for="mqtt-publish-topic" class="form-label">全局发布主题前缀</label>
+          <input type="text" class="form-control" id="mqtt-publish-topic" placeholder="例如：data/modbus/">
+          <div class="form-text">系统发布数据时将使用此前缀加上数据点标识符作为完整主题。</div>
+        </div>
+        
+        <div class="mb-3">
+          <label for="mqtt-data-format" class="form-label">数据格式</label>
+          <select class="form-select" id="mqtt-data-format">
+            <option value="json">JSON格式</option>
+            <option value="plaintext">纯文本</option>
+          </select>
+          <div class="form-text">JSON格式示例: {"temperature": 25.5, "humidity": 60}，纯文本示例: 25.5</div>
+        </div>
+        
+        <div class="mb-3">
+          <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="mqtt-retain-flag">
+            <label class="form-check-label" for="mqtt-retain-flag">发布消息使用保留标志</label>
+          </div>
+          <div class="form-text">启用后，发布的消息将被MQTT服务器保留，新订阅者会立即收到最新值。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 生成随机客户端ID
+      document.getElementById('generate-client-id').addEventListener('click', function() {
+        const randomId = 'modbus_mqtt_client_' + Math.random().toString(16).substring(2, 10);
+        document.getElementById('mqtt-client-id').value = randomId;
+      });
+
+      // 加载已保存的MQTT设置
+      loadMQTTSettings();
+
+      // 测试MQTT连接
+      document.getElementById('test-mqtt-connection').addEventListener('click', testMQTTConnection);
+
+      // 保存MQTT设置
+      document.getElementById('saveMQTTSettings').addEventListener('click', saveMQTTSettings);
+      
+      // 数据源类型切换
+      document.querySelectorAll('input[name="data-source-type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+          // 这里可以添加数据源切换的逻辑
+        });
+      });
+    });
+
+    // 加载MQTT设置
+    function loadMQTTSettings() {
+      fetch('/api/mqtt/settings')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.settings) {
+            const settings = data.settings;
+            document.getElementById('mqtt-url').value = settings.url || '';
+            document.getElementById('mqtt-client-id').value = settings.clientId || '';
+            document.getElementById('mqtt-username').value = settings.username || '';
+            document.getElementById('mqtt-password').value = settings.password || '';
+            document.getElementById('mqtt-keepalive').value = settings.keepalive || 60;
+            document.getElementById('mqtt-reconnect-period').value = settings.reconnectPeriod || 5000;
+            document.getElementById('mqtt-connect-timeout').value = settings.connectTimeout || 30000;
+            document.getElementById('mqtt-clean').checked = settings.clean !== false;
+            document.getElementById('mqtt-auto-reconnect').checked = settings.autoReconnect !== false;
+            document.getElementById('mqtt-subscribe-topic').value = settings.subscribeTopic || '';
+            document.getElementById('mqtt-publish-topic').value = settings.publishTopic || '';
+            document.getElementById('mqtt-data-format').value = settings.dataFormat || 'json';
+            document.getElementById('mqtt-retain-flag').checked = settings.retain === true;
+            
+            // 设置数据源类型
+            const dataSourceType = settings.dataSourceType || 'modbus';
+            document.querySelector(`input[name="data-source-type"][value="${dataSourceType}"]`).checked = true;
+          }
+        })
+        .catch(error => {
+          console.error('加载MQTT设置失败:', error);
+        });
+    }
+
+    // 测试MQTT连接
+    function testMQTTConnection() {
+      const url = document.getElementById('mqtt-url').value;
+      const clientId = document.getElementById('mqtt-client-id').value;
+      const username = document.getElementById('mqtt-username').value;
+      const password = document.getElementById('mqtt-password').value;
+      
+      if (!url) {
+        alert('请输入MQTT服务器地址');
+        return;
+      }
+      
+      const testButton = document.getElementById('test-mqtt-connection');
+      testButton.disabled = true;
+      testButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 测试中...';
+      
+      fetch('/api/mqtt/test-connection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          url,
+          clientId,
+          username,
+          password
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('连接成功！MQTT服务器可用。');
+        } else {
+          alert('连接失败: ' + (data.error || '未知错误'));
+        }
+      })
+      .catch(error => {
+        alert('请求错误: ' + error.message);
+      })
+      .finally(() => {
+        testButton.disabled = false;
+        testButton.innerHTML = '<i class="bi bi-plug"></i> 测试连接';
+      });
+    }
+
+    // 保存MQTT设置
+    function saveMQTTSettings() {
+      const saveButton = document.getElementById('saveMQTTSettings');
+      saveButton.disabled = true;
+      saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...';
+      
+      const settings = {
+        dataSourceType: document.querySelector('input[name="data-source-type"]:checked').value,
+        url: document.getElementById('mqtt-url').value,
+        clientId: document.getElementById('mqtt-client-id').value,
+        username: document.getElementById('mqtt-username').value,
+        password: document.getElementById('mqtt-password').value,
+        keepalive: parseInt(document.getElementById('mqtt-keepalive').value),
+        reconnectPeriod: parseInt(document.getElementById('mqtt-reconnect-period').value),
+        connectTimeout: parseInt(document.getElementById('mqtt-connect-timeout').value),
+        clean: document.getElementById('mqtt-clean').checked,
+        autoReconnect: document.getElementById('mqtt-auto-reconnect').checked,
+        subscribeTopic: document.getElementById('mqtt-subscribe-topic').value,
+        publishTopic: document.getElementById('mqtt-publish-topic').value,
+        dataFormat: document.getElementById('mqtt-data-format').value,
+        retain: document.getElementById('mqtt-retain-flag').checked
+      };
+      
+      fetch('/api/mqtt/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(settings)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('MQTT设置已成功保存！');
+        } else {
+          alert('保存失败: ' + (data.error || '未知错误'));
+        }
+      })
+      .catch(error => {
+        alert('请求错误: ' + error.message);
+      })
+      .finally(() => {
+        saveButton.disabled = false;
+        saveButton.innerHTML = '<i class="bi bi-save"></i> MQTT配置已保存';
+      });
+    }
+  </script>
+</body>
+</html> 

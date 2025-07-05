@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据控制API测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        .section-title {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: Consolas, monospace;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 15px;
+            background-color: #f9f9f9;
+            border-left: 3px solid #4CAF50;
+            padding: 10px;
+            font-family: Consolas, monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow: auto;
+        }
+        .templates {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .template-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .template-btn:hover {
+            background-color: #0b7dda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>数据控制API测试</h1>
+        
+        <div class="test-section">
+            <h3 class="section-title">请求数据</h3>
+            <div class="templates">
+                <button class="template-btn" onclick="loadTemplate('create_work_plan')">创建工作计划</button>
+                <button class="template-btn" onclick="loadTemplate('mark_complete')">标记完成</button>
+                <button class="template-btn" onclick="loadTemplate('update_param')">更新参数</button>
+                <button class="template-btn" onclick="loadTemplate('device_control')">设备控制</button>
+                <button class="template-btn" onclick="loadTemplate('temp_work_record')">临时工作记录</button>
+            </div>
+            <textarea id="requestData" placeholder="输入JSON请求数据..."></textarea>
+            <button onclick="sendRequest()">发送请求</button>
+        </div>
+        
+        <div class="test-section">
+            <h3 class="section-title">响应结果</h3>
+            <div id="result" class="result">结果将显示在这里...</div>
+        </div>
+    </div>
+
+    <script>
+        // 请求模板
+        const templates = {
+            create_work_plan: {
+                action_type: "increate",
+                target_object: "work_plan",
+                details: {
+                    content: "明天上午检查设备运行状态",
+                    time: "明天上午十点"
+                }
+            },
+            mark_complete: {
+                action_type: "mark_complete",
+                target_object: "work_plan_status_update",
+                details: {
+                    taskId: "1",
+                    status: "已完成"
+                }
+            },
+            update_param: {
+                action_type: "update",
+                target_object: "runtime_parameter",
+                details: {
+                    pump_speed: 75
+                }
+            },
+            device_control: {
+                action_type: "control",
+                target_object: "device_control",
+                details: {
+                    device_name: "pump_1",
+                    action: "start",
+                    duration: "30m"
+                }
+            },
+            temp_work_record: {
+                action_type: "increate",
+                target_object: "temporary_work_record",
+                details: {
+                    content: "紧急处理水泵故障",
+                    tempId: "temp_" + new Date().getTime()
+                }
+            }
+        };
+
+        // 加载模板
+        function loadTemplate(templateName) {
+            const template = templates[templateName];
+            if (template) {
+                document.getElementById('requestData').value = JSON.stringify(template, null, 2);
+            }
+        }
+
+        // 发送请求
+        async function sendRequest() {
+            const resultElement = document.getElementById('result');
+            resultElement.textContent = "发送请求中...";
+            
+            try {
+                const requestData = document.getElementById('requestData').value;
+                
+                // 解析并验证JSON
+                const jsonData = JSON.parse(requestData);
+                
+                // 发送请求
+                const response = await fetch('/api/data-control', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: requestData
+                });
+                
+                // 解析响应
+                const responseData = await response.json();
+                
+                // 显示结果
+                resultElement.textContent = JSON.stringify(responseData, null, 2);
+                
+                // 根据响应状态设置样式
+                if (responseData.success) {
+                    resultElement.style.borderLeftColor = '#4CAF50';
+                } else {
+                    resultElement.style.borderLeftColor = '#f44336';
+                }
+            } catch (error) {
+                resultElement.textContent = "错误: " + error.message;
+                resultElement.style.borderLeftColor = '#f44336';
+            }
+        }
+
+        // 初始加载默认模板
+        window.onload = function() {
+            loadTemplate('create_work_plan');
+        };
+    </script>
+</body>
+</html> 

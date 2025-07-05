@@ -1,0 +1,3806 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!-- ������ʼ���ؼ����� -->
+    <script>
+        // ȷ��lastUserInteractionTime������ҳ����������ھͱ���ʼ��
+        window.lastUserInteractionTime = Date.now();
+        console.log('[�����ű�] �ѳ�ʼ��lastUserInteractionTime =', new Date(window.lastUserInteractionTime).toLocaleTimeString());
+        
+        // ��ʼ��activeTimerReminders����
+        window.activeTimerReminders = new Map();
+        console.log('[�����ű�] �ѳ�ʼ��activeTimerReminders');
+        
+        // ��ʼ���Զ�������ſ���
+        window.autoSpeakEnabled = true;
+        console.log('[�����ű�] �ѳ�ʼ��autoSpeakEnabled = true');
+        
+        // ��ʼ����������
+        window.currentVoice = 'longxiaochun';
+        window.currentAudio = null;
+        console.log('[�����ű�] �ѳ�ʼ����������');
+    </script>
+    
+    <!-- ������ʼ��timerSettings������ȷ�����κνű�ִ��ǰ�ʹ��� -->
+    <script>
+    (function() {
+        console.log('[�����޸�] ������ʼ��timerSettings����');
+        
+        // ��ȫ����������timerSettings
+        window.timerSettings = {
+            repeatCount: 2,         // Ĭ���ظ�����
+            intervalSeconds: 5,     // Ĭ�ϼ������
+            autoStopOnResponse: true, // Ĭ������Ӧʱֹͣ����
+            audioLoopCount: 1,      // ��Ƶѭ������
+            audioLoopInterval: 500  // ��Ƶѭ�����
+        };
+        
+        // ��ʼ����ʱ����ر������������Ƶĳ�ʼ��˳������
+        window.activeTimerReminders = new Map(); // ���������Ѽ�ʱ��
+        window.lastUserInteractionTime = Date.now(); // �ϴ��û�����ʱ��
+        
+        // ���Դ�localStorage�����ѱ��������
+        try {
+            const savedSettings = localStorage.getItem('timerSettings');
+            if (savedSettings) {
+                const parsedSettings = JSON.parse(savedSettings);
+                // �ϲ��ѱ��������
+                window.timerSettings = {...window.timerSettings, ...parsedSettings};
+                console.log('[�����޸�] ��localStorage�����˱��������');
+            }
+        } catch (error) {
+            console.error('[�����޸�] �������ó���:', error);
+        }
+        
+        // ȷ��initSettingsPanel�������԰�ȫִ��
+        const originalInitSettingsPanel = window.initSettingsPanel;
+        window.initSettingsPanel = function() {
+            console.log('[�����޸�] ���ð�ȫ�汾��initSettingsPanel');
+            
+            // �ٴ�ȷ��timerSettings����
+            if (typeof window.timerSettings === 'undefined') {
+                console.warn('[�����޸�] timerSettings�����ڣ����³�ʼ��');
+                window.timerSettings = {
+                    repeatCount: 2,
+                    intervalSeconds: 5,
+                    autoStopOnResponse: true,
+                    audioLoopCount: 1,
+                    audioLoopInterval: 500
+                };
+            }
+            
+            // ����ԭʼ����
+            if (typeof originalInitSettingsPanel === 'function') {
+                try {
+                    originalInitSettingsPanel();
+                } catch (e) {
+                    console.error('[�����޸�] ִ��ԭʼinitSettingsPanel����:', e);
+                }
+            }
+        };
+        
+        console.log('[�����޸�] ������ʼ���ͺ����޸����');
+    })();
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>��������</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .chat-container {
+            background-color: white;
+            border-radius: 0 0 5px 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        
+        .user-message {
+            background-color: #DCF8C6;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .bot-message {
+            background-color: #F1F0F0;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 15px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+        }
+        
+        .chat-input button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .chat-input button:hover {
+            background-color: #45a049;
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 10px 15px;
+            background-color: #f1f1f1;
+            border-radius: 18px;
+            margin-bottom: 15px;
+            width: fit-content;
+        }
+        
+        .typing-indicator span {
+            height: 10px;
+            width: 10px;
+            float: left;
+            margin: 0 1px;
+            background-color: #9E9EA1;
+            display: block;
+            border-radius: 50%;
+            opacity: 0.4;
+        }
+        
+        .typing-indicator span:nth-of-type(1) {
+            animation: 1s blink infinite 0.3333s;
+        }
+        
+        .typing-indicator span:nth-of-type(2) {
+            animation: 1s blink infinite 0.6666s;
+        }
+        
+        .typing-indicator span:nth-of-type(3) {
+            animation: 1s blink infinite 0.9999s;
+        }
+        
+        @keyframes blink {
+            50% {
+                opacity: 1;
+            }
+        }
+        
+        .file-upload {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .file-upload label {
+            padding: 8px 15px;
+            background-color: #f1f1f1;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        .file-upload label:hover {
+            background-color: #e1e1e1;
+        }
+        
+        .file-preview {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .file-item {
+            position: relative;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .file-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        
+        .remove-file {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            background-color: #ff4d4d;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            cursor: pointer;
+        }
+        
+        .file-status {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background-color: #333;
+        }
+        
+        .nav-bar a {
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+        }
+        
+        .nav-bar a:hover {
+            background-color: #555;
+            border-radius: 5px;
+        }
+        
+        /* ����̨��ť��ʽ */
+        .console-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        .console-button:hover {
+            background-color: #45a049;
+        }
+        
+        /* ���ð�ť��ʽ */
+        .reset-button {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .reset-button:hover {
+            background-color: #ff5252;
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-left: auto;
+        }
+        
+        /* ¼���ť��ʽ */
+        .record-button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .record-button.recording {
+            background-color: #cc0000;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .record-button:hover {
+            background-color: #d32f2f;
+        }
+        
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+        
+        .recording-status {
+            display: none;
+            font-size: 14px;
+            color: #f44336;
+            margin-top: 5px;
+            text-align: center;
+        }
+        
+        /* ��Ӽ�ʱ����ʷ��¼��ť��ʽ */
+        .timer-history-button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        .timer-history-button:hover {
+            background-color: #0b7dda;
+        }
+        
+        /* ��ʱ����ʷ��¼ģ̬����ʽ */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            width: 80%;
+            max-width: 800px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .timer-history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .timer-history-table th, .timer-history-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .timer-history-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .timer-history-table th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .timer-history-table tr:hover {
+            background-color: #ddd;
+        }
+        
+        .no-history {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        /* ��Ӽ�ʱ�����������ʽ */
+        .settings-panel {
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .settings-panel h3 {
+            margin-top: 0;
+            color: #4CAF50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .settings-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .settings-row label {
+            flex: 1;
+            margin-right: 10px;
+        }
+        
+        .settings-row input, .settings-row select {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .settings-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        .settings-toggle {
+            background-color: #f1f1f1;
+            color: #333;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+        
+        .settings-toggle:hover {
+            background-color: #e1e1e1;
+        }
+
+        /* ģ̬������ʽ */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #555;
+        }
+
+        .settings-container {
+            margin-top: 15px;
+        }
+
+        .settings-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .settings-section h3 {
+            margin-top: 0;
+            color: #4CAF50;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .settings-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .save-btn, .test-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .save-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .test-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background-color: #45a049;
+        }
+
+        .test-btn:hover {
+            background-color: #0b7dda;
+        }
+        
+        /* ��ʱ��Ϣ��ʽ */
+        .temporary-message {
+            opacity: 0.8;
+            position: relative;
+        }
+        
+        /* ���ض�����ʽ */
+        .loading-dots {
+            display: inline-block;
+            margin-left: 10px;
+            vertical-align: bottom;
+        }
+        
+        .loading-dots span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #777;
+            margin-right: 3px;
+            animation: dotPulse 1.5s infinite ease-in-out;
+        }
+        
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes dotPulse {
+            0%, 100% { transform: scale(0.6); opacity: 0.6; }
+            50% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* ��Ϣ�ı���ʽ */
+        .message-text {
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+    <!-- ��ʱ��������ͨ�������ű���ʼ����������Ҫ�ⲿ�޸��ű� -->
+    <!-- <script src="/js/timer-settings-init-quick-fix.js"></script> -->
+
+    <!-- �������е��Թ��� -->
+    <script>
+    (function() {
+        console.log('[���Խ���] ���ڽ������е������͹���');
+        
+        // ���CSS�����ص������
+        const styleElement = document.createElement('style');
+        styleElement.textContent = `
+            /* �������е���Ԫ�� */
+            #timerDebugPanel, #debugToggle, .debug-panel, .debug-toggle,
+            [id^="debug-"], [class^="debug-"], [id*="debug"], [class*="debug"] {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                height: 0 !important;
+                width: 0 !important;
+                position: absolute !important;
+                left: -9999px !important;
+                top: -9999px !important;
+                z-index: -9999 !important;
+            }
+        `;
+        document.head.appendChild(styleElement);
+        
+        // ���õ��������غ���
+        window.addDebugToggleButton = function() {
+            console.log('[���Խ���] ���԰�ť�����ѽ���');
+            return false;
+        };
+        
+        window.debugTimerForm = function() {
+            console.log('[���Խ���] ������幦���ѽ���');
+            return false;
+        };
+        
+        // ����DOM���غ�Ĵ���
+        document.addEventListener('DOMContentLoaded', function() {
+            // �����Ƴ����е���Ԫ��
+            setTimeout(function removeDebugElements() {
+                const selectors = [
+                    '#timerDebugPanel', '#debugToggle', '.debug-panel', '.debug-toggle',
+                    '[id^="debug-"]', '[class^="debug-"]'
+                ];
+                
+                selectors.forEach(function(selector) {
+                    document.querySelectorAll(selector).forEach(function(element) {
+                        if (element && element.parentNode) {
+                            element.parentNode.removeChild(element);
+                        }
+                    });
+                });
+                
+                // ����emergencyFunctions�еĵ��Թ���
+                if (window.emergencyFunctions) {
+                    window.emergencyFunctions.debugTimerForm = function() {
+                        console.log('[���Խ���] ��������еĵ�����幦���ѽ���');
+                        return false;
+                    };
+                }
+            }, 500);
+            
+            // ���ڼ�鲢�Ƴ�����Ԫ��
+            setInterval(function() {
+                document.querySelectorAll('#timerDebugPanel, #debugToggle, .debug-panel, .debug-toggle').forEach(function(element) {
+                    if (element && element.parentNode) {
+                        element.parentNode.removeChild(element);
+                    }
+                });
+            }, 2000);
+        });
+    })();
+    </script>
+</head>
+<body>
+    <!-- ������ -->
+    <div class="nav-bar">
+        <div class="nav-links">
+            <a href="/">��ҳ</a>
+            <a href="/chat.html">����</a>
+        </div>
+        <div>
+            <button class="console-button" onclick="window.location.href='/modbus.html'">����̨</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>��������</h1>
+            <button id="toggleSettings" class="settings-toggle">��ʱ������</button>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <!-- ������Ϣ����������ʾ -->
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="������������..." autocomplete="off">
+                <button id="sendButton">����</button>
+                <button id="recordButton" class="record-button">¼��</button>
+            </div>
+            
+            <div class="recording-status" id="recordingStatus">����¼��...</div>
+            
+            <div class="file-upload">
+                <input type="file" id="fileInput" accept="image/*" multiple>
+                <label for="fileInput">�ϴ�ͼƬ</label>
+                <div id="fileStatus" class="file-status"></div>
+            </div>
+            
+            <div class="file-preview" id="filePreview">
+                <!-- �ļ�Ԥ������������ʾ -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- ��ʱ����ʷ��¼ģ̬�� -->
+    <div id="timerHistoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>��ʱ����ʷ��¼</h2>
+            <div id="timerHistoryContent">
+                <table class="timer-history-table">
+                    <thead>
+                        <tr>
+                            <th>����</th>
+                            <th>��Ϣ</th>
+                            <th>���ʱ��</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timerHistoryTableBody">
+                        <!-- ��ʱ����ʷ��¼����������ʾ -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ���������� -->
+    <!-- 
+    <div id="timerSettings" class="settings-panel" style="display: none;">
+        <h3>��ʱ����������</h3>
+        <div class="settings-row">
+            <label for="reminderRepeatCount">�����ظ�����:</label>
+            <input type="number" id="reminderRepeatCount" min="1" max="10" value="2">
+        </div>
+        <div class="settings-row">
+            <label for="reminderInterval">�ظ����ʱ��(��):</label>
+            <input type="number" id="reminderInterval" min="1" max="60" value="5">
+        </div>
+        <div class="settings-row">
+            <label for="autoStopReminders">����Ӧ��ʱֹͣ����:</label>
+            <select id="autoStopReminders">
+                <option value="true" selected>��</option>
+                <option value="false">��</option>
+            </select>
+        </div>
+        <div class="settings-info">
+            ����ʱ��������ϵͳ�Ქ����ʾ�����Ϣ�������������ý����ظ����ѣ�ֱ���û�������Ϣ��ﵽ����ظ�������
+        </div>
+    </div>
+    -->
+    
+    <!-- ��ʱ������ģ̬���� -->
+    <div id="timerSettingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeTimerSettings">&times;</span>
+            <h2>��ʱ����Ƶ����</h2>
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h3>�����ظ�����</h3>
+                    <div class="settings-row">
+                        <label for="reminderRepeatCount">�����ظ�����:</label>
+                        <input type="number" id="reminderRepeatCount" min="1" max="10" value="2">
+                    </div>
+                    <div class="settings-row">
+                        <label for="reminderInterval">�ظ����ʱ��(��):</label>
+                        <input type="number" id="reminderInterval" min="1" max="60" value="5">
+                    </div>
+                    <div class="settings-row">
+                        <label for="autoStopReminders">����Ӧ��ʱֹͣ����:</label>
+                        <select id="autoStopReminders">
+                            <option value="true" selected>��</option>
+                            <option value="false">��</option>
+                        </select>
+                    </div>
+                    <div class="settings-info">
+                        ����ʱ��������ϵͳ�Ქ����ʾ�����Ϣ�������������ý����ظ����ѣ�ֱ���û�������Ϣ��ﵽ����ظ�������
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>��Ƶѭ������</h3>
+                    <div class="settings-row">
+                        <label for="audioLoopCount">��Ƶѭ������:</label>
+                        <input type="number" id="audioLoopCount" min="1" max="5" value="1">
+                    </div>
+                    <div class="settings-row">
+                        <label for="audioLoopInterval">��Ƶѭ�����(����):</label>
+                        <input type="number" id="audioLoopInterval" min="0" max="5000" step="100" value="500">
+                    </div>
+                    <div class="settings-info">
+                        ��Ƶѭ�����ÿ��Ƶ��������е�ѭ�����Ŵ����ͼ�����ǿ����Ч����
+                    </div>
+                </div>
+                
+                <div class="settings-buttons">
+                    <button id="saveTimerSettings" class="save-btn">��������</button>
+                    <button id="testAudioLoop" class="test-btn">����ѭ������</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOMԪ��
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const fileInput = document.getElementById('fileInput');
+        const fileStatus = document.getElementById('fileStatus');
+        const filePreview = document.getElementById('filePreview');
+        const recordButton = document.getElementById('recordButton');
+        
+        // ȫ�ֱ���
+        let conversationId = localStorage.getItem('lastSessionId') || '';
+        let userId = localStorage.getItem('userId') || generateUserId();
+        let ws = null;
+        let sessionStartTime = Date.now();
+        let mediaSource = null;
+        let sourceBuffer = null;
+        let audioElement = null;
+        let audioChunks = [];
+        let audioQueue = [];
+        let pendingAudioUrls = [];
+        let isAudioPlaying = false;
+        let isProcessingAudio = false;
+        let audioInitialized = false;
+        let processedUrls = new Set();
+        let deletedFiles = new Set();
+        let totalAudioReceived = 0;
+        let totalAudioPlayed = 0;
+        let currentPlayingAudio = null;
+        let currentTaskId = null; // ��ӵ�ǰ����ID����
+        let isStreamingResponse = false; // ����Ƿ����ڽ�����ʽ��Ӧ
+        let uploadedFiles = []; // ����ϴ��ļ�����
+        let botMessage = ''; // ��ӻ�������Ϣ�����������ۼ���ʾ��Ϣ����
+        let currentConversationRoundId = ''; // ��ǰ�Ի��ִ�ID�����ڹ�����Ƶ
+        
+        // ¼����ر���
+        let isRecording = false;
+        let mediaRecorder = null;
+        let audioStream = null;
+        let audioTracks = null;
+        let recordingStartTime = 0;
+        
+        // ����û������¼���������Ƶ����
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('keydown', unlockAudio);
+        
+        // ��ʼ��ҳ��
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('ҳ���Ѽ��أ���ʼ���������');
+            
+            // ��ʼ������ȡ�û���ʶ
+            userId = localStorage.getItem('userId');
+            if (!userId) {
+                userId = 'user-' + Date.now();
+                localStorage.setItem('userId', userId);
+                console.log(`�����µ��û���ʶ: ${userId}`);
+            } else {
+                console.log(`ʹ���ѱ�����û���ʶ: ${userId}`);
+            }
+            
+            // ��ʼ������ʶ����״̬
+            window.isProcessingAjaxRecognition = false;
+            
+            // ���Դ�localStorage�ָ��ỰID
+            const savedSessionId = localStorage.getItem('lastSessionId');
+            const savedSessionDate = localStorage.getItem('lastSessionDate');
+            const currentDate = getCurrentDateString();
+            
+            if (savedSessionId && savedSessionDate === currentDate) {
+                // ����б���ĻỰID�����ǽ���ģ���ʹ����
+                conversationId = savedSessionId;
+                console.log(`��localStorage�ָ��ỰID: ${conversationId}`);
+            } else {
+                // �����ʼ��/���ỰID
+                checkAndUpdateConversationId();
+                console.log('��ǰ�ỰID:', conversationId);
+            }
+            
+            // ����¼�������
+            sendButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); // ��ֹĬ�ϵĻس�����
+                    sendMessage();
+                }
+            });
+            fileInput.addEventListener('change', handleFileUpload);
+            
+            // ��ʼ����Ƶ��ر���
+            mediaSource = null;
+            sourceBuffer = null;
+            audioElement = null;
+            audioChunks = [];
+            audioQueue = [];
+            pendingAudioUrls = [];
+            isAudioPlaying = false;
+            isProcessingAudio = false;
+            audioInitialized = false;
+            processedUrls = new Set();
+            deletedFiles = new Set();
+            totalAudioReceived = 0;
+            totalAudioPlayed = 0;
+            currentPlayingAudio = null;
+            console.log('��Ƶ�����ѳ�ʼ��');
+            
+            // ��ӻ�ӭ��Ϣ
+            addMessage('���ã������������֣���ʲô���԰�������', 'bot');
+            
+            // ����ɻỰ����Ƶ�ļ�
+            cleanupOldAudioFiles(sessionStartTime);
+            
+            // �����ð�ť�¼�
+            const resetButton = document.getElementById('reset-button');
+            if (resetButton) {
+                resetButton.addEventListener('click', resetConversation);
+            } else {
+                console.warn('���ð�ťԪ��δ�ҵ��������¼���');
+            }
+            
+            // ��ʼ��¼�����
+            initRecordingFeature();
+            
+            // ����WebSocket����
+            connectWebSocket();
+            
+            // ��ʼ����ʱ����ʷ��¼����
+            initTimerHistory();
+            
+            // ��ʼ���������
+            initSettingsPanel();
+        });
+        
+        // ����WebSocket
+        function connectWebSocket() {
+            const wsUrl = `ws://${window.location.host}`;
+            
+            console.log(`��������WebSocket: ${wsUrl}`);
+            ws = new WebSocket(wsUrl);
+            
+            // ����ϳɺͲ�����غ���
+            function requestSpeech(text) {
+                if (!text) return;
+                console.log('��������ϳ�:', text);
+                
+                // ֹͣ��ǰ���ڲ��ŵ���Ƶ
+                stopAllAudio();
+                
+                // ����TTS API
+                fetch('/api/tts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        voice: window.currentVoice || 'longxiaochun'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.audioUrl) {
+                        playAudio(data.audioUrl);
+                    } else {
+                        console.error('����ϳ�ʧ��:', data.error || 'δ֪����');
+                    }
+                })
+                .catch(error => {
+                    console.error('����ϳ�����ʧ��:', error);
+                });
+            }
+
+            function playAudio(audioUrl) {
+                if (!audioUrl) return;
+                
+                // ֹͣ��ǰ���ڲ��ŵ���Ƶ
+                stopAllAudio();
+                
+                // �����µ���Ƶʵ��������
+                window.currentAudio = new Audio(audioUrl);
+                window.currentAudio.play().catch(error => {
+                    console.error('��Ƶ����ʧ��:', error);
+                });
+            }
+
+            function stopAllAudio() {
+                if (window.currentAudio) {
+                    window.currentAudio.pause();
+                    window.currentAudio = null;
+                }
+                console.log('ֹͣ�������ڲ��ŵ���Ƶ');
+            }
+
+            // �л��Զ��������
+            window.toggleAutoSpeak = function() {
+                window.autoSpeakEnabled = !window.autoSpeakEnabled;
+                console.log('�Զ����������' + (window.autoSpeakEnabled ? '����' : '����'));
+                return window.autoSpeakEnabled;
+            }
+
+            // �л�����
+            window.changeVoice = function(voice) {
+                window.currentVoice = voice;
+                console.log('���л�������:', voice);
+            }
+            
+            ws.onopen = () => {
+                console.log('WebSocket�����ѽ���');
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('�յ�WebSocket��Ϣ����:', data.type);
+                    
+                    // ��������ʶ����
+                    if (data.type === 'asr_result') {
+                        // ���AJAX�������ڴ��������WebSocket����
+                        if (window.isProcessingAjaxRecognition !== true) {
+                            updateRecognitionText(data);
+                        } else {
+                            console.log('AJAXʶ���������ڴ����У�����WebSocket asr_result����');
+                        }
+                    }
+                    // ��������ʶ������¼�
+                    else if (data.type === 'asr_complete') {
+                        // ���AJAX�������ڴ��������WebSocket����
+                        if (window.isProcessingAjaxRecognition !== true) {
+                            handleRecognitionComplete(data);
+                        } else {
+                            console.log('AJAXʶ���������ڴ����У�����WebSocket asr_complete����');
+                        }
+                    }
+                    // �����ʱ������¼�
+                    else if (data.type === 'timer_completed') {
+                        // ��ʱ�����
+                        handleTimerCompleted(data.timer);
+                    }
+                    // ��Ӷ�������Ӧ�Ĵ���
+                    else if (data.type === 'chat_response') {
+                        // ��������ָʾ��
+                        typingIndicator.style.display = 'none';
+                        
+                        if (data.success) {
+                            // ��ӻ�������Ϣ
+                            console.log('�յ��ظ�:', data.answer);
+                            addMessage(data.answer, 'bot');
+                            
+                            // ��Ϣ�����ʶ����ѡ�������Ҫ��UI��չʾ���ࣩ
+                            if (data.messageType) {
+                                console.log(`��Ϣ����: ${data.messageType}`);
+                            }
+                            
+                            // ����������Զ�����
+                            if (window.autoSpeakEnabled) {
+                                // ��������ϳ�
+                                requestSpeech(data.answer);
+                            }
+                        } else {
+                            // �������
+                            addMessage(data.error || '��Ǹ��������������ʱ�����ˡ�', 'bot');
+                        }
+                        
+                        // �������ײ�
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                    // ����������Ӧ����
+                    else if (data.type === 'chat_response_update') {
+                        console.log('�յ�������Ӧ����:', data.answer);
+                        
+                        if (data.success) {
+                            // ��Ӹ��µĻظ�
+                            addMessage(data.answer, 'bot');
+                            
+                            // ����������Զ���������Ÿ��»ظ�������
+                            if (window.autoSpeakEnabled) {
+                                // ��������ϳ�
+                                requestSpeech(data.answer);
+                            }
+                        }
+                    }
+                    // ����TTS��Ӧ
+                    else if (data.type === 'tts_response') {
+                        if (data.success && data.audioUrl) {
+                            playAudio(data.audioUrl);
+                        } else {
+                            console.error('TTS����ʧ��:', data.error || 'δ֪����');
+                        }
+                    }
+                } catch (error) {
+                    console.error('����WebSocket��Ϣʧ��:', error);
+                }
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket�����ѹرգ���������...');
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket����:', error);
+            };
+        }
+        
+        // ��ʼ��¼�����
+        function initRecordingFeature() {
+            console.log('��ʼ��¼�����');
+            
+            // ���������Ƿ�֧��getUserMedia
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.error('�������֧��¼�����');
+                recordButton.style.display = 'none';
+                return;
+            }
+            
+            // ����¼���ť״̬ - ��ǿ�汾
+            function updateRecordingButtonState(state) {
+                console.log(`����¼���ť״̬: ${state}`);
+                
+                // �Ƴ����п��ܵ���
+                recordButton.classList.remove('recording', 'processing', 'error');
+                
+                // ����״̬������Ӧ���������
+                switch (state) {
+                    case 'idle':
+                        // ����״̬
+                        recordButton.textContent = '¼��';
+                        recordButton.disabled = false;
+                        recordButton.title = '��ʼ¼��';
+                        
+                        // ����״̬��ʾ
+                        if (recordingStatus.textContent === '����¼��...' || 
+                            recordingStatus.textContent.startsWith('����¼��... ')) {
+                            recordingStatus.style.display = 'none';
+                        }
+                        break;
+                        
+                    case 'recording':
+                        // ¼����״̬
+                        recordButton.classList.add('recording');
+                        recordButton.textContent = 'ֹͣ';
+                        recordButton.disabled = false;
+                        recordButton.title = 'ֹͣ¼��';
+                        
+                        // ��ʾ¼��״̬
+                        recordingStatus.style.display = 'block';
+                        recordingStatus.textContent = '����¼��...';
+                        break;
+                        
+                    case 'processing':
+                        // ������״̬
+                        recordButton.classList.add('processing');
+                        recordButton.textContent = '������...';
+                        recordButton.disabled = true;
+                        recordButton.title = '������...';
+                        
+                        // ��ʾ����״̬
+                        recordingStatus.style.display = 'block';
+                        recordingStatus.textContent = '���ڴ���¼��...';
+                        break;
+                        
+                    case 'error':
+                        // ����״̬
+                        recordButton.classList.add('error');
+                        recordButton.textContent = '����';
+                        recordButton.disabled = false;
+                        recordButton.title = '¼�������������';
+                        
+                        // ���û���ض�������Ϣ����ʾͨ����Ϣ
+                        if (recordingStatus.textContent === '') {
+                            recordingStatus.textContent = '¼������������';
+                        }
+                        
+                        recordingStatus.style.display = 'block';
+                        break;
+                    
+                    default:
+                        console.error(`δ֪�İ�ť״̬: ${state}`);
+                        recordButton.textContent = '¼��';
+                        recordButton.disabled = false;
+                        break;
+                }
+                
+                // ��־��ǰ״̬
+                console.log(`��ť״̬�Ѹ���Ϊ: ${state}, ����״̬: ${recordButton.disabled}, �ı�: ${recordButton.textContent}`);
+            }
+            
+            // ��ʾ¼��״̬��Ϣ
+            function showStatus(type, message) {
+                console.log(`״̬����: [${type}] ${message}`);
+                
+                if (!recordingStatus) {
+                    console.error('¼��״̬Ԫ��δ�ҵ�');
+                    return;
+                }
+                
+                recordingStatus.textContent = message;
+                recordingStatus.style.display = 'block';
+                
+                // ����״̬�������ò�ͬ����ʽ
+                recordingStatus.className = 'recording-status';
+                switch (type) {
+                    case 'error':
+                        recordingStatus.classList.add('status-error');
+                        break;
+                    case 'success':
+                        recordingStatus.classList.add('status-success');
+                        // �ɹ�״̬1.5����Զ�����
+                        setTimeout(() => {
+                            if (recordingStatus.classList.contains('status-success')) {
+                                recordingStatus.style.display = 'none';
+                            }
+                        }, 1500);
+                        break;
+                    case 'info':
+                        recordingStatus.classList.add('status-info');
+                        break;
+                    case 'warning':
+                        recordingStatus.classList.add('status-warning');
+                        break;
+                    case 'processing':
+                        recordingStatus.classList.add('status-processing');
+                        break;
+                    default:
+                        break;
+                }
+            }
+            
+            // ���¼���ť�¼� - ��ǿ�汾
+            recordButton.addEventListener('click', (event) => {
+                console.log('¼���ť���������ǰ¼��״̬:', isRecording ? '¼����' : 'δ¼��');
+                
+                // ��ֹ�¼�ð�ݺ�Ĭ����Ϊ�������δ���
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // ¼���ť�ڴ�����ʱ���õ��
+                if (recordButton.disabled) {
+                    console.log('¼���ť��ǰ�ѽ��ã����Ե��');
+                    return;
+                }
+                
+                if (isRecording) {
+                    console.log('����ֹͣ¼��...');
+                    // ��������UI״̬����ֹ�û��ظ����
+                    recordButton.disabled = true;
+                    updateRecordingButtonState('processing');
+                    
+                    // ʹ��setTimeoutȷ��״̬���º���ֹͣ¼��
+                    setTimeout(() => {
+                        stopRecording();
+                    }, 10);
+                } else {
+                    console.log('���Կ�ʼ¼��...');
+                    startRecording();
+                }
+            });
+            
+            // ��ʼ¼�� - ֻ��������¼��ʶ��汾
+            async function startRecording() {
+                console.log('��ʼ¼�������ʶ��ģʽ��');
+                
+                // ����¼���ť״̬
+                updateRecordingButtonState('recording');
+                
+                try {
+                    // ������Ƶ������
+                    audioChunks = [];
+                    
+                    // ����¼��״̬Ϊtrue
+                    isRecording = true;
+                    
+                    // ��ȡý����
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            sampleRate: 16000,
+                            channelCount: 1 // ȷ��������
+                        }
+                    });
+                    
+                    console.log('��ȡ����˷�Ȩ��');
+                    
+                    // ����ý�����͹��
+                    audioStream = stream;
+                    audioTracks = stream.getAudioTracks();
+                    
+                    // ����MediaRecorderʵ������ȷָ��mime���ͺͱ�����
+                    const options = {
+                        mimeType: 'audio/webm;codecs=opus',
+                        audioBitsPerSecond: 128000
+                    };
+                    
+                    // �����֧�֣�����������ʽ
+                    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                        console.warn(`${options.mimeType} ��֧�֣����Ա�ѡ��ʽ`);
+                        options.mimeType = 'audio/webm';
+                    }
+                    
+                    console.log(`ʹ��¼���ʽ: ${options.mimeType}`);
+                    mediaRecorder = new MediaRecorder(stream, options);
+                    
+                    // ��¼��ʼʱ��
+                    recordingStartTime = Date.now();
+                    
+                    // �������ݿ����¼�������
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            console.log(`�ռ�����Ƶ��: ${(event.data.size / 1024).toFixed(2)} KB`);
+                            audioChunks.push(event.data);
+                        }
+                    };
+                    
+                    // ����ֹͣ�¼�������
+                    mediaRecorder.onstop = () => {
+                        console.log('MediaRecorder ֹͣ');
+                        
+                        // ֹͣ������Ƶ���
+                        if (audioTracks) {
+                            audioTracks.forEach(track => {
+                                if (track.readyState === 'live') {
+                                    track.stop();
+                                    console.log('��Ƶ�����ֹͣ');
+                                }
+                            });
+                        }
+                        
+                        // ��������¼��
+                        processRecording();
+                    };
+                    
+                    // ��ʼ¼��
+                    mediaRecorder.start(1000);  // ÿ1���ȡһ�����ݿ�
+                    console.log('¼���ѿ�ʼ��ÿ1���ռ�һ������');
+                    
+                    showStatus('info', '¼����...');
+                } catch (error) {
+                    console.error('���¼��ʱ����:', error);
+                    
+                    // ȷ��¼��״̬����Ϊfalse
+                    isRecording = false;
+                    
+                    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                        showStatus('error', '��˷���ʱ��ܾ������������Ȩ������');
+                    } else {
+                        showStatus('error', `���¼�����: ${error.message}`);
+                    }
+                    
+                    updateRecordingButtonState('error');
+                    
+                    // �ӳٺ�ָ���ť״̬
+                    setTimeout(() => {
+                        updateRecordingButtonState('idle');
+                    }, 2000);
+                }
+            }
+            
+            // ֹͣ¼��
+            function stopRecording() {
+                console.log('ֹͣ¼��');
+                
+                // ���°�ť״̬
+                updateRecordingButtonState('processing');
+                
+                // ����¼��״̬Ϊfalse
+                isRecording = false;
+                
+                try {
+                    // ���mediaRecorder�Ƿ���ں�״̬
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        console.log('ֹͣMediaRecorder');
+                        mediaRecorder.stop();
+                    } else {
+                        console.warn('MediaRecorder�����ڻ���¼��״̬');
+                        
+                        // ���¼���������ڣ�ֱ�Ӵ�����
+                        if (audioChunks && audioChunks.length > 0) {
+                            processRecording();
+                        } else {
+                            updateRecordingButtonState('idle');
+                            showStatus('error', '¼���쳣��������');
+                        }
+                    }
+                    
+                    // ֹͣ������Ƶ���
+                    if (audioTracks) {
+                        audioTracks.forEach(track => {
+                            if (track.readyState === 'live') {
+                                track.stop();
+                                console.log('��Ƶ�����ֹͣ');
+                            }
+                        });
+                    }
+                    
+                    // �ͷ���Ƶ��
+                    if (audioStream) {
+                        audioStream.getTracks().forEach(track => track.stop());
+                        audioStream = null;
+                    }
+                } catch (error) {
+                    console.error('ֹͣ¼��ʱ����:', error);
+                    showStatus('error', `ֹͣ¼�����: ${error.message}`);
+                    updateRecordingButtonState('error');
+                    
+                    // �ӳٺ�ָ���ť״̬
+                    setTimeout(() => {
+                        updateRecordingButtonState('idle');
+                    }, 2000);
+                }
+            }
+            
+            // ����¼������
+            function processRecording() {
+                console.log('��ʼ��������¼������');
+                
+                // ����Ƿ���¼������
+                if (!audioChunks || audioChunks.length === 0) {
+                    console.warn('û��¼�����ݿɴ���');
+                    showStatus('error', 'û�м�⵽����');
+                    updateRecordingButtonState('idle');
+                    return;
+                }
+                
+                try {
+                    // ������ƵBlob
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    console.log(`������Ƶ���ݴ�С: ${(audioBlob.size / 1024).toFixed(2)} KB`);
+                    
+                    // �����Ƶ��С
+                    if (audioBlob.size < 8192) { // 8KB
+                        console.warn('��Ƶ����̫С������û��¼������');
+                        showStatus('error', '¼��̫�̻�û������');
+                        updateRecordingButtonState('idle');
+                        return;
+                    }
+                    
+                    // ʹ�õ�ǰʱ�������Ψһ�û�ID���ļ���
+                    const uniqueUserId = 'user-' + Date.now();
+                    const filename = `recording_${Date.now()}.webm`;
+                    
+                    // ����FormData����
+                    const formData = new FormData();
+                    formData.append('file', audioBlob, filename);
+                    formData.append('user', uniqueUserId);
+                    formData.append('isPartial', 'false'); // ���Ϊ������Ƶ
+                    
+                    showStatus('info', '����ʶ����������...');
+                    
+                    // ���AJAXʶ���������ڴ�����
+                    window.isProcessingAjaxRecognition = true;
+                    
+                    // ���͵�����������ʶ��
+                    fetch('/api/speech-to-text', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            console.error(`����ʶ������ʧ��: ${response.status} ${response.statusText}`);
+                            throw new Error(`����ʶ������ʧ��: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('��������ʶ����(AJAX):', data);
+                        
+                        if (data.success && data.text) {
+                            // ��ʶ������ӵ������
+                            const inputBox = document.getElementById('messageInput');
+                            if (inputBox) {
+                                const currentText = inputBox.value.trim();
+                                let newText = '';
+                                
+                                // �����ǰ����������ı���׷����ʶ����ı��������滻
+                                if (currentText) {
+                                    // ����Ƿ���Ҫ��ӿո�������
+                                    const needsSeparator = !currentText.endsWith(' ') && 
+                                                          !currentText.endsWith('��') && 
+                                                          !currentText.endsWith('��') &&
+                                                          !currentText.endsWith('��') &&
+                                                          !currentText.endsWith('��');
+                                    
+                                    // ����ʵ��ķָ�������Ļ�����ͨ��ʹ�ö��ţ�
+                                    newText = currentText + (needsSeparator ? '��' : '') + data.text;
+                                } else {
+                                    newText = data.text;
+                                }
+                                
+                                // ����������ı�
+                                inputBox.value = newText;
+                                
+                                // ���������õ������ĩβ
+                                inputBox.focus();
+                                inputBox.setSelectionRange(inputBox.value.length, inputBox.value.length);
+                            } else {
+                                console.error('δ�ҵ�idΪmessageInput�������Ԫ��');
+                            }
+                            
+                            showStatus('success', '����ʶ��ɹ�������ӵ������');
+                        } else {
+                            console.warn('����ʶ��û�з����ı�');
+                            showStatus('warning', 'δ��ʶ����������');
+                        }
+                        
+                        // �ָ���ť״̬
+                        updateRecordingButtonState('idle');
+                    })
+                    .catch(error => {
+                        console.error('����ʶ�������:', error);
+                        showStatus('error', `����ʶ��ʧ��: ${error.message}`);
+                        updateRecordingButtonState('error');
+                        
+                        // �ӳٺ�ָ���ť״̬
+                        setTimeout(() => {
+                            updateRecordingButtonState('idle');
+                        }, 2000);
+                    })
+                    .finally(() => {
+                        // �����Ƶ����
+                        audioChunks = [];
+                        // ���AJAXʶ�����������
+                        window.isProcessingAjaxRecognition = false;
+                    });
+                } catch (error) {
+                    console.error('����¼�����ݳ���:', error);
+                    showStatus('error', `����¼�����: ${error.message}`);
+                    updateRecordingButtonState('error');
+                    
+                    // �ӳٺ�ָ���ť״̬
+                    setTimeout(() => {
+                        updateRecordingButtonState('idle');
+                    }, 2000);
+                    
+                    // �����Ƶ����
+                    audioChunks = [];
+                    // ȷ��״̬����
+                    window.isProcessingAjaxRecognition = false;
+                }
+            }
+        }
+        
+        // ������Ƶ���ţ��������Ҫ�û����������Զ�������Ƶ��
+        let audioUnlocked = false;
+        function unlockAudio() {
+            if (audioUnlocked) return;
+            
+            console.log('���Խ�����Ƶ����...');
+            
+            // ����һ���������ƵԪ�ز����Բ���
+            const silentAudio = new Audio();
+            silentAudio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU4LjU0AAAAAAAAAAAAAAAAJAYAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA';
+            silentAudio.volume = 0.01;
+            
+            const promise = silentAudio.play();
+            if (promise !== undefined) {
+                promise.then(() => {
+                    console.log('��Ƶ�����ѽ���');
+                    audioUnlocked = true;
+                    
+                    // ��ʼ��MediaSource
+                    if (!audioInitialized) {
+                        initMediaSource();
+                    }
+                }).catch(e => {
+                    console.warn('�޷�������Ƶ����:', e);
+                });
+            }
+            
+            // �Ƴ��¼�������
+            document.removeEventListener('click', unlockAudio);
+            document.removeEventListener('keydown', unlockAudio);
+        }
+        
+        // ������Ƶ����
+        function handleAudioData(base64Audio) {
+            if (!mediaSource || mediaSource.readyState !== 'open') {
+                initMediaSource();
+            }
+            
+            try {
+                // ��Base64��Ƶ����ת��ΪArrayBuffer
+                const binaryString = atob(base64Audio);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                
+                // ���SourceBuffer���ڸ��£�����Ƶ����ӵ�����
+                if (sourceBuffer && sourceBuffer.updating) {
+                    audioChunks.push(bytes.buffer);
+                } else if (sourceBuffer) {
+                    // ����ֱ����ӵ�SourceBuffer
+                    sourceBuffer.appendBuffer(bytes.buffer);
+                } else {
+                    console.error('SourceBuffer��δ����');
+                }
+                
+                // �����Ƶδ�ڲ��ţ���ʼ����
+                if (!isAudioPlaying && audioElement) {
+                    audioElement.play().then(() => {
+                        isAudioPlaying = true;
+                        console.log('��ʼ������Ƶ');
+                    }).catch(e => {
+                        console.error('��Ƶ����ʧ��:', e);
+                    });
+                }
+            } catch (e) {
+                console.error('������Ƶ����ʧ��:', e);
+            }
+        }
+        
+        // ������Ƶ��
+        function endAudioStream() {
+            if (mediaSource && mediaSource.readyState === 'open') {
+                // ����������е�������Ƶ���ر�MediaSource
+                if (audioChunks.length === 0 && sourceBuffer && !sourceBuffer.updating) {
+                    try {
+                        mediaSource.endOfStream();
+                    } catch (e) {
+                        console.error('�ر�MediaSourceʧ��:', e);
+                    }
+                } else {
+                    // ������в�Ϊ�ջ�SourceBuffer���ڸ��£��ȴ�������ɺ��ٹر�
+                    setTimeout(endAudioStream, 100);
+                }
+            }
+        }
+        
+        // ������Ϣ
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            
+            if (!message && uploadedFiles.length === 0) {
+                return;
+            }
+            
+            // �ڷ�������Ϣǰ������ֹͣ�������ڲ��ŵ���Ƶ����Ӧ
+            console.log('��������Ϣ��ֹͣ������Ӧ����Ƶ����');
+            
+            // �����жϵ�ǰ���ڴ������ʽ��Ӧ
+            if (isStreamingResponse) {
+                try {
+                    // ������ֹ��ǰ����Ӧ��ȡ����������ڣ�
+                    if (window.currentResponseReader && window.currentResponseReader.cancel) {
+                        window.currentResponseReader.cancel('�û�����������Ϣ');
+                        console.log('���жϵ�ǰ��Ӧ����ȡ��');
+                    }
+                    
+                    // �Ƴ���ǰ�Ļ�������ϢDOMԪ�أ����������ʾ��
+                    if (window.currentBotMessageElement) {
+                        console.log('�Ƴ�δ��ɵĻ�������ϢԪ��');
+                        if (window.currentBotMessageElement.parentNode) {
+                            window.currentBotMessageElement.parentNode.removeChild(window.currentBotMessageElement);
+                        }
+                        window.currentBotMessageElement = null;
+                    }
+                } catch (error) {
+                    console.error('�жϵ�ǰ��Ӧʱ����:', error);
+                }
+            }
+            
+            // ֹͣ������Ƶ����
+            stopAllAudio();
+            
+            // ��������ڽ��е���ʽ��Ӧ����ֹͣ��
+            if (isStreamingResponse && currentTaskId) {
+                console.log(`��⵽�µ��û����룬ֹͣ��ǰ��Ӧ������ID: ${currentTaskId}`);
+                
+                // ��������״̬������ȴ�ֹͣ�������
+                console.log('��������״̬��׼����������Ϣ');
+                isStreamingResponse = false;
+                currentTaskId = null;
+            }
+            
+            // ����û���Ϣ�����촰��
+            addMessage(message, 'user');
+            
+            // ��������
+            messageInput.value = '';
+            
+            // ��ʾ����ָʾ��
+            typingIndicator.style.display = 'block';
+            
+            // ͨ��WebSocket������Ϣ��������
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                // ��������ID
+                const requestId = 'req_' + Date.now();
+                
+                // ׼��Ҫ���͵�����
+                const requestData = {
+                    type: 'chat_request',
+                    message: message,
+                    requestId: requestId,
+                    userId: userId,
+                    files: uploadedFiles.map(file => ({
+                type: 'image',
+                url: file.url
+                    }))
+                };
+                
+                // ��������
+                ws.send(JSON.stringify(requestData));
+                console.log('�ѷ�����������:', requestData);
+                        } else {
+                console.error('WebSocketδ���ӣ��޷�������Ϣ');
+                // ��ʾ������Ϣ
+                addMessage('��Ǹ�������������ѶϿ�����ˢ��ҳ�����ԡ�', 'bot');
+                    // ��������ָʾ��
+                    typingIndicator.style.display = 'none';
+            }
+            
+            // ����ļ�Ԥ�����ϴ����ļ�
+            filePreview.innerHTML = '';
+            uploadedFiles = [];
+        }
+        
+        // ��������ϳ�
+        function requestSpeech(text) {
+            if (!text || !autoSpeakEnabled) return;
+            
+            console.log('��������ϳ�:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
+            
+            // ��������ID
+            const requestId = 'tts_' + Date.now();
+            
+            // ����TTS����
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'tts_request',
+                    text: text,
+                    voice: currentVoice || 'longxiaochun', // ʹ�õ�ǰѡ�е������Ĭ��ֵ
+                    requestId: requestId
+                }));
+                                                    } else {
+                console.error('WebSocketδ���ӣ��޷�����TTS����');
+            }
+        }
+        
+        // ������Ƶ
+        function playAudio(audioUrl) {
+            if (!audioUrl) return;
+            
+            console.log('������Ƶ:', audioUrl);
+            
+            // ֹͣ��ǰ���ڲ��ŵ���Ƶ
+            stopAllAudio();
+            
+            // ������ƵԪ��
+            const audio = new Audio(audioUrl);
+            audio.dataset.audioUrl = audioUrl;
+            
+            // ������Ƶ�¼�
+            audio.onplay = () => {
+                console.log('��Ƶ��ʼ����');
+            };
+            
+            audio.onended = () => {
+                console.log('��Ƶ���Ž���');
+                // �Ƴ���ƵԪ��
+                if (audio.parentNode) {
+                    audio.parentNode.removeChild(audio);
+                }
+            };
+            
+            audio.onerror = (error) => {
+                console.error('��Ƶ���Ŵ���:', error);
+                // �Ƴ���ƵԪ��
+                if (audio.parentNode) {
+                    audio.parentNode.removeChild(audio);
+                }
+            };
+            
+            // ����ƵԪ����ӵ�DOM��
+            document.body.appendChild(audio);
+            
+            // ������Ƶ
+            audio.play().catch(error => {
+                console.error('������Ƶʧ��:', error);
+            });
+        }
+        
+        // ��ǿstopAllAudio������ȷ������ֹͣ������������Ƶ
+        function stopAllAudio() {
+            console.log('ֹͣ�������ڲ��ŵ���Ƶ');
+            
+            // ���Ҳ�ֹͣ������ƵԪ��
+            const audioElements = document.querySelectorAll('audio');
+            if (audioElements.length > 0) {
+                console.log(`�ҵ� ${audioElements.length} ����ƵԪ�أ�ֹͣ���Ų��Ƴ�`);
+                audioElements.forEach(audio => {
+                    try {
+                        // ��¼��ֹͣ����ƵURL
+                        if (audio.dataset.audioUrl) {
+                            console.log(`ֹͣ������Ƶ: ${audio.dataset.audioUrl}`);
+                            processedUrls.add(audio.dataset.audioUrl);
+                        }
+                        
+                        // ֹͣ����
+                        audio.pause();
+                        audio.currentTime = 0;
+                        
+                        // �Ƴ�Ԫ��
+                        if (audio.parentNode) {
+                            audio.parentNode.removeChild(audio);
+                        }
+                    } catch (err) {
+                        console.error('ֹͣ��ƵԪ��ʱ����:', err);
+                    }
+                });
+            }
+            
+            // ��մ��������
+            if (pendingAudioUrls.length > 0) {
+                console.log(`�����Ƶ���� (${pendingAudioUrls.length} ����Ŀ)`);
+                pendingAudioUrls = [];
+            }
+            
+            // ȡ�����й���ĺϳ���������У�
+            if (window.currentSynthesisRequests && window.currentSynthesisRequests.length > 0) {
+                console.log(`ȡ�� ${window.currentSynthesisRequests.length} ������ĺϳ�����`);
+                window.currentSynthesisRequests.forEach(controller => {
+                    if (controller && controller.abort) {
+                        try {
+                            controller.abort();
+                        } catch (err) {
+                            console.error('ȡ���ϳ�����ʱ����:', err);
+                        }
+                    }
+                });
+                window.currentSynthesisRequests = [];
+            }
+            
+            // ����״̬
+            isProcessingAudio = false;
+            currentPlayingAudio = null;
+            console.log('��Ƶ��������ȫֹͣ���������״̬������');
+        }
+        
+        // �����Ϣ�����촰��
+        function addMessage(content, sender) {
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${sender}-message`;
+            
+            // �������
+            const textEl = document.createElement('div');
+            textEl.className = 'message-text';
+            textEl.textContent = content;
+            messageEl.appendChild(textEl);
+            
+            chatMessages.appendChild(messageEl);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // �����ļ��ϴ�
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            
+            if (!files || files.length === 0) {
+                return;
+            }
+            
+            fileStatus.textContent = '�����ϴ�...';
+            
+            // ����ļ�Ԥ��
+            filePreview.innerHTML = '';
+            uploadedFiles = [];
+            
+            // �ϴ�ÿ���ļ�
+            Array.from(files).forEach(file => {
+                // ����FormData
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                // �ϴ��ļ���������
+                fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.url) {
+                        // ��ӵ��ϴ����ļ��б�
+                        uploadedFiles.push({
+                            name: file.name,
+                            url: data.url
+                        });
+                        
+                        // ����Ԥ��
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        
+                        const img = document.createElement('img');
+                        img.src = data.url;
+                        fileItem.appendChild(img);
+                        
+                        const removeBtn = document.createElement('div');
+                        removeBtn.className = 'remove-file';
+                        removeBtn.textContent = 'x';
+                        removeBtn.addEventListener('click', () => {
+                            // ��Ԥ�����ϴ��б����Ƴ�
+                            fileItem.remove();
+                            uploadedFiles = uploadedFiles.filter(f => f.url !== data.url);
+                        });
+                        fileItem.appendChild(removeBtn);
+                        
+                        filePreview.appendChild(fileItem);
+                        
+                        // ����״̬
+                        fileStatus.textContent = `���ϴ� ${uploadedFiles.length} ���ļ�`;
+                    } else {
+                        console.error('�ļ��ϴ�ʧ��:', data.error);
+                        fileStatus.textContent = '�ļ��ϴ�ʧ��';
+                    }
+                })
+                .catch(error => {
+                    console.error('�ļ��ϴ�����ʧ��:', error);
+                    fileStatus.textContent = '�ļ��ϴ�ʧ��';
+                });
+            });
+        }
+
+        // ��ʼ��MediaSource
+        function initMediaSource() {
+            console.log('��ʼ��MediaSource');
+            
+            // ����Ѿ���ʼ�����򷵻�
+            if (audioInitialized) {
+                console.log('MediaSource�Ѿ���ʼ��');
+                return;
+            }
+            
+            // ����MediaSourceʵ��
+            mediaSource = new MediaSource();
+            
+            // ������ƵԪ��
+            audioElement = new Audio();
+            audioElement.controls = false;
+            audioElement.style.display = 'none';
+            audioElement.volume = 1.0;
+            document.body.appendChild(audioElement);
+            
+            // ������ƵԴ
+            audioElement.src = URL.createObjectURL(mediaSource);
+            
+            // ����MediaSource���¼�
+            mediaSource.addEventListener('sourceopen', () => {
+                console.log('MediaSource�Ѵ�');
+                
+                try {
+                    // ���Բ�ͬ��MIME����
+                    try {
+                        sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+                    } catch (e) {
+                        console.warn('�޷�����audio/mpeg SourceBuffer������������ʽ');
+                        try {
+                            sourceBuffer = mediaSource.addSourceBuffer('audio/mp3');
+                        } catch (e2) {
+                            console.warn('�޷�����audio/mp3 SourceBuffer������������ʽ');
+                            sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg; codecs="mp3"');
+                        }
+                    }
+                    
+                    // ����SourceBuffer���½����¼�
+                    sourceBuffer.addEventListener('updateend', () => {
+                        console.log('SourceBuffer���½���');
+                        // ����������д��������Ƶ�飬�������
+                        if (audioChunks.length > 0 && !sourceBuffer.updating) {
+                            const chunk = audioChunks.shift();
+                            console.log(`�Ӷ�����ȡ����Ƶ�飬ʣ��: ${audioChunks.length}`);
+                            sourceBuffer.appendBuffer(chunk);
+                        }
+                    });
+                    
+                    audioInitialized = true;
+                    console.log('��Ƶ��������ʼ�����');
+                } catch (e) {
+                    console.error('����SourceBufferʧ��:', e);
+                    // ����ʹ����ͨAudioԪ�ز���
+                    fallbackToSimpleAudio();
+                }
+            });
+            
+            // ��Ӵ�����
+            mediaSource.addEventListener('error', (e) => {
+                console.error('MediaSource����:', e);
+                fallbackToSimpleAudio();
+            });
+            
+            // ������Ƶ���Ž����¼�
+            audioElement.addEventListener('ended', () => {
+                console.log('��Ƶ���Ž���');
+                isAudioPlaying = false;
+            });
+            
+            // ��Ӵ�����
+            audioElement.addEventListener('error', (e) => {
+                console.error('��ƵԪ�ش���:', e);
+                fallbackToSimpleAudio();
+            });
+        }
+
+        // �����Ƶ�鵽MediaSource
+        function appendAudioChunk(arrayBuffer) {
+            if (!sourceBuffer || !mediaSource || mediaSource.readyState !== 'open') {
+                // ���MediaSource��δ׼���ã�������ӵ�����
+                audioChunks.push(arrayBuffer);
+                console.log('MediaSource��δ׼���ã�����Ƶ����ӵ�����');
+                return;
+            }
+            
+            try {
+                if (sourceBuffer.updating) {
+                    // ���SourceBuffer���ڸ��£�������ӵ�����
+                    audioChunks.push(arrayBuffer);
+                    console.log('SourceBuffer���ڸ��£�����Ƶ����ӵ�����');
+                } else {
+                    // ֱ����ӵ�SourceBuffer
+                    console.log(`ֱ�������Ƶ�鵽SourceBuffer����С: ${arrayBuffer.byteLength}`);
+                    sourceBuffer.appendBuffer(arrayBuffer);
+                    console.log(`��Ƶ������ӵ�SourceBuffer�����г���: ${audioChunks.length}`);
+                }
+            } catch (e) {
+                console.error('�����Ƶ��ʧ��:', e);
+                // ������ʧ�ܣ����Խ���
+                fallbackToSimpleAudio();
+            }
+        }
+
+        // �����ƵԤ���ع���
+        function preloadAudio(url) {
+            return new Promise((resolve, reject) => {
+                const audio = new Audio();
+                audio.oncanplaythrough = () => {
+                    resolve(audio);
+                };
+                audio.onerror = (error) => {
+                    reject(error);
+                };
+                audio.src = url;
+                audio.load();
+            });
+        }
+
+        // �������������URL�Ƿ��Ѵ����
+        function isUrlProcessed(url) {
+            // ����URL���
+            if (processedUrls.has(url)) return true;
+            
+            // �ļ�����飨��ʱURL��ʽ�������в�ͬ��
+            const filename = url.split('/').pop();
+            for (const processedUrl of processedUrls) {
+                const processedFilename = processedUrl.split('/').pop();
+                if (processedFilename === filename) return true;
+            }
+            return false;
+        }
+        
+        // �������������URL�Ƿ����ڶ�����
+        function isUrlInQueue(url) {
+            // ����URL���
+            const exactMatch = pendingAudioUrls.some(item => item.url === url);
+            if (exactMatch) return true;
+            
+            // �ļ�����飨��ʱURL��ʽ�������в�ͬ��
+            const filename = url.split('/').pop();
+            return pendingAudioUrls.some(item => {
+                const itemFilename = item.url.split('/').pop();
+                return itemFilename === filename;
+            });
+        }
+        
+        // ���յ���Ƶ�¼�ʱ��������ƵURL
+        function handleAudioEvent(parsedData) {
+            console.log('�յ���ƵURL:', parsedData.url);
+            console.log('��Ƶ�ı�:', parsedData.text);
+            console.log('�Ƿ�����Ƭ��:', parsedData.isFinal);
+            console.log('��Ƶ�ִ�ID:', parsedData.roundId || 'δָ��');
+            
+            // ���URL�Ƿ���Ч
+            if (!parsedData.url || !parsedData.url.startsWith('/audio/')) {
+                console.log('������Ч��ƵURL');
+                return;
+            }
+            
+            // ��ȡ�ļ���
+            const filename = parsedData.url.split('/').pop();
+            
+            // ����ļ��Ƿ��ѱ�ɾ��
+            if (deletedFiles.has(filename)) {
+                console.log(`������ɾ������Ƶ�ļ�: ${filename}`);
+                return;
+            }
+            
+            // �����Ƶ�Ƿ����ڵ�ǰ�Ի��ִ� - ʹ�ú�˷��ص��ִ�ID
+            const audioRoundId = parsedData.roundId;
+            if (audioRoundId && audioRoundId !== currentConversationRoundId) {
+                console.log(`���������ڵ�ǰ�ִε���Ƶ: ${parsedData.url} [�ִ�ID: ${audioRoundId} ������ ${currentConversationRoundId}]`);
+                return;
+            }
+            
+            // ���URL�Ƿ����ڶ����л��Ѵ���
+            if (isUrlProcessed(parsedData.url)) {
+                console.log(`��ƵURL�ѱ����������: ${parsedData.url}`);
+                return;
+            }
+            
+            if (isUrlInQueue(parsedData.url)) {
+                console.log(`��ƵURL���ڶ����У�����: ${parsedData.url}`);
+                return;
+            }
+            
+            // ��ȡ�ļ����е����֣���������
+            const match = parsedData.url.match(/tts_(\d+)(?:_round_[^.]+)?\.mp3$/);
+            const timestamp = match ? parseInt(match[1]) : 0;
+            
+            // ����������
+            totalAudioReceived++;
+            console.log(`��������Ƶ #${totalAudioReceived}: ${parsedData.url}`);
+            
+            // ��ӵ���������У�������ǰ�Ի��ִ�ID
+            pendingAudioUrls.push({
+                url: parsedData.url,
+                text: parsedData.text || "",
+                isFinal: parsedData.isFinal || false,
+                timestamp: timestamp,
+                id: totalAudioReceived,
+                receivedAt: Date.now(),
+                roundId: audioRoundId || currentConversationRoundId // ʹ�ú�˷��ص��ִ�ID����û����ʹ�õ�ǰ�ִ�ID
+            });
+            
+            console.log(`��ӵ����гɹ�����ǰ���г���: ${pendingAudioUrls.length}, �ִ�ID: ${audioRoundId || currentConversationRoundId}`);
+            
+            // ��ʱ����������
+            pendingAudioUrls.sort((a, b) => a.timestamp - b.timestamp);
+            
+            // �����ǰû�����ڴ�����Ƶ����ʼ����
+            if (!isProcessingAudio) {
+                console.log('��ʼ������Ƶ����');
+                processNextAudio();
+            } else {
+                console.log('��ǰ����Ƶ���ڴ��������Ƶ�Ѽ������');
+            }
+        }
+
+        // �޸���Ƶ�������
+        async function processNextAudio() {
+            // ���˲����ڵ�ǰ�ִε���Ƶ
+            if (pendingAudioUrls.length > 0) {
+                const outdatedAudios = pendingAudioUrls.filter(audio => audio.roundId !== currentConversationRoundId);
+                if (outdatedAudios.length > 0) {
+                    console.log(`���� ${outdatedAudios.length} �������ڵ�ǰ�ִ�(${currentConversationRoundId})����Ƶ����������`);
+                    // �Ӷ������Ƴ���Щ��Ƶ
+                    pendingAudioUrls = pendingAudioUrls.filter(audio => audio.roundId === currentConversationRoundId);
+                }
+            }
+            
+            if (pendingAudioUrls.length === 0) {
+                isProcessingAudio = false;
+                currentPlayingAudio = null;
+                console.log('��Ƶ����Ϊ�գ��������');
+                return;
+            }
+            
+            isProcessingAudio = true;
+            const audioItem = pendingAudioUrls.shift();
+            currentPlayingAudio = audioItem;
+            
+            console.log(`��ʼ������Ƶ: ${audioItem.url} (����ʣ��: ${pendingAudioUrls.length}��) [�ִ�ID: ${audioItem.roundId}]`);
+            
+            // �ٴμ�����Ƶ�Ƿ��ѱ�������ѱ�ɾ��
+            const filename = audioItem.url.split('/').pop();
+            if (isUrlProcessed(audioItem.url)) {
+                console.log(`��Ƶ�ѱ����������: ${audioItem.url}`);
+                currentPlayingAudio = null;
+                processNextAudio();
+                return;
+            }
+            
+            if (deletedFiles.has(filename)) {
+                console.log(`��Ƶ�ļ��ѱ�ɾ��������: ${filename}`);
+                currentPlayingAudio = null;
+                processNextAudio();
+                return;
+            }
+            
+            try {
+                // Ԥ������Ƶ
+                console.log(`Ԥ������Ƶ: ${audioItem.url}`);
+                const audio = await preloadAudio(audioItem.url);
+                console.log(`��ƵԤ���سɹ�: ${audioItem.url}`);
+                
+                // ����ִ�ID�������ں������
+                audio.dataset.roundId = audioItem.roundId;
+                audio.dataset.audioUrl = audioItem.url;
+                
+                // ������Ƶ
+                audio.onended = () => {
+                    console.log(`��Ƶ�������: ${audioItem.url}`);
+                    // ���Ϊ�Ѵ���
+                    processedUrls.add(audioItem.url);
+                    totalAudioPlayed++;
+                    currentPlayingAudio = null;
+                    
+                    // ������ɺ�ɾ����Ƶ�ļ�
+                    if (filename && filename.startsWith('tts_') && filename.endsWith('.mp3') && !deletedFiles.has(filename)) {
+                        deleteAudioFile(filename);
+                    }
+                    
+                    // ɾ����ƵԪ�أ������ڴ�й©
+                    document.body.removeChild(audio);
+                    processNextAudio();
+                };
+                
+                // ��ӵ�DOM�Ա����
+                audio.style.display = 'none'; // ����Ԫ�ص����ֹ���
+                document.body.appendChild(audio);
+                
+                console.log(`��ʼ������Ƶ: ${audioItem.url}`);
+                audio.play().catch(error => {
+                    console.error(`��Ƶ����ʧ��: ${error.message}`);
+                    // �������¼��ز�����
+                    setTimeout(() => {
+                        console.log(`�������¼�����Ƶ: ${audioItem.url}`);
+                        audio.load();
+                        audio.play().catch(e => {
+                            console.error(`���Բ���ʧ��: ${e.message}`);
+                            // �Ƴ�DOMԪ��
+                            document.body.removeChild(audio);
+                            processNextAudio(); // ����������һ��
+                        });
+                    }, 1000);
+                });
+            } catch (error) {
+                console.error(`������Ƶ����: ${error.message}`);
+                // ����������һ��
+                currentPlayingAudio = null;
+                processNextAudio();
+            }
+        }
+
+        // ��ʼ����
+        function startPlayback() {
+            // �����Ƶδ�ڲ��ţ���ʼ����
+            if (!isAudioPlaying && audioElement && audioInitialized) {
+                audioElement.play()
+                    .then(() => {
+                        isAudioPlaying = true;
+                        console.log('��ʼ������Ƶ��');
+                    })
+                    .catch(err => {
+                        // �������ʧ�ܣ����Խ���
+                        fallbackToSimpleAudio();
+                    });
+            } else {
+                if (isAudioPlaying) {
+                    console.log('���ڲ�����');
+                } else {
+                    console.log('������δ����');
+                }
+            }
+        }
+
+        // ����������Ƶ����
+        function fallbackToSimpleAudio() {
+            console.log('����������Ƶ����ģʽ');
+            
+            // ����״̬
+            audioInitialized = false;
+            isAudioPlaying = false;
+            
+            // ��������Ԫ��
+            if (audioElement) {
+                audioElement.pause();
+                if (audioElement.parentNode) {
+                    audioElement.parentNode.removeChild(audioElement);
+                }
+            }
+            
+            // ȷ�����а�ʱ�������
+            pendingAudioUrls.sort((a, b) => a.timestamp - b.timestamp);
+            
+            // ��ʾ��ǰ����״̬
+            const queueInfo = pendingAudioUrls.map(item => {
+                const shortUrl = item.url.split('/').pop();
+                return `${shortUrl}`;
+            }).join(', ');
+            
+            // ������Ƶ���в�����
+            const audioQueue = [...pendingAudioUrls];
+            pendingAudioUrls = [];
+            
+            // ���ŵ�һ����Ƶ
+            if (audioQueue.length > 0) {
+                playNextInQueue(audioQueue);
+            }
+        }
+
+        // ��˳�򲥷Ŷ����е���Ƶ
+        function playNextInQueue(queue) {
+            if (queue.length === 0) {
+                console.log('��ģʽ���в������');
+                return;
+            }
+            
+            const audioData = queue.shift();
+            console.log(`��ģʽ����: ${audioData.url.split('/').pop()}`);
+            
+            const audio = new Audio(audioData.url);
+            audio.volume = 1.0;
+            audio.controls = false;
+            audio.style.display = 'none';
+            document.body.appendChild(audio);
+            
+            // ���Ž����󲥷���һ��
+            audio.onended = () => {
+                // ɾ����Ƶ�ļ�
+                const filename = audioData.url.split('/').pop();
+                if (filename && filename.startsWith('tts_') && filename.endsWith('.mp3') && !deletedFiles.has(filename)) {
+                    deleteAudioFile(filename);
+                }
+                
+                document.body.removeChild(audio);
+                playNextInQueue(queue);
+            };
+            
+            // ���Ŵ�����
+            audio.onerror = (e) => {
+                console.error('���Ŵ���:', e);
+                document.body.removeChild(audio);
+                playNextInQueue(queue);
+            };
+            
+            // ��ʼ����
+            audio.play().catch(err => {
+                console.error('����ʧ��:', err);
+                document.body.removeChild(audio);
+                playNextInQueue(queue);
+            });
+        }
+
+        // �Ľ������Ƶ�ļ�����
+        function checkMissingAudio() {
+            console.log('��ʼ�����Ƶ�ļ�...');
+            
+            // ��ȡ���30���ڵ�URL��������̫�ɵ���Ƶ
+            const recentTime = Date.now() - 30000; // 30��ǰ
+            
+            // ��ȡ�Ѵ�������URLs
+            const recentProcessedUrls = Array.from(processedUrls)
+                .filter(url => {
+                    // ���Դ�URL����ȡʱ���
+                    const match = url.match(/tts_(\d+)(?:_round_[^.]+)?\.mp3$/);
+                    if (match) {
+                        const urlTimestamp = parseInt(match[1]);
+                        // ʱ����Ƿ������30����
+                        return Date.now() - urlTimestamp < 30000;
+                    }
+                    return true; // ����޷���ȡʱ�����Ĭ�ϱ���
+                });
+            
+            // ����̨���ɵ���Ƶ�ļ�
+            fetch('/api/audio/list')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const backendFiles = data.files || [];
+                    if (backendFiles.length === 0) {
+                        console.log('��̨û����Ƶ�ļ�');
+                        return;
+                    }
+                    
+                    console.log(`��̨��Ƶ�ļ�����: ${backendFiles.length}`);
+                    
+                    // ��ȡ������ɵ���Ƶ�ļ������ļ����е�ʱ�������
+                    const recentFiles = backendFiles
+                        .filter(file => {
+                            // �޸�������ʽ��ƥ������ִ�ID���ļ���
+                            const match = file.match(/tts_(\d+)(?:_round_([^.]+))?\.mp3$/);
+                            if (match) {
+                                const timestamp = parseInt(match[1]);
+                                const roundId = match[2];
+                                
+                                // ֻ����30���ڵ��ļ�������Ҫôû���ִ�ID��Ҫô�ִ�IDƥ�䵱ǰ�ִ�
+                                return Date.now() - timestamp < 30000 && 
+                                       (!roundId || roundId === currentConversationRoundId);
+                            }
+                            return false;
+                        })
+                        .sort((a, b) => {
+                            const matchA = a.match(/tts_(\d+)(?:_round_[^.]+)?\.mp3$/);
+                            const matchB = b.match(/tts_(\d+)(?:_round_[^.]+)?\.mp3$/);
+                            const timeA = matchA ? parseInt(matchA[1]) : 0;
+                            const timeB = matchB ? parseInt(matchB[1]) : 0;
+                            return timeA - timeB;
+                        });
+                    
+                    if (recentFiles.length === 0) {
+                        console.log('û��������ɵ���Ƶ�ļ�');
+                        return;
+                    }
+                    
+                    console.log(`�����Ƶ�ļ�: ${recentFiles.join(', ')}`);
+                    
+                    // ����Ƿ���δ������ļ�
+                    const pendingUrls = pendingAudioUrls.map(item => item.url.split('/').pop());
+                    
+                    const missingFiles = recentFiles.filter(file => {
+                        // ����ļ��Ƿ��ѱ�ɾ��
+                        if (deletedFiles.has(file)) return false;
+                        
+                        // ����ļ�����Ӧ��URL�Ƿ����ڶ�����
+                        const fileUrl = `/audio/${file}`;
+                        if (isUrlInQueue(fileUrl)) return false;
+                        
+                        // ����ļ�����Ӧ��URL�Ƿ��ѱ�����
+                        if (isUrlProcessed(fileUrl)) return false;
+                        
+                        // ����ļ��Ƿ����ڵ�ǰ�ִ�
+                        const match = file.match(/tts_\d+_round_([^.]+)\.mp3$/);
+                        if (match) {
+                            const roundId = match[1];
+                            if (roundId !== currentConversationRoundId) {
+                                console.log(`���������ڵ�ǰ�ִε���Ƶ�ļ�: ${file} [�ִ�ID: ${roundId}]`);
+                                return false;
+                            }
+                        }
+                        
+                        // ������������������㣬����Ϊ����©���ļ�
+                        return true;
+                    });
+                    
+                    if (missingFiles.length > 0) {
+                        console.log(`���� ${missingFiles.length} ��δ�������Ƶ�ļ�: ${missingFiles.join(', ')}`);
+                        
+                        // ������ӵ��������������̫����ļ�
+                        const filesToAdd = missingFiles.slice(0, 5); // ������5��
+                        
+                        console.log(`��� ${filesToAdd.length} ���ļ�������`);
+                        
+                        // ��ӵ���������У����Ϊ��ǰ�ִε���Ƶ
+                        filesToAdd.forEach((file, index) => {
+                            const url = `/audio/${file}`;
+                            
+                            // ����Ƿ��Ѿ��ڶ�����
+                            const alreadyInQueue = pendingAudioUrls.some(item => item.url === url);
+                            if (alreadyInQueue) {
+                                console.log(`�ļ����ڶ�����: ${file}`);
+                                return;
+                            }
+                            
+                            // ��ȡ�ļ��е��ִ�ID
+                            let fileRoundId = currentConversationRoundId;
+                            const roundMatch = file.match(/tts_\d+_round_([^.]+)\.mp3$/);
+                            if (roundMatch) {
+                                fileRoundId = roundMatch[1];
+                            }
+                            
+                            const timestampMatch = file.match(/tts_(\d+)(?:_round_[^.]+)?\.mp3$/);
+                            const timestamp = timestampMatch ? parseInt(timestampMatch[1]) : 0;
+                            
+                            pendingAudioUrls.push({
+                                url: url,
+                                text: "",
+                                isFinal: index === filesToAdd.length - 1,
+                                timestamp: timestamp,
+                                id: totalAudioReceived + index + 1,
+                                receivedAt: Date.now(),
+                                roundId: fileRoundId // ʹ���ļ����е��ִ�ID
+                            });
+                        });
+                        
+                        totalAudioReceived += filesToAdd.length;
+                        
+                        // ��ʱ����������
+                        pendingAudioUrls.sort((a, b) => a.timestamp - b.timestamp);
+                        
+                        // �����ǰû�����ڴ�����Ƶ����ʼ����
+                        if (!isProcessingAudio) {
+                            processNextAudio();
+                        }
+                    } else {
+                        console.log('û�з���δ�������Ƶ�ļ�');
+                    }
+                })
+                .catch(error => {
+                    console.error('�����Ƶ�ļ�ʧ��:', error);
+                });
+        }
+
+        // ɾ����Ƶ�ļ�
+        async function deleteAudioFile(filename) {
+            try {
+                // ����ļ��Ƿ��Ѿ���ɾ��
+                if (deletedFiles.has(filename)) {
+                    console.log(`�ļ��ѱ�ɾ��������: ${filename}`);
+                    return;
+                }
+                
+                console.log(`����ɾ����Ƶ�ļ�: ${filename}`);
+                const response = await fetch(`/api/audio/delete/${filename}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    console.log(`��Ƶ�ļ�ɾ���ɹ�: ${filename}`);
+                    deletedFiles.add(filename);
+                } else {
+                    console.log(`��Ƶ�ļ�ɾ��ʧ��: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('ɾ����Ƶ�ļ�ʧ��:', error);
+            }
+        }
+        
+        // �����������Ƶ�ļ�
+        async function cleanupOldAudioFiles(sessionStartTime) {
+            try {
+                console.log(`�����������Ƶ�ļ�...`);
+                const response = await fetch('/api/audio/cleanup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ sessionStartTime })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    console.log(`�������: ��ɾ��${result.deletedCount}�����ļ�`);
+                    
+                    // ��ɾ�����ļ���¼��deletedFiles������
+                    if (result.deletedFiles && Array.isArray(result.deletedFiles)) {
+                        result.deletedFiles.forEach(file => deletedFiles.add(file));
+                    }
+                } else {
+                    console.log(`����ʧ��: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('�������Ƶ�ļ�ʧ��:', error);
+            }
+        }
+
+        // ���öԻ�
+        function resetConversation() {
+            console.log('========== ���öԻ���ʼ ==========');
+            console.log(`�û���ʶ: ${userId} (���ֲ���)`);
+            console.log(`�ɻỰID: ${conversationId || '��'}`);
+            
+            // �����µĶԻ��ִ�ID
+            currentConversationRoundId = 'round_' + Date.now();
+            console.log(`�����µĶԻ��ִ�ID: ${currentConversationRoundId}`);
+            
+            // ֹͣ������Ƶ����
+            stopAllAudio();
+            
+            // �����Ϣ����
+            chatMessages.innerHTML = '';
+            
+            // ����ỰID�����localStorage��¼���������û���ʶ
+            conversationId = '';
+            localStorage.removeItem('lastSessionId');
+            localStorage.removeItem('lastSessionDate');
+            console.log('������ỰID��localStorage��¼');
+            
+            // ���³�ʼ���ỰID
+            checkAndUpdateConversationId();
+            console.log(`�»ỰID: ${conversationId}`);
+            
+            // ��ӻ�ӭ��Ϣ
+            addMessage('���ã������������֣���ʲô���԰�������', 'bot');
+            
+            // ����ȫ�ֱ���
+            audioQueue = [];
+            pendingAudioUrls = [];
+            processedUrls = new Set();
+            // ����ɾ���ļ���¼
+            currentPlayingAudio = null;
+            totalAudioPlayed = 0;
+            totalAudioReceived = 0;
+            isProcessingAudio = false;
+            
+            // ���µ�ǰ�Ựʱ���
+            sessionStartTime = Date.now();
+            
+            // �������Ƶ�ļ�
+            cleanupOldAudioFiles(sessionStartTime);
+            
+            console.log('�Ի������ã�������Ƶ��ر���������');
+            console.log('========== ���öԻ���� ==========');
+        }
+
+        // ��ȡ���������ַ���
+        function getCurrentDateString() {
+            const today = new Date();
+            return today.getFullYear() +
+                   String(today.getMonth() + 1).padStart(2, '0') +
+                   String(today.getDate()).padStart(2, '0');
+        }
+
+        // ���ɻ������ڵĻỰID
+        function generateConversationId() {
+            return `chat_session_${getCurrentDateString()}`;
+        }
+
+        // ����Ψһ�û�ID
+        function generateUserId() {
+            return 'user-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        }
+
+        // ���ỰID�Ƿ���Ҫ���£���ͬ���ڣ�
+        function checkAndUpdateConversationId() {
+            console.log('���ỰID�Ƿ���Ҫ����...');
+            console.log(`��ǰ�ỰID: ${conversationId || '��'}`);
+            
+            // ���ɻ������ڵ���ID
+            const newId = generateConversationId();
+            
+            // ���ỰID����
+            const isCustomId = conversationId && conversationId.startsWith('chat_session_');
+            const isUUID = conversationId && !isCustomId; // ���Զ���ID��ΪUUID
+            
+            // ����ỰIDΪ�գ��������Զ����ʽ�����ǽ�������ڣ������
+            if (!conversationId) {
+                console.log(`�ỰIDΪ�գ���ʼ��Ϊ: ${newId}`);
+                conversationId = newId;
+                return true; // ��ʾID�Ѹ���
+            } else if (isCustomId && conversationId !== newId) {
+                console.log(`�ỰID�ǹ��ڵ��Զ���ID������Ϊ�����ID: ${conversationId} -> ${newId}`);
+                conversationId = newId;
+                return true; // ��ʾID�Ѹ��� 
+            } else if (isUUID) {
+                console.log(`�ỰID��UUID��ʽ�����ֲ���: ${conversationId}`);
+                // �����UUID��ʽ���������
+                return false; // ��ʾIDδ����
+            } else {
+                console.log(`�ỰID�����µ��Զ���ID���������: ${conversationId}`);
+                return false; // ��ʾIDδ����
+            }
+        }
+
+        // ��������ʶ���ı��������
+        function updateRecognitionText(data) {
+            console.log('�յ�WebSocket����ʶ����:', data);
+            
+            // ����Ƿ�����WebSocket��ʵʱ����
+            const isWebSocketUpdate = true;
+            
+            // ������ڽ���AJAXʶ�������������WebSocket����
+            if (window.isProcessingAjaxRecognition === true) {
+                console.log('AJAXʶ���������ڴ����У�����WebSocket����');
+                return;
+            }
+            
+            // ��ʶ���ı���䵽��Ϣ�����
+            messageInput.value = data.text;
+            
+            // ��������ս��������״̬
+            if (data.isFinal) {
+                // ��ʾ¼��״̬Ϊ"ʶ�����"
+                recordingStatus.textContent = '����ʶ�����';
+                setTimeout(() => {
+                    if (recordingStatus.textContent === '����ʶ�����') {
+                        recordingStatus.style.display = 'none';
+                    }
+                }, 1500);
+            }
+        }
+        
+        // ��������ʶ�����
+        function handleRecognitionComplete(data) {
+            console.log('����ʶ�����:', data);
+            
+            // ������ʶ���ı���䵽��Ϣ�����
+            messageInput.value = data.text;
+            
+            // ����״̬
+            recordingStatus.textContent = 'ʶ�����';
+            setTimeout(() => {
+                recordingStatus.style.display = 'none';
+                updateRecordingButtonState('idle');
+                recordButton.disabled = false;
+            }, 1500);
+            
+            // �۽������
+            messageInput.focus();
+        }
+        
+        // �����ʱ������¼�
+        function handleTimerCompleted(timer) {
+            console.log('��ʱ�����:', timer);
+            
+            // ��ȡ��Ϣ���ݺ�֪ͨ�ı�
+            let notificationMessage = '';
+            let messageToSpeak = '';
+            
+            // ��ȡ��ʱ����ʵ����Ϣ���ݣ����ڲ��ţ�
+            if (timer && timer.message) {
+                messageToSpeak = timer.message;
+            }
+            
+            // ����֪ͨ��Ϣ��ֻ������ʾ��
+            if (timer && timer.name) {
+                notificationMessage = `��ʱ�� "${timer.name}" �����`;
+            } else if (timer && timer.title) {
+                notificationMessage = `��ʱ�� "${timer.title}" �����`;
+            } else {
+                notificationMessage = '��ʱ�������';
+            }
+            
+            // �����Ϣ�������
+            addMessage(notificationMessage, 'bot');
+            
+            // ������ָ������Ϣ����ʱ�Ų�������
+            if (messageToSpeak) {
+                console.log(`��ʱ����Ϣ����: "${messageToSpeak}"`);
+                // �Ȳ��Ź㲥��ʾ���Ȼ���ٲ��ż�ʱ����Ϣ
+                playWithAlertSound(messageToSpeak);
+                
+                // �����ظ�����
+                if (timerSettings.repeatCount > 1) {
+                    const timerId = timer.id || `timer_${Date.now()}`;
+                    setupTimerReminders(timerId, messageToSpeak);
+                }
+            } else {
+                // ���û��ָ����Ϣ���ݣ��򲥷�֪ͨ��Ϣ
+                console.log('��ʱ��û��ָ����Ϣ���ݣ�ʹ��֪ͨ��Ϣ');
+                playWithAlertSound(notificationMessage);
+                
+                // �����ظ�����
+                if (timerSettings.repeatCount > 1) {
+                    const timerId = timer.id || `timer_${Date.now()}`;
+                    setupTimerReminders(timerId, notificationMessage);
+                }
+            }
+        }
+
+        // �Ȳ�����ʾ���Ȼ���ٲ��ż�ʱ����Ϣ�ĺ���
+        function playWithAlertSound(message) {
+            const alertSoundUrl = '/audio/Broadcastalert.mp3';
+            
+            console.log('���㲥��ʾ���ļ�:', alertSoundUrl);
+            console.log(`��Ҫ���ŵļ�ʱ����Ϣ:`, message);
+            
+            // ����Ƿ���AudioAutoplayģ��
+            if (window.AudioAutoplay) {
+                // �Ȳ�����ʾ���Ȼ�󲥷���Ϣ
+                window.AudioAutoplay.play(alertSoundUrl, () => {
+                    console.log('�㲥��ʾ�������ɣ���ʼ���ż�ʱ����Ϣ');
+                    // ʹ������ϳɲ�����Ϣ
+                    speakMessage(message);
+                });
+            } else {
+                // ���˷��������㲥��ʾ���ļ��Ƿ����
+                fetch(alertSoundUrl, { method: 'HEAD' })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('�㲥��ʾ����ã��Ȳ�����ʾ��');
+                            playAlertThenMessage(alertSoundUrl, message);
+                        } else {
+                            console.log('�㲥��ʾ������ã�ֱ�Ӳ��ż�ʱ����Ϣ');
+                            // ֱ�Ӳ��ż�ʱ����Ϣ
+                            speakMessage(message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('���㲥��ʾ��ʱ����:', error);
+                        // ����ʱֱ�Ӳ��ż�ʱ����Ϣ
+                        speakMessage(message);
+                    });
+            }
+        }
+
+        // ʹ����ͨAudioԪ�ز�����ʾ���Ȼ�󲥷���Ϣ
+        function playAlertThenMessage(alertSoundUrl, message, repeatCount = 2) {
+            console.log('ʹ����ͨAudioԪ�ز�����ʾ��');
+            
+            // ������ƵԪ�ز�������ʾ��
+            const alertAudio = new Audio();
+            // ���playsinline������������ƶ��豸���Զ����ŵĳɹ���
+            alertAudio.setAttribute('playsinline', '');
+            alertAudio.setAttribute('webkit-playsinline', '');
+            alertAudio.preload = 'auto';
+            
+            // ������ƵԴ
+            alertAudio.src = alertSoundUrl;
+            
+            // ��ʾ�������ɺ󣬲��ż�ʱ����Ϣ
+            alertAudio.onended = function() {
+                console.log('�㲥��ʾ�������ɣ���ʼ���ż�ʱ����Ϣ');
+                // �Ƴ���ʾ��Ԫ��
+                if (alertAudio.parentNode) {
+                    alertAudio.parentNode.removeChild(alertAudio);
+                }
+                // ���ż�ʱ����Ϣ���ظ�����ָ������
+                speakMessage(message, repeatCount);
+            };
+            
+            // ��ʾ����ش���ʱ��ֱ�Ӳ��ż�ʱ����Ϣ
+            alertAudio.onerror = function(e) {
+                console.error('�㲥��ʾ�����ʧ��:', e);
+                // �Ƴ���ʾ��Ԫ��
+                if (alertAudio.parentNode) {
+                    alertAudio.parentNode.removeChild(alertAudio);
+                }
+                // ֱ�Ӳ��ż�ʱ����Ϣ���ظ�����ָ������
+                speakMessage(message, repeatCount);
+            };
+            
+            // ����ƵԪ����ӵ�DOM���Ա���Ʋ��źʹ����¼�
+            alertAudio.style.display = 'none'; // ����Ԫ��
+            document.body.appendChild(alertAudio);
+            
+            // ��������ǰ�����ýϵ�������Ȼ���ٻָ�
+            alertAudio.volume = 0.1;
+            
+            // ��ʼ������ʾ��
+            alertAudio.play().then(() => {
+                console.log('�㲥��ʾ���ʼ����');
+                // ���ųɹ���ƽ���ָ�����
+                setTimeout(() => {
+                    // ʹ�ö�ʱ��ƽ����������
+                    let vol = 0.1;
+                    const interval = setInterval(() => {
+                        if (vol < 1.0) {
+                            vol += 0.1;
+                            alertAudio.volume = vol > 1.0 ? 1.0 : vol;
+                        } else {
+                            clearInterval(interval);
+                        }
+                    }, 100);
+                }, 100);
+            }).catch(err => {
+                console.error('�㲥��ʾ�����ʧ��:', err);
+                // ֱ�Ӳ��ż�ʱ����Ϣ���ظ�����ָ������
+                speakMessage(message, repeatCount);
+            });
+        }
+
+        // �����������
+        function speakMessage(message, repeatCount = 1) {
+            // ����Ѿ�������ϳɹ��ܣ�ʹ�����й���
+            if (typeof synthText === 'function') {
+                synthText(message, repeatCount);
+                return;
+            }
+            
+            // ʹ�ð�����CosyVoiceģ�ͽ�������ϳ�
+            fetch('/api/tts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.audioUrl) {
+                    console.log(`��ʼ����������Ϣ${repeatCount > 1 ? `(���ظ�${repeatCount}��)` : ''}: "${message}"`);
+                    
+                    // ʹ��AudioAutoplayģ�鲥�ţ����ظ���
+                    if (window.AudioAutoplay) {
+                        playAudioWithRepeat(data.audioUrl, repeatCount);
+                        return;
+                    }
+                    
+                    // ������ƵԪ�ز�����
+                    playAudioElementWithRepeat(data.audioUrl, message, repeatCount);
+                } else {
+                    console.error('����ϳ�ʧ��:', data.error);
+                    // �����������ԭ������ϳ�
+                    useBrowserTTS(message, repeatCount);
+                }
+            })
+            .catch(error => {
+                console.error('����ϳ�����ʧ��:', error);
+                // �����������ԭ������ϳ�
+                useBrowserTTS(message, repeatCount);
+            });
+        }
+
+        // ʹ��AudioAutoplayģ�鲥����Ƶ���ظ�
+        function playAudioWithRepeat(audioUrl, repeatCount) {
+            let currentRepeat = 0;
+            
+            const playNext = () => {
+                currentRepeat++;
+                console.log(`���ŵ� ${currentRepeat}/${repeatCount} ��`);
+                
+                if (currentRepeat <= repeatCount) {
+                    window.AudioAutoplay.play(audioUrl, () => {
+                        console.log(`�� ${currentRepeat} �鲥�����`);
+                        // �������Ҫ�����ظ����ӳ�һС��ʱ��󲥷���һ��
+                        if (currentRepeat < repeatCount) {
+                            setTimeout(playNext, 500); // 0.5��ļ��
+                        }
+                    });
+                }
+            };
+            
+            // ��ʼ��һ�β���
+            playNext();
+        }
+
+        // ʹ����ͨAudioԪ�ز�����Ƶ���ظ�
+        function playAudioElementWithRepeat(audioUrl, fallbackText, repeatCount) {
+            let currentRepeat = 0;
+            
+            const playNext = () => {
+                currentRepeat++;
+                console.log(`���ŵ� ${currentRepeat}/${repeatCount} ��`);
+                
+                const audio = new Audio(audioUrl);
+                
+                // ��Ӽ��ش�����
+                audio.onerror = function(e) {
+                    console.error(`�� ${currentRepeat} ����Ƶ����ʧ��:`, e);
+                    if (currentRepeat === 1) {
+                        // ֻ�ڵ�һ��ʧ��ʱ�����������TTS
+                        useBrowserTTS(fallbackText, repeatCount);
+                    }
+                };
+                
+                // �����Ƶ��������¼�
+                audio.onended = function() {
+                    console.log(`�� ${currentRepeat} ����Ƶ�������`);
+                    
+                    // �Ƴ���ƵԪ��
+                    if (audio.parentNode) {
+                        audio.parentNode.removeChild(audio);
+                    }
+                    
+                    // �������Ҫ�����ظ����ӳ�һС��ʱ��󲥷���һ��
+                    if (currentRepeat < repeatCount) {
+                        setTimeout(playNext, 500); // 0.5��ļ��
+                    }
+                };
+                
+                // ����ƵԪ����ӵ�DOM
+                audio.style.display = 'none';
+                document.body.appendChild(audio);
+                
+                // ��ʼ����
+                audio.play().catch(err => {
+                    console.error(`�� ${currentRepeat} ����Ƶ����ʧ��:`, err);
+                    if (currentRepeat === 1) {
+                        // ֻ�ڵ�һ��ʧ��ʱ�����������TTS
+                        useBrowserTTS(fallbackText, repeatCount);
+                    }
+                });
+            };
+            
+            // ��ʼ��һ�β���
+            playNext();
+        }
+
+        // ʹ�������ԭ������ϳ�
+        function useBrowserTTS(text, repeatCount = 1) {
+            // ���������Ƿ�֧������ϳ�
+            if ('speechSynthesis' in window) {
+                // ����һ�����飬������Ҫ���ŵ��ı����ظ���Σ�
+                const textsToSpeak = Array(repeatCount).fill(text);
+                let currentIndex = 0;
+                
+                const speakNext = () => {
+                    if (currentIndex < textsToSpeak.length) {
+                        const utterance = new SpeechSynthesisUtterance(textsToSpeak[currentIndex]);
+                        
+                        // ����������������
+                        const voices = window.speechSynthesis.getVoices();
+                        const chineseVoice = voices.find(voice => 
+                            voice.lang.includes('zh') || 
+                            voice.name.includes('Chinese') || 
+                            voice.name.includes('����')
+                        );
+                        
+                        if (chineseVoice) {
+                            utterance.voice = chineseVoice;
+                            utterance.lang = chineseVoice.lang;
+                        } else {
+                            utterance.lang = 'zh-CN';
+                        }
+                        
+                        // ��ǰ�ı�������Ϻ�Ļص�
+                        utterance.onend = () => {
+                            console.log(`�����TTS: �� ${currentIndex + 1} �鲥�����`);
+                            currentIndex++;
+                            // �ӳ�һС��ʱ��󲥷���һ��
+                            setTimeout(speakNext, 500);
+                        };
+                        
+                        console.log(`�����TTS: ���ŵ� ${currentIndex + 1}/${repeatCount} ��`);
+                        window.speechSynthesis.speak(utterance);
+                    }
+                };
+                
+                // ��ʼ��һ�β���
+                speakNext();
+            } else {
+                console.error('�������֧������ϳ�');
+            }
+        }
+
+        // ... existing code ...
+        ws.onopen = () => {
+            console.log('WebSocket�����ѽ���');
+        };
+        
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                
+                // ��������ʶ����
+                if (data.type === 'asr_result') {
+                    updateRecognitionText(data);
+                }
+                // ��������ʶ������¼�
+                else if (data.type === 'asr_complete') {
+                    handleRecognitionComplete(data);
+                }
+                // �����ʱ������¼�
+                else if (data.type === 'timer_completed') {
+                    // ��ʱ�����
+                    handleTimerCompleted(data.timer);
+                }
+                // ��Ӷ�������Ӧ�Ĵ���
+                else if (data.type === 'chat_response') {
+                    // ��������ָʾ��
+                    typingIndicator.style.display = 'none';
+                    
+                    if (data.success) {
+                        // ��ӻ�������Ϣ
+                        console.log('�յ��ظ�:', data.answer);
+                        addMessage(data.answer, 'bot');
+                        
+                        // ��Ϣ�����ʶ����ѡ�������Ҫ��UI��չʾ���ࣩ
+                        if (data.messageType) {
+                            console.log(`��Ϣ����: ${data.messageType}`);
+                        }
+                        
+                        // ����������Զ�����
+                        if (window.autoSpeakEnabled) {
+                            // ��������ϳ�
+                            requestSpeech(data.answer);
+                        }
+                    } else {
+                        // �������
+                        addMessage(data.error || '��Ǹ��������������ʱ�����ˡ�', 'bot');
+                    }
+                    
+                    // �������ײ�
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+                // ����������Ӧ����
+                else if (data.type === 'chat_response_update') {
+                    console.log('�յ�������Ӧ����:', data.answer);
+                    
+                    if (data.success) {
+                        // ��Ӹ��µĻظ�
+                        addMessage(data.answer, 'bot');
+                        
+                        // ����������Զ���������Ÿ��»ظ�������
+                        if (window.autoSpeakEnabled) {
+                            // ��������ϳ�
+                            requestSpeech(data.answer);
+                        }
+                    }
+                }
+                // ����TTS��Ӧ
+                else if (data.type === 'tts_response') {
+                    if (data.success && data.audioUrl) {
+                        playAudio(data.audioUrl);
+                    } else {
+                        console.error('TTS����ʧ��:', data.error || 'δ֪����');
+                    }
+                }
+            } catch (error) {
+                console.error('����WebSocket��Ϣʧ��:', error);
+            }
+        };
+        
+        ws.onclose = () => {
+            console.log('WebSocket�����ѹرգ���������...');
+            setTimeout(connectWebSocket, 3000);
+        };
+        // ... existing code ...
+
+        // ����ĺ����ѱ����ã�����ʹ��ʵʱ��ʽʶ��
+        /*
+        function sendAudioChunkForRecognition(audioBlob) {
+            // �������ݱ�����
+        }
+        */
+
+        // ... existing code ...
+
+        // ��ʼ��ȫ�ֱ���
+        window.currentResponseReader = null;
+        window.currentBotMessageElement = null;
+        window.currentSynthesisRequests = [];
+
+        // ��ʼ����ʱ����ʷ��¼����
+        function initTimerHistory() {
+            const modal = document.getElementById('timerHistoryModal');
+            const btn = document.getElementById('timer-history-button');
+            const closeBtn = document.getElementsByClassName('close')[0];
+            
+            // �����ҪԪ�ز����ڣ�ֱ�ӷ���
+            if (!modal || !btn) {
+                console.warn('��ʱ����ʷģ̬���ť�����ڣ�������ʼ��');
+                return;
+            }
+            
+            // �����ʱ����ʷ��ť��ģ̬��
+            btn.onclick = function() {
+                loadTimerHistory();
+                modal.style.display = 'block';
+            }
+            
+            // ����رհ�ť�ر�ģ̬��
+            if (closeBtn) {
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+                }
+            } else {
+                console.warn('ģ̬��رհ�ť������');
+            }
+            
+            // ���ģ̬���ⲿ�ر�ģ̬��
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        }
+        
+        // ���ؼ�ʱ����ʷ��¼
+        function loadTimerHistory() {
+            console.log('���ؼ�ʱ����ʷ��¼');
+            const tableBody = document.getElementById('timerHistoryTableBody');
+            
+            if (!tableBody) {
+                console.error('��ʱ����ʷ��¼��񲻴���');
+                return;
+            }
+            
+            tableBody.innerHTML = '<tr><td colspan="3" class="no-history">������...</td></tr>';
+            
+            fetch('/api/timer-history')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP����! ״̬��: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('��ȡ��ʱ����ʷ��¼�ɹ�:', data);
+                    
+                    if (data.success && data.data && data.data.length > 0) {
+                        // ��ձ��
+                        tableBody.innerHTML = '';
+                        
+                        // �����ʷ��¼
+                        data.data.forEach(record => {
+                            const row = document.createElement('tr');
+                            
+                            // ��ʽ��ʱ��
+                            const completedAt = new Date(record.completed_at);
+                            const formattedDate = `${completedAt.getFullYear()}-${(completedAt.getMonth()+1).toString().padStart(2, '0')}-${completedAt.getDate().toString().padStart(2, '0')} ${completedAt.getHours().toString().padStart(2, '0')}:${completedAt.getMinutes().toString().padStart(2, '0')}:${completedAt.getSeconds().toString().padStart(2, '0')}`;
+                            
+                            row.innerHTML = `
+                                <td>${record.title || '--'}</td>
+                                <td>${record.message || '--'}</td>
+                                <td>${formattedDate}</td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    } else {
+                        tableBody.innerHTML = '<tr><td colspan="3" class="no-history">û���ҵ���ʱ����ʷ��¼</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('��ȡ��ʱ����ʷ��¼ʧ��:', error);
+                    tableBody.innerHTML = `<tr><td colspan="3" class="no-history">����ʧ��: ${error.message}</td></tr>`;
+                });
+        }
+
+        // ȫ�����ñ��� - ����ҳ��ͷ�������ű��г�ʼ��
+        // ע: ԭʼ�������Ƶ�head�е������ű������������ʼ��˳������
+        // timerSettings����:
+        // - repeatCount: �����ظ�����(Ĭ��2)
+        // - intervalSeconds: �������(Ĭ��5)
+        // - autoStopOnResponse: ����Ӧʱֹͣ����(Ĭ��true)
+        // - audioLoopCount: ��Ƶѭ������(Ĭ��1)
+        // - audioLoopInterval: ��Ƶѭ�����(Ĭ��500ms)
+        
+        // ��ʱ����ر���
+        let activeTimerReminders = new Map(); // ���������Ѽ�ʱ��
+        let lastUserInteractionTime = Date.now(); // �ϴ��û�����ʱ��
+        
+        // DOM������ɺ��ʼ���������
+        document.addEventListener('DOMContentLoaded', () => {
+            // ... existing code ...
+            
+            // ��ʼ���������
+            initSettingsPanel();
+        });
+        
+        // ��ʼ���������
+        function initSettingsPanel() {
+            console.log('��ʼ��ʼ���������...');
+            
+            const toggleSettingsBtn = document.getElementById('toggleSettings');
+            console.log('��ʱ�����ð�ťԪ��:', toggleSettingsBtn);
+            
+            const settingsModal = document.getElementById('timerSettingsModal');
+            console.log('����ģ̬����Ԫ��:', settingsModal);
+            
+            const closeBtn = document.getElementById('closeTimerSettings');
+            const saveBtn = document.getElementById('saveTimerSettings');
+            const testBtn = document.getElementById('testAudioLoop');
+            
+            const repeatCountInput = document.getElementById('reminderRepeatCount');
+            const intervalInput = document.getElementById('reminderInterval');
+            const autoStopSelect = document.getElementById('autoStopReminders');
+            const audioLoopCountInput = document.getElementById('audioLoopCount');
+            const audioLoopIntervalInput = document.getElementById('audioLoopInterval');
+            
+            // ��localStorage��������
+            loadSettings();
+            
+            // ���ó�ʼֵ
+            if (repeatCountInput) repeatCountInput.value = timerSettings.repeatCount;
+            if (intervalInput) intervalInput.value = timerSettings.intervalSeconds;
+            if (autoStopSelect) autoStopSelect.value = timerSettings.autoStopOnResponse.toString();
+            if (audioLoopCountInput) audioLoopCountInput.value = timerSettings.audioLoopCount || 1;
+            if (audioLoopIntervalInput) audioLoopIntervalInput.value = timerSettings.audioLoopInterval || 500;
+            
+            // ������ð�ť��ģ̬����
+            if (toggleSettingsBtn && settingsModal) {
+                console.log('����������ð�ť����¼�...');
+                toggleSettingsBtn.onclick = function() {
+                    console.log('���ð�ť�����');
+                    settingsModal.style.display = 'block';
+                }
+            } else {
+                console.error('���ð�ť��ģ̬����Ԫ�ز����ڣ��޷���ӵ���¼�');
+            }
+            
+            // ����رհ�ť
+            if (closeBtn) {
+                closeBtn.onclick = function() {
+                    console.log('�رհ�ť�����');
+                    if (settingsModal) settingsModal.style.display = 'none';
+                }
+            }
+            
+            // ���ģ̬�����ⲿҲ�ɹر�
+            if (settingsModal) {
+                window.onclick = function(event) {
+                    if (event.target === settingsModal) {
+                        console.log('�����ģ̬�����ⲿ');
+                        settingsModal.style.display = 'none';
+                    }
+                }
+            }
+            
+            // ��������
+            if (saveBtn) {
+                saveBtn.onclick = function() {
+                    console.log('���水ť�����');
+                    // ֱ�ӵ��ñ��ر��溯������������ⲿ���еĺ���
+                    try {
+                        const repeatCountInput = document.getElementById('reminderRepeatCount');
+                        const intervalInput = document.getElementById('reminderInterval');
+                        const autoStopSelect = document.getElementById('autoStopReminders');
+                        const audioLoopCountInput = document.getElementById('audioLoopCount');
+                        const audioLoopIntervalInput = document.getElementById('audioLoopInterval');
+                        
+                        // ��������
+                        timerSettings.repeatCount = Math.max(1, Math.min(10, parseInt(repeatCountInput.value) || 2));
+                        timerSettings.intervalSeconds = Math.max(1, Math.min(60, parseInt(intervalInput.value) || 5));
+                        timerSettings.autoStopOnResponse = autoStopSelect.value === 'true';
+                        timerSettings.audioLoopCount = Math.max(1, Math.min(5, parseInt(audioLoopCountInput.value) || 1));
+                        timerSettings.audioLoopInterval = Math.max(0, Math.min(5000, parseInt(audioLoopIntervalInput.value) || 500));
+                        
+                        // ���������ֵ����ֹ��Ч���룩
+                        repeatCountInput.value = timerSettings.repeatCount;
+                        intervalInput.value = timerSettings.intervalSeconds;
+                        audioLoopCountInput.value = timerSettings.audioLoopCount;
+                        audioLoopIntervalInput.value = timerSettings.audioLoopInterval;
+                        
+                        // ���浽localStorage
+                        localStorage.setItem('timerSettings', JSON.stringify(timerSettings));
+                        console.log('��ʱ�������ѳɹ�����:', timerSettings);
+                        
+                        // �ر�ģ̬����
+                        if (settingsModal) settingsModal.style.display = 'none';
+                        
+                        // ��ʾ����ɹ���֪ͨ
+                        showNotification('�����ѱ���');
+                    } catch (error) {
+                        console.error('��������ʧ��:', error);
+                        showNotification('��������ʧ��: ' + error.message);
+                    }
+                }
+            }
+            
+            // ����ѭ������
+            if (testBtn) {
+                testBtn.onclick = function() {
+                    console.log('���԰�ť�����');
+                    // ���ٵ����ⲿ��saveSettings()�������������
+                    // ֱ�Ӳ�����Ƶѭ������
+                    testAudioLoopPlayback();
+                }
+            }
+            
+            // �û�������Ϣʱ��¼����ʱ��
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) {
+                messageInput.addEventListener('input', () => {
+                    lastUserInteractionTime = Date.now();
+                    // ����û���ʼ���룬ֹͣ��������
+                    if (timerSettings.autoStopOnResponse && messageInput.value.trim().length > 0) {
+                        stopAllTimerReminders();
+                    }
+                });
+            }
+            
+            console.log('��������ʼ�����');
+        }
+        
+        // ��localStorage��������
+        function loadSettings() {
+            try {
+                const savedSettings = localStorage.getItem('timerSettings');
+                if (savedSettings) {
+                    const parsedSettings = JSON.parse(savedSettings);
+                    timerSettings.repeatCount = parsedSettings.repeatCount || 2;
+                    timerSettings.intervalSeconds = parsedSettings.intervalSeconds || 5;
+                    timerSettings.autoStopOnResponse = parsedSettings.autoStopOnResponse !== false; // Ĭ��Ϊtrue
+                    timerSettings.audioLoopCount = parsedSettings.audioLoopCount || 1;
+                    timerSettings.audioLoopInterval = parsedSettings.audioLoopInterval || 500;
+                }
+            } catch (error) {
+                console.error('��������ʧ��:', error);
+            }
+        }
+        
+        // �������õ�localStorage
+        function saveSettings() {
+            try {
+                const repeatCountInput = document.getElementById('reminderRepeatCount');
+                const intervalInput = document.getElementById('reminderInterval');
+                const autoStopSelect = document.getElementById('autoStopReminders');
+                const audioLoopCountInput = document.getElementById('audioLoopCount');
+                const audioLoopIntervalInput = document.getElementById('audioLoopInterval');
+                
+                // ��������
+                timerSettings.repeatCount = Math.max(1, Math.min(10, parseInt(repeatCountInput.value) || 2));
+                timerSettings.intervalSeconds = Math.max(1, Math.min(60, parseInt(intervalInput.value) || 5));
+                timerSettings.autoStopOnResponse = autoStopSelect.value === 'true';
+                timerSettings.audioLoopCount = Math.max(1, Math.min(5, parseInt(audioLoopCountInput.value) || 1));
+                timerSettings.audioLoopInterval = Math.max(0, Math.min(5000, parseInt(audioLoopIntervalInput.value) || 500));
+                
+                // ���������ֵ����ֹ��Ч���룩
+                repeatCountInput.value = timerSettings.repeatCount;
+                intervalInput.value = timerSettings.intervalSeconds;
+                audioLoopCountInput.value = timerSettings.audioLoopCount;
+                audioLoopIntervalInput.value = timerSettings.audioLoopInterval;
+                
+                // ���浽localStorage
+                localStorage.setItem('timerSettings', JSON.stringify(timerSettings));
+                console.log('��ʱ�������ѱ���:', timerSettings);
+            } catch (error) {
+                console.error('��������ʧ��:', error);
+            }
+        }
+        
+        // ���ü�ʱ���ظ�����
+        function setupTimerReminders(timerId, message) {
+            // ����Ѿ��������ʱ�������ѣ������
+            if (activeTimerReminders.has(timerId)) {
+                clearTimeout(activeTimerReminders.get(timerId));
+            }
+            
+            // ��ǰ�Ѳ����˵�1�Σ����Դ�2��ʼ����
+            let repeatCount = 2;
+            
+            const scheduleNextReminder = () => {
+                if (repeatCount <= timerSettings.repeatCount) {
+                    // �����ϴ��û����������ڵ�ʱ��
+                    const timeSinceLastInteraction = Date.now() - lastUserInteractionTime;
+                    
+                    // �������Ϊ���û���Ӧ��ֹͣ�����û����н�������������
+                    if (timerSettings.autoStopOnResponse && timeSinceLastInteraction < timerSettings.intervalSeconds * 1000) {
+                        console.log('��⵽�û�������ֹͣ��������');
+                        return;
+                    }
+                    
+                    // ������һ������
+                    const timerId = setTimeout(() => {
+                        console.log(`���ŵ�${repeatCount}/${timerSettings.repeatCount}������`);
+                        playWithAlertSound(message);
+                        
+                        repeatCount++;
+                        if (repeatCount <= timerSettings.repeatCount) {
+                            scheduleNextReminder();
+                        } else {
+                            activeTimerReminders.delete(timerId);
+                        }
+                    }, timerSettings.intervalSeconds * 1000);
+                    
+                    activeTimerReminders.set(timerId, timerId);
+                }
+            };
+            
+            // ��ʼ��������
+            scheduleNextReminder();
+        }
+        
+        // ֹͣ���м�ʱ������
+        function stopAllTimerReminders() {
+            console.log('ֹͣ���м�ʱ������');
+            activeTimerReminders.forEach((timeoutId) => {
+                clearTimeout(timeoutId);
+            });
+            activeTimerReminders.clear();
+        }
+
+        // ������Ƶѭ������
+        function testAudioLoopPlayback() {
+            const testMessage = "����һ��������Ϣ��������֤ѭ���������á�";
+            const alertSoundUrl = '/audio/Broadcastalert.mp3';
+            
+            // ����Ƿ���AudioAutoplayģ��
+            if (window.AudioAutoplay) {
+                showNotification('���ڲ�����Ƶѭ������...');
+                
+                // ʹ��ѭ������
+                const options = {
+                    loopCount: timerSettings.audioLoopCount,
+                    loopInterval: timerSettings.audioLoopInterval
+                };
+                
+                console.log(`����ѭ������: ѭ��${options.loopCount}�Σ����${options.loopInterval}ms`);
+                
+                // ������ʾ��
+                window.AudioAutoplay.playLoop(alertSoundUrl, options, () => {
+                    showNotification('��Ƶѭ�����Ų������');
+                    
+                    // �ӳ�1��󲥷���Ϣ����
+                    setTimeout(() => {
+                        speakMessage(testMessage);
+                    }, 1000);
+                });
+            } else {
+                console.error('AudioAutoplayģ��δ���أ��޷�����');
+                showNotification('�޷�������Ƶѭ�����ţ���ȷ����Ƶģ���Ѽ���');
+            }
+        }
+
+        // ��ʾ֪ͨ
+        function showNotification(message) {
+            const notificationEl = document.getElementById('notification');
+            if (notificationEl) {
+                notificationEl.textContent = message;
+                notificationEl.style.display = 'block';
+                
+                // 3�������
+                setTimeout(() => {
+                    notificationEl.style.display = 'none';
+                }, 3000);
+            } else {
+                // ���û��֪ͨԪ�أ�����һ����ʱ֪ͨ
+                const tempNotification = document.createElement('div');
+                tempNotification.textContent = message;
+                tempNotification.style.position = 'fixed';
+                tempNotification.style.top = '20px';
+                tempNotification.style.right = '20px';
+                tempNotification.style.backgroundColor = '#4CAF50';
+                tempNotification.style.color = 'white';
+                tempNotification.style.padding = '15px';
+                tempNotification.style.borderRadius = '4px';
+                tempNotification.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                tempNotification.style.zIndex = '1000';
+                
+                document.body.appendChild(tempNotification);
+                
+                // 3����Ƴ�
+                setTimeout(() => {
+                    if (document.body.contains(tempNotification)) {
+                        document.body.removeChild(tempNotification);
+                    }
+                }, 3000);
+            }
+        }
+
+        // ҳ�����ʱ�������Խ�����Ƶ
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('ҳ�������ɣ����Գ�ʼ����Ƶ����');
+            
+            // ����ֱ�����ü�ʱ�����ð�ť�ĵ���¼�
+            const settingsBtn = document.getElementById('toggleSettings');
+            const settingsModal = document.getElementById('timerSettingsModal');
+            
+            if (settingsBtn && settingsModal) {
+                console.log('�ҵ���ʱ�����ð�ť��ģ̬���ڣ���ӵ���¼�');
+                
+                // ʹ��ֱ�Ӹ�ֵ�ķ�ʽ��onclick�¼�
+                settingsBtn.onclick = function() {
+                    console.log('��ʱ�����ð�ť�����');
+                    settingsModal.style.display = 'block';
+                };
+                
+                // Ϊ�رհ�ť����¼�
+                const closeBtn = document.getElementById('closeTimerSettings');
+                if (closeBtn) {
+                    closeBtn.onclick = function() {
+                        settingsModal.style.display = 'none';
+                    };
+                }
+                
+                // ���ģ̬�����ⲿ�ر�
+                window.onclick = function(event) {
+                    if (event.target === settingsModal) {
+                        settingsModal.style.display = 'none';
+                    }
+                };
+            } else {
+                console.error('��ʱ�����ð�ť��ģ̬���ڲ����ڣ��޷��󶨵���¼�');
+                if (!settingsBtn) console.error('�Ҳ�����ʱ�����ð�ť');
+                if (!settingsModal) console.error('�Ҳ�����ʱ������ģ̬����');
+            }
+            
+            // ���AudioAutoplayģ���Ƿ����
+            if (window.AudioAutoplay) {
+                // ��ȡ��ʼ״̬
+                const initialStatus = window.AudioAutoplay.getStatus();
+                console.log('��ʼ��Ƶ״̬:', initialStatus);
+                
+                // �������Խ���
+                window.AudioAutoplay.unlock();
+                
+                // ���һ���û������¼����������԰�������
+                const unlockWithInteraction = () => {
+                    if (!window.AudioAutoplay.isFullyUnlocked()) {
+                        console.log('�û����������Խ�����Ƶ����');
+                        window.AudioAutoplay.unlock();
+                        
+                        // ������״̬
+                        setTimeout(() => {
+                            const status = window.AudioAutoplay.getStatus();
+                            console.log('��������Ƶ״̬:', status);
+                            
+                            if (!status.fullyUnlocked) {
+                                console.log('ͨ������δ����ȫ��������ʾ�ֶ�������ť');
+                                window.AudioAutoplay.showUnlockButton();
+                            }
+                        }, 500);
+                    }
+                };
+                
+                // ����¼�������
+                document.addEventListener('click', unlockWithInteraction, { once: false });
+                document.addEventListener('touchstart', unlockWithInteraction, { once: false });
+                document.addEventListener('keydown', unlockWithInteraction, { once: false });
+                
+                // 2��������״̬
+                setTimeout(function() {
+                    const status = window.AudioAutoplay.getStatus();
+                    console.log('2�����Ƶ״̬:', status);
+                    
+                    // �����δ�����ɹ�����ʾ�ֶ�������ť
+                    if (!status.fullyUnlocked && !status.unlocked) {
+                        console.log('�Զ�����ʧ�ܣ���ʾ�ֶ�������ť');
+                        window.AudioAutoplay.showUnlockButton();
+                    }
+                }, 2000);
+            } else {
+                console.error('AudioAutoplayģ��δ����ȷ���أ�');
+            }
+        });
+    </script>
+    
+    <!-- �����Ƶ�Զ�����ģ�� -->
+    <script src="/js/audio-autoplay.js"></script>
+    
+    <!-- ������Ƶ�Զ����Ź��� -->
+    <script>
+        // ҳ�����ʱ�������Խ�����Ƶ
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('ҳ�������ɣ����Գ�ʼ����Ƶ����');
+            
+            // ����ֱ�����ü�ʱ�����ð�ť�ĵ���¼�
+            const settingsBtn = document.getElementById('toggleSettings');
+            const settingsModal = document.getElementById('timerSettingsModal');
+            
+            if (settingsBtn && settingsModal) {
+                console.log('�ҵ���ʱ�����ð�ť��ģ̬���ڣ���ӵ���¼�');
+                
+                // ʹ��ֱ�Ӹ�ֵ�ķ�ʽ��onclick�¼�
+                settingsBtn.onclick = function() {
+                    console.log('��ʱ�����ð�ť�����');
+                    settingsModal.style.display = 'block';
+                };
+                
+                // Ϊ�رհ�ť����¼�
+                const closeBtn = document.getElementById('closeTimerSettings');
+                if (closeBtn) {
+                    closeBtn.onclick = function() {
+                        settingsModal.style.display = 'none';
+                    };
+                }
+                
+                // ���ģ̬�����ⲿ�ر�
+                window.onclick = function(event) {
+                    if (event.target === settingsModal) {
+                        settingsModal.style.display = 'none';
+                    }
+                };
+            } else {
+                console.error('��ʱ�����ð�ť��ģ̬���ڲ����ڣ��޷��󶨵���¼�');
+                if (!settingsBtn) console.error('�Ҳ�����ʱ�����ð�ť');
+                if (!settingsModal) console.error('�Ҳ�����ʱ������ģ̬����');
+            }
+            
+            // ���AudioAutoplayģ���Ƿ����
+            if (window.AudioAutoplay) {
+                // ��ȡ��ʼ״̬
+                const initialStatus = window.AudioAutoplay.getStatus();
+                console.log('��ʼ��Ƶ״̬:', initialStatus);
+                
+                // �������Խ���
+                window.AudioAutoplay.unlock();
+                
+                // ���һ���û������¼����������԰�������
+                const unlockWithInteraction = () => {
+                    if (!window.AudioAutoplay.isFullyUnlocked()) {
+                        console.log('�û����������Խ�����Ƶ����');
+                        window.AudioAutoplay.unlock();
+                        
+                        // ������״̬
+                        setTimeout(() => {
+                            const status = window.AudioAutoplay.getStatus();
+                            console.log('��������Ƶ״̬:', status);
+                            
+                            if (!status.fullyUnlocked) {
+                                console.log('ͨ������δ����ȫ��������ʾ�ֶ�������ť');
+                                window.AudioAutoplay.showUnlockButton();
+                            }
+                        }, 500);
+                    }
+                };
+                
+                // ����¼�������
+                document.addEventListener('click', unlockWithInteraction, { once: false });
+                document.addEventListener('touchstart', unlockWithInteraction, { once: false });
+                document.addEventListener('keydown', unlockWithInteraction, { once: false });
+                
+                // 2��������״̬
+                setTimeout(function() {
+                    const status = window.AudioAutoplay.getStatus();
+                    console.log('2�����Ƶ״̬:', status);
+                    
+                    // �����δ�����ɹ�����ʾ�ֶ�������ť
+                    if (!status.fullyUnlocked && !status.unlocked) {
+                        console.log('�Զ�����ʧ�ܣ���ʾ�ֶ�������ť');
+                        window.AudioAutoplay.showUnlockButton();
+                    }
+                }, 2000);
+            } else {
+                console.error('AudioAutoplayģ��δ����ȷ���أ�');
+            }
+        });
+        
+        // ����ԭʼ�Ĵ������
+        const originalProcessNextAudio = processNextAudio;
+        
+        // ��ȫ������Ƶ���������ʹ��AudioAutoplayģ��
+        processNextAudio = async function() {
+            // ���û�д������URL��ֱ�ӷ���
+            if (pendingAudioUrls.length === 0) return;
+            
+            // ����Ѿ��ڴ����У�ֱ�ӷ���
+            if (isProcessingAudio) return;
+            
+            // ������ڴ���
+            isProcessingAudio = true;
+            
+            try {
+                // ��ȡ��һ��URL���д���
+                const url = pendingAudioUrls.shift();
+                
+                // ����ʹ��AudioAutoplayģ�鲥��
+                if (window.AudioAutoplay) {
+                    console.log('ʹ��AudioAutoplayģ�鲥����Ƶ:', url);
+                    window.AudioAutoplay.play(url, () => {
+                        console.log('AudioAutoplay�������:', url);
+                        processedUrls.add(url);
+                        totalAudioPlayed++;
+                        
+                        // ������ϣ����Ϊ�Ǵ���״̬
+                        isProcessingAudio = false;
+                        
+                        // ������һ��
+                        processNextAudio();
+                    });
+                } else {
+                    // ���AudioAutoplay�����ã����˵�ԭʼ����
+                    console.warn('AudioAutoplayģ�鲻���ã�ʹ��ԭʼ��Ƶ�������');
+                    originalProcessNextAudio();
+                }
+            } catch (error) {
+                console.error('������Ƶ����:', error);
+                isProcessingAudio = false;
+                processNextAudio(); // ���Դ�����һ��
+            }
+        };
+    </script>
+    
+    <!-- �����ƵЭ�����ű� -->
+    <script src="/js/audio-playback-coordinator.js"></script>
+    
+    <!-- ��Ӽ�ʱ�������޸��ű� -->
+    <script src="/js/chat-settings-fix.js"></script>
+    <script src="/js/timer-settings-fix.js"></script>
+    <!-- �����ƵURL�����޸��ű� -->
+    <script src="/js/chat-audio-url-fix.js"></script>
+    <!-- ��ӶԻ��������޸��ű�(�������ȷ�����ȼ����) -->
+    <script src="/js/chat-dialog-audio-fix.js"></script>
+    <!-- ��������޸��ű�(���ս������) -->
+    <script src="/js/timer-audio-integration-fix.js"></script>
+    <!-- ���������ƵĽű�����֮��������ǵı���޸��ű� -->
+    <script src="/js/timer-settings-form-fix.js"></script>
+</body>
+</html>

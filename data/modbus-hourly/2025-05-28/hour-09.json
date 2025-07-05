@@ -1,0 +1,32 @@
+[
+  {
+    "id": 21199,
+    "dataPointId": "mqtt_formatted_1748362612236",
+    "dataPointName": "formatted",
+    "value": 52,
+    "formattedValue": "52",
+    "quality": "GOOD",
+    "dataType": "STRING",
+    "updatedAt": "2025-05-28T00:25:34.000Z"
+  },
+  {
+    "id": 21198,
+    "dataPointId": "mqtt_value_1748362612232",
+    "dataPointName": "value",
+    "value": 52,
+    "formattedValue": "52",
+    "quality": "GOOD",
+    "dataType": "FLOAT32",
+    "updatedAt": "2025-05-28T00:25:34.000Z"
+  },
+  {
+    "id": 1,
+    "dataPointId": "test-dp-1745808693346-1",
+    "dataPointName": "测试数据点1",
+    "value": 42,
+    "formattedValue": "42 °C",
+    "quality": "GOOD",
+    "dataType": "INT16",
+    "updatedAt": "2025-05-27T08:56:48.000Z"
+  }
+]

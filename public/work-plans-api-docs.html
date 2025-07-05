@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作计划API文档</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #3498db;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #2980b9;
+            margin-top: 20px;
+        }
+        .api-section {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .endpoint {
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 16px;
+        }
+        .method {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .get {
+            background-color: #61affe;
+        }
+        .post {
+            background-color: #49cc90;
+        }
+        .code-block {
+            background-color: #2c3e50;
+            color: #fff;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: monospace;
+            line-height: 1.5;
+        }
+        .request-example, .response-example {
+            margin: 15px 0;
+        }
+        .parameter-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .parameter-table th, .parameter-table td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .parameter-table th {
+            background-color: #f2f2f2;
+        }
+        .test-link {
+            display: inline-block;
+            background-color: #e74c3c;
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        .test-link:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <h1>工作计划API文档</h1>
+    <p>本文档详细介绍了工作计划API的使用方法，包括获取待处理工作计划、查询指定日期的工作计划和标记工作计划为已完成的接口。</p>
+    
+    <a href="/test-work-plans" class="test-link">查看API测试页面</a>
+    
+    <div class="api-section">
+        <h2>1. 获取待处理的工作计划</h2>
+        <p>获取daily_work_plans表中当天所有work_status为pending的工作计划。</p>
+        
+        <h3>请求</h3>
+        <div class="endpoint"><span class="method get">GET</span> /api/work-plans/pending</div>
+        
+        <h3>参数</h3>
+        <p>此接口不需要参数。</p>
+        
+        <h3>响应</h3>
+        <div class="response-example">
+            <h4>成功响应 (200 OK)</h4>
+            <pre class="code-block">{
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "id": 1,
+      "dataPointId": "DP001",
+      "identifier": "temp_sensor_1",
+      "name": "温度传感器1",
+      "content": "检查温度传感器是否正常工作",
+      "type": "regular",
+      "status": "pending",
+      "taskId": 101,
+      "planDate": "2023-07-15",
+      "updatedAt": "2023-07-15T08:30:00Z"
+    },
+    {
+      "id": 2,
+      "dataPointId": "DP002",
+      "identifier": "pressure_valve_1",
+      "name": "压力阀1",
+      "content": "更换压力阀密封圈",
+      "type": "temporary",
+      "status": "pending",
+      "taskId": 102,
+      "planDate": "2023-07-15",
+      "updatedAt": "2023-07-15T09:15:00Z"
+    }
+  ]
+}</pre>
+        </div>
+        
+        <div class="response-example">
+            <h4>失败响应</h4>
+            <pre class="code-block">{
+  "success": false,
+  "error": "获取工作计划失败",
+  "message": "具体错误信息"
+}</pre>
+        </div>
+        
+        <h3>前端使用示例</h3>
+        <pre class="code-block">// 使用fetch API
+fetch('/api/work-plans/pending')
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // 处理返回的工作计划数据
+      const workPlans = data.data;
+      console.log(`找到${data.count}条待处理工作计划`);
+      
+      // 遍历工作计划数据
+      workPlans.forEach(plan => {
+        console.log(`计划ID: ${plan.id}, 内容: ${plan.content}`);
+        // 在页面上显示工作计划
+        // ...
+      });
+    } else {
+      // 处理错误
+      console.error(`获取工作计划失败: ${data.error}`);
+    }
+  })
+  .catch(error => {
+    console.error('请求发生错误:', error);
+  });
+</pre>
+    </div>
+    
+    <div class="api-section">
+        <h2>2. 获取指定日期的工作计划</h2>
+        <p>获取daily_work_plans表中指定日期的所有工作计划。</p>
+        
+        <h3>请求</h3>
+        <div class="endpoint"><span class="method get">GET</span> /api/work-plans/date/:date</div>
+        
+        <h3>路径参数</h3>
+        <table class="parameter-table">
+            <tr>
+                <th>参数名</th>
+                <th>类型</th>
+                <th>描述</th>
+                <th>是否必需</th>
+            </tr>
+            <tr>
+                <td>date</td>
+                <td>String</td>
+                <td>日期，格式为YYYY-MM-DD</td>
+                <td>是</td>
+            </tr>
+        </table>
+        
+        <h3>响应</h3>
+        <div class="response-example">
+            <h4>成功响应 (200 OK)</h4>
+            <pre class="code-block">{
+  "success": true,
+  "date": "2023-07-15",
+  "count": 3,
+  "data": [
+    {
+      "id": 1,
+      "dataPointId": "DP001",
+      "identifier": "temp_sensor_1",
+      "name": "温度传感器1",
+      "content": "检查温度传感器是否正常工作",
+      "type": "regular",
+      "status": "pending",
+      "taskId": 101,
+      "planDate": "2023-07-15",
+      "updatedAt": "2023-07-15T08:30:00Z"
+    },
+    {
+      "id": 2,
+      "dataPointId": "DP002",
+      "identifier": "pressure_valve_1",
+      "name": "压力阀1",
+      "content": "更换压力阀密封圈",
+      "type": "temporary",
+      "status": "pending",
+      "taskId": 102,
+      "planDate": "2023-07-15",
+      "updatedAt": "2023-07-15T09:15:00Z"
+    },
+    {
+      "id": 3,
+      "dataPointId": "DP003",
+      "identifier": "flow_meter_1",
+      "name": "流量计1",
+      "content": "校准流量计",
+      "type": "regular",
+      "status": "completed",
+      "taskId": 103,
+      "planDate": "2023-07-15",
+      "updatedAt": "2023-07-15T14:20:00Z"
+    }
+  ]
+}</pre>
+        </div>
+        
+        <div class="response-example">
+            <h4>失败响应 - 日期格式错误 (400 Bad Request)</h4>
+            <pre class="code-block">{
+  "success": false,
+  "error": "日期格式无效，请使用YYYY-MM-DD格式"
+}</pre>
+        </div>
+        
+        <h3>前端使用示例</h3>
+        <pre class="code-block">// 使用fetch API获取指定日期的工作计划
+function getWorkPlansByDate(date) {
+  if (!date) {
+    console.error('日期不能为空');
+    return;
+  }
+  
+  fetch(`/api/work-plans/date/${date}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log(`找到${data.count}条${date}的工作计划`);
+        
+        // 处理返回的工作计划数据
+        const workPlans = data.data;
+        
+        // 在页面上显示工作计划
+        // ...
+      } else {
+        console.error(`获取工作计划失败: ${data.error}`);
+      }
+    })
+    .catch(error => {
+      console.error('请求发生错误:', error);
+    });
+}
+
+// 调用示例
+// getWorkPlansByDate('2023-07-15');
+</pre>
+    </div>
+    
+    <div class="api-section">
+        <h2>3. 标记工作计划为已完成</h2>
+        <p>将指定ID的工作计划的work_status字段更新为completed。</p>
+        
+        <h3>请求</h3>
+        <div class="endpoint"><span class="method post">POST</span> /api/work-plans/:id/complete</div>
+        
+        <h3>路径参数</h3>
+        <table class="parameter-table">
+            <tr>
+                <th>参数名</th>
+                <th>类型</th>
+                <th>描述</th>
+                <th>是否必需</th>
+            </tr>
+            <tr>
+                <td>id</td>
+                <td>Integer</td>
+                <td>工作计划的ID</td>
+                <td>是</td>
+            </tr>
+        </table>
+        
+        <h3>请求体</h3>
+        <p>此接口不需要请求体数据。</p>
+        
+        <h3>响应</h3>
+        <div class="response-example">
+            <h4>成功响应 (200 OK)</h4>
+            <pre class="code-block">{
+  "success": true,
+  "message": "工作计划已标记为已完成"
+}</pre>
+        </div>
+        
+        <div class="response-example">
+            <h4>失败响应 - 工作计划不存在 (404 Not Found)</h4>
+            <pre class="code-block">{
+  "success": false,
+  "error": "未找到指定的工作计划"
+}</pre>
+        </div>
+        
+        <div class="response-example">
+            <h4>失败响应 - 参数错误 (400 Bad Request)</h4>
+            <pre class="code-block">{
+  "success": false,
+  "error": "缺少工作计划ID"
+}</pre>
+        </div>
+        
+        <div class="response-example">
+            <h4>失败响应 - 服务器错误 (500 Internal Server Error)</h4>
+            <pre class="code-block">{
+  "success": false,
+  "error": "标记工作计划完成失败",
+  "message": "具体错误信息"
+}</pre>
+        </div>
+        
+        <h3>前端使用示例</h3>
+        <pre class="code-block">// 使用fetch API标记工作计划为已完成
+function markWorkPlanAsCompleted(planId) {
+  if (!planId) {
+    console.error('工作计划ID不能为空');
+    return;
+  }
+  
+  fetch(`/api/work-plans/${planId}/complete`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      console.log('工作计划已标记为已完成');
+      // 更新界面
+      // ...
+    } else {
+      console.error(`操作失败: ${data.error}`);
+      // 显示错误消息
+      // ...
+    }
+  })
+  .catch(error => {
+    console.error('请求发生错误:', error);
+    // 处理网络错误
+    // ...
+  });
+}
+
+// 调用示例
+// markWorkPlanAsCompleted(1); // 标记ID为1的工作计划为已完成
+</pre>
+    </div>
+    
+    <div class="api-section">
+        <h2>完整使用流程</h2>
+        <p>下面是一个完整的工作流程示例，展示如何在前端应用中使用这些API：</p>
+        
+        <pre class="code-block">// 获取今天待处理的工作计划并显示在页面上
+function loadPendingWorkPlans() {
+  // 显示加载提示
+  const container = document.getElementById('work-plans-container');
+  container.innerHTML = '&lt;p&gt;加载中...&lt;/p&gt;';
+  
+  // 请求API获取数据
+  fetch('/api/work-plans/pending')
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        if (data.count === 0) {
+          container.innerHTML = '&lt;p&gt;没有待处理的工作计划&lt;/p&gt;';
+          return;
+        }
+        
+        // 生成HTML
+        let html = '';
+        data.data.forEach(plan => {
+          html += `
+            &lt;div class="work-plan-item" data-id="${plan.id}"&gt;
+              &lt;h3&gt;${plan.name || '未命名计划'}&lt;/h3&gt;
+              &lt;p&gt;类型: ${plan.type === 'regular' ? '常规' : '临时'}&lt;/p&gt;
+              &lt;p&gt;内容: ${plan.content || '无内容'}&lt;/p&gt;
+              &lt;p&gt;计划日期: ${plan.planDate}&lt;/p&gt;
+              &lt;p&gt;更新时间: ${new Date(plan.updatedAt).toLocaleString()}&lt;/p&gt;
+              &lt;button onclick="markAsCompleted(${plan.id})"&gt;标记为已完成&lt;/button&gt;
+            &lt;/div&gt;
+          `;
+        });
+        
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = `&lt;p&gt;获取数据失败: ${data.error || '未知错误'}&lt;/p&gt;`;
+      }
+    })
+    .catch(error => {
+      container.innerHTML = `&lt;p&gt;请求错误: ${error.message}&lt;/p&gt;`;
+    });
+}
+
+// 根据选择的日期加载工作计划
+function loadWorkPlansByDate() {
+  const date = document.getElementById('date-selector').value;
+  
+  if (!date) {
+    alert('请选择日期');
+    return;
+  }
+  
+  const container = document.getElementById('date-plans-container');
+  container.innerHTML = '&lt;p&gt;加载中...&lt;/p&gt;';
+  
+  fetch(`/api/work-plans/date/${date}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        if (data.count === 0) {
+          container.innerHTML = `&lt;p&gt;${date} 没有工作计划&lt;/p&gt;`;
+          return;
+        }
+        
+        // 生成HTML
+        let html = `&lt;h3&gt;${date} 的工作计划&lt;/h3&gt;`;
+        
+        data.data.forEach(plan => {
+          const isCompleted = plan.status === 'completed';
+          
+          html += `
+            &lt;div class="work-plan-item ${isCompleted ? 'completed' : ''}" data-id="${plan.id}"&gt;
+              &lt;h4&gt;${plan.name || '未命名计划'}&lt;/h4&gt;
+              &lt;div class="tags"&gt;
+                &lt;span class="tag ${plan.type}"&gt;${plan.type === 'regular' ? '常规' : '临时'}&lt;/span&gt;
+                &lt;span class="tag ${plan.status}"&gt;${plan.status === 'pending' ? '待处理' : '已完成'}&lt;/span&gt;
+              &lt;/div&gt;
+              &lt;p&gt;内容: ${plan.content || '无内容'}&lt;/p&gt;
+              ${!isCompleted ? `&lt;button onclick="markAsCompleted(${plan.id}, loadWorkPlansByDate)"&gt;标记为已完成&lt;/button&gt;` : ''}
+            &lt;/div&gt;
+          `;
+        });
+        
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = `&lt;p&gt;获取数据失败: ${data.error || '未知错误'}&lt;/p&gt;`;
+      }
+    })
+    .catch(error => {
+      container.innerHTML = `&lt;p&gt;请求错误: ${error.message}&lt;/p&gt;`;
+    });
+}
+
+// 标记工作计划为已完成
+function markAsCompleted(id, callback) {
+  if (!confirm('确定要将此工作计划标记为已完成吗?')) {
+    return;
+  }
+  
+  fetch(`/api/work-plans/${id}/complete`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('工作计划已标记为已完成');
+      // 重新加载列表
+      loadPendingWorkPlans();
+      // 如果提供了回调函数，也执行它（用于刷新其他视图）
+      if (typeof callback === 'function') {
+        callback();
+      }
+    } else {
+      alert(`操作失败: ${data.error || '未知错误'}`);
+    }
+  })
+  .catch(error => {
+    alert(`请求错误: ${error.message}`);
+  });
+}
+
+// 页面加载时获取数据
+window.onload = function() {
+  // 设置日期选择器默认值为今天
+  document.getElementById('date-selector').valueAsDate = new Date();
+  // 加载待处理工作计划
+  loadPendingWorkPlans();
+};
+</pre>
+    </div>
+    
+    <div class="api-section">
+        <h2>接口数据字段说明</h2>
+        
+        <h3>工作计划对象</h3>
+        <table class="parameter-table">
+            <tr>
+                <th>字段名</th>
+                <th>类型</th>
+                <th>描述</th>
+            </tr>
+            <tr>
+                <td>id</td>
+                <td>Integer</td>
+                <td>工作计划的唯一标识符</td>
+            </tr>
+            <tr>
+                <td>dataPointId</td>
+                <td>String</td>
+                <td>数据点ID（可能为空）</td>
+            </tr>
+            <tr>
+                <td>identifier</td>
+                <td>String</td>
+                <td>数据点标识符（可能为空）</td>
+            </tr>
+            <tr>
+                <td>name</td>
+                <td>String</td>
+                <td>数据点名称（可能为空）</td>
+            </tr>
+            <tr>
+                <td>content</td>
+                <td>String</td>
+                <td>工作内容</td>
+            </tr>
+            <tr>
+                <td>type</td>
+                <td>String</td>
+                <td>工作类型，值为'regular'(常规)或'temporary'(临时)</td>
+            </tr>
+            <tr>
+                <td>status</td>
+                <td>String</td>
+                <td>工作状态，值为'pending'(待处理)、'completed'(已完成)或'cancelled'(已取消)</td>
+            </tr>
+            <tr>
+                <td>taskId</td>
+                <td>Integer</td>
+                <td>关联的任务ID</td>
+            </tr>
+            <tr>
+                <td>planDate</td>
+                <td>String</td>
+                <td>计划日期，格式为YYYY-MM-DD</td>
+            </tr>
+            <tr>
+                <td>updatedAt</td>
+                <td>DateTime</td>
+                <td>最后更新时间</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="api-section">
+        <h2>数据表结构说明</h2>
+        
+        <h3>daily_work_plans表</h3>
+        <p>用于存储每日工作计划，替代了原来在modbus_data_latest表中存储工作计划的方式。</p>
+        
+        <table class="parameter-table">
+            <tr>
+                <th>字段名</th>
+                <th>类型</th>
+                <th>描述</th>
+            </tr>
+            <tr>
+                <td>id</td>
+                <td>INT AUTO_INCREMENT</td>
+                <td>主键</td>
+            </tr>
+            <tr>
+                <td>data_point_id</td>
+                <td>VARCHAR(255)</td>
+                <td>关联的数据点ID（可为NULL）</td>
+            </tr>
+            <tr>
+                <td>data_point_identifier</td>
+                <td>VARCHAR(255)</td>
+                <td>关联的数据点标识符（可为NULL）</td>
+            </tr>
+            <tr>
+                <td>data_point_name</td>
+                <td>VARCHAR(255)</td>
+                <td>关联的数据点名称（可为NULL）</td>
+            </tr>
+            <tr>
+                <td>work_content</td>
+                <td>TEXT</td>
+                <td>工作内容</td>
+            </tr>
+            <tr>
+                <td>work_type</td>
+                <td>ENUM('regular', 'temporary')</td>
+                <td>工作类型</td>
+            </tr>
+            <tr>
+                <td>work_status</td>
+                <td>ENUM('pending', 'completed', 'cancelled')</td>
+                <td>工作状态</td>
+            </tr>
+            <tr>
+                <td>task_id</td>
+                <td>INT</td>
+                <td>关联的任务ID</td>
+            </tr>
+            <tr>
+                <td>plan_date</td>
+                <td>DATE</td>
+                <td>计划日期</td>
+            </tr>
+            <tr>
+                <td>created_at</td>
+                <td>DATETIME</td>
+                <td>创建时间</td>
+            </tr>
+            <tr>
+                <td>updated_at</td>
+                <td>DATETIME</td>
+                <td>更新时间</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html> 

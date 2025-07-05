@@ -1,0 +1,19 @@
+{
+  "connection": {
+    "host": "127.0.0.1",
+    "port": 502,
+    "unitId": 1,
+    "timeout": 5000,
+    "autoConnect": false,
+    "autoReconnect": true,
+    "maxReconnectAttempts": 5,
+    "keepAliveEnabled": true,
+    "keepAliveInterval": 20000,
+    "keepAliveAddress": 12,
+    "keepAliveFunctionCode": 3
+  },
+  "polling": {
+    "interval": 10000,
+    "enabled": true
+  }
+}

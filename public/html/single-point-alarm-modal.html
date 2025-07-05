@@ -1,0 +1,143 @@
+<!-- 单点报警规则配置模态框 -->
+<div class="modal fade" id="singlePointAlarmModal" tabindex="-1" aria-labelledby="singlePointAlarmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="singlePointAlarmModalLabel">
+          <i class="bi bi-plus-circle"></i> 添加单点报警规则
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="singlePointAlarmForm">
+          <!-- 基本信息 -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="singlePointAlarmRuleName" class="form-label">规则名称 <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="singlePointAlarmRuleName" required placeholder="请输入规则名称">
+            </div>
+            <div class="col-md-6">
+              <label for="singlePointDataPointSelect" class="form-label">监控数据点 <span class="text-danger">*</span></label>
+              <select class="form-select" id="singlePointDataPointSelect" required>
+                <option value="">-- 请选择数据点 --</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 报警类型 -->
+          <div class="mb-3">
+            <label for="singlePointAlarmTypeSelect" class="form-label">报警类型 <span class="text-danger">*</span></label>
+            <select class="form-select" id="singlePointAlarmTypeSelect" required>
+              <option value="no_update" selected>无更新报警</option>
+              <option value="threshold">阈值报警</option>
+            </select>
+          </div>
+
+          <!-- 无更新报警配置 -->
+          <div id="singlePointNoUpdateConfig" class="card mb-3">
+            <div class="card-header">
+              <h6 class="mb-0"><i class="bi bi-clock"></i> 无更新报警配置</h6>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label for="singlePointNoUpdateTimeout" class="form-label">超时时间 (秒)</label>
+                <input type="number" class="form-control" id="singlePointNoUpdateTimeout" min="10" max="86400" value="300" placeholder="数据点超过多长时间未更新时触发报警">
+                <div class="form-text">建议设置为 60-3600 秒之间</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 阈值报警配置 -->
+          <div id="singlePointThresholdConfig" class="card mb-3" style="display: none;">
+            <div class="card-header">
+              <h6 class="mb-0"><i class="bi bi-graph-up"></i> 阈值报警配置</h6>
+            </div>
+            <div class="card-body">
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="singlePointThresholdOperator" class="form-label">判断逻辑</label>
+                  <select class="form-select" id="singlePointThresholdOperator">
+                    <option value="greater_than">大于 (&gt;)</option>
+                    <option value="greater_equal">大于等于 (&gt;=)</option>
+                    <option value="less_than">小于 (&lt;)</option>
+                    <option value="less_equal">小于等于 (&lt;=)</option>
+                    <option value="equals">等于 (=)</option>
+                    <option value="not_equals">不等于 (≠)</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label for="singlePointThresholdValue" class="form-label">设定值 <span class="text-danger">*</span></label>
+                  <input type="number" class="form-control" id="singlePointThresholdValue" step="any" placeholder="请输入阈值" required>
+                </div>
+                <div class="col-md-4">
+                  <label for="singlePointThresholdDuration" class="form-label">持续时间 (秒)</label>
+                  <input type="number" class="form-control" id="singlePointThresholdDuration" min="1" value="60" placeholder="触发报警前的持续时间">
+                  <div class="form-text">条件满足多长时间后触发报警</div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="singlePointCheckInterval" class="form-label">检查间隔 (秒)</label>
+                  <input type="number" class="form-control" id="singlePointCheckInterval" min="1" value="10" placeholder="检查频率">
+                  <div class="form-text">多长时间检查一次数据点的值</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 报警设置 -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="singlePointAlarmLevel" class="form-label">报警级别</label>
+              <select class="form-select" id="singlePointAlarmLevel">
+                <option value="low">低</option>
+                <option value="medium" selected>中</option>
+                <option value="high">高</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 报警内容 -->
+          <div class="mb-3">
+            <label for="singlePointAlarmContent" class="form-label">报警内容 <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="singlePointAlarmContent" rows="3" required placeholder="请输入报警描述内容"></textarea>
+            <div class="form-text" id="singlePointContentExample">
+              示例: "温度传感器数据异常，超过5分钟未更新"
+            </div>
+          </div>
+
+          <!-- 通知设置 -->
+          <div class="mb-3">
+            <label class="form-label">通知方式</label>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="singlePointEnableNotification" checked>
+              <label class="form-check-label" for="singlePointEnableNotification">
+                启用页面通知
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="singlePointEnableSound">
+              <label class="form-check-label" for="singlePointEnableSound">
+                启用声音报警
+              </label>
+            </div>
+          </div>
+
+          <!-- 配置预览 -->
+          <div class="alert alert-info">
+            <h6><i class="bi bi-info-circle"></i> 配置预览</h6>
+            <div id="singlePointConfigPreview">
+              <!-- 配置预览内容将在此显示 -->
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" id="saveSinglePointAlarmBtn">
+          <i class="bi bi-save"></i> 保存规则
+        </button>
+      </div>
+    </div>
+  </div>
+</div> 

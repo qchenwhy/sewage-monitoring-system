@@ -1,0 +1,271 @@
+{
+  "projectInfo": {
+    "name": "wzh17 - MQTT/Modbus数据采集系统",
+    "version": "1.0.0",
+    "description": "基于Node.js的工业数据采集、处理和可视化系统",
+    "mainEntry": "app.js",
+    "port": 3000,
+    "architecture": "单体应用 + 可选远程渲染架构"
+  },
+  
+  "techStack": {
+    "backend": {
+      "framework": "Express.js",
+      "database": "MySQL (mysql2连接池)",
+      "protocols": ["MQTT", "Modbus", "WebSocket"],
+      "core_dependencies": [
+        "express@^4.21.2",
+        "mysql2@^3.14.0", 
+        "mqtt@^5.13.0",
+        "ws@^8.18.1",
+        "axios@^1.9.0",
+        "puppeteer@^24.10.0",
+        "xlsx@^0.18.5",
+        "multer@^1.4.5-lts.2"
+      ]
+    },
+    "frontend": {
+      "base": "原生HTML/CSS/JavaScript",
+      "ui_components": ["Bootstrap", "Chart.js", "Three.js"],
+      "communication": "WebSocket + REST API"
+    },
+    "external_services": {
+      "ai": "阿里云DashScope + Dify知识库",
+      "tts": "CosyVoice WebSocket",
+      "file_processing": "xlsx, multer, form-data"
+    }
+  },
+  
+  "codeStructure": {
+    "entry_point": "app.js",
+    "routes": {
+      "pattern": "routes/*.js",
+      "examples": [
+        "routes/workTaskRoutes.js",
+        "routes/data-point-batch.js"
+      ]
+    },
+    "modules": {
+      "modbus": "modbus/ - Modbus相关功能和业务逻辑",
+      "public": "public/ - 静态文件和前端页面",
+      "docs": "docs/ - 文档和配置",
+      "sql": "sql/ - 数据库脚本"
+    },
+    "database": {
+      "config": "modbus/db-config.js",
+      "manager": "modbus/db-manager.js (连接池)",
+      "migrations": "sql/*.sql"
+    }
+  },
+  
+  "architecturePatterns": {
+    "database_access": {
+      "preferred": "使用db-manager连接池",
+      "example": "const dbManager = require('./modbus/db-manager'); const result = await dbManager.query(sql, params);",
+      "avoid": "直接创建mysql连接"
+    },
+    "api_routes": {
+      "pattern": "Express Router模式",
+      "structure": "router.get/post/put/delete + 错误处理",
+      "response_format": "JSON格式，包含success/error状态"
+    },
+    "websocket": {
+      "server": "使用ws库创建WebSocket服务器",
+      "client_integration": "与前端实时数据推送集成",
+      "message_format": "JSON格式消息"
+    },
+    "file_operations": {
+      "upload": "使用multer中间件",
+      "excel": "使用xlsx库处理Excel文件",
+      "static_files": "通过express.static提供"
+    }
+  },
+  
+  "remoteRenderingArchitecture": {
+    "overview": "高配置渲染服务器 + 低配置客户端架构",
+    "components": {
+      "data_server": {
+        "role": "原有app.js，提供数据API和WebSocket",
+        "port": 3000,
+        "responsibilities": ["MQTT数据采集", "数据库操作", "业务逻辑API"]
+      },
+      "rendering_server": {
+        "role": "专用3D渲染和视频编码",
+        "port": 3001,
+        "tech_stack": ["Puppeteer", "Three.js", "FFmpeg", "WebRTC/HLS"],
+        "responsibilities": ["3D场景渲染", "视频编码", "交互处理"]
+      },
+      "client": {
+        "role": "轻量级显示终端",
+        "tech_stack": ["HTML5 Video", "WebSocket", "简化UI"],
+        "responsibilities": ["视频播放", "用户交互捕获", "数据面板显示"]
+      }
+    },
+    "communication_flow": {
+      "data_flow": "数据服务器 → 渲染服务器 → 客户端",
+      "interaction_flow": "客户端 → 渲染服务器 → 数据服务器",
+      "protocols": ["WebSocket", "WebRTC", "HLS"]
+    }
+  },
+  
+  "codingGuidelines": {
+    "error_handling": {
+      "pattern": "try-catch + 统一错误响应格式",
+      "logging": "console.log/error with timestamps",
+      "user_feedback": "前端显示错误信息和成功提示"
+    },
+    "database_operations": {
+      "transactions": "对于多表操作使用事务",
+      "connection_management": "始终使用连接池",
+      "query_optimization": "使用参数化查询防止SQL注入"
+    },
+    "api_design": {
+      "restful": "遵循RESTful设计原则",
+      "validation": "输入参数验证",
+      "pagination": "大数据量查询使用分页"
+    },
+    "frontend_integration": {
+      "ajax": "使用fetch API进行HTTP请求",
+      "websocket": "实时数据使用WebSocket推送",
+      "ui_feedback": "操作反馈和加载状态显示"
+    }
+  },
+  
+  "developmentWorkflow": {
+    "new_feature_steps": [
+      "1. 在routes/创建路由文件",
+      "2. 在public/创建前端页面",
+      "3. 在app.js中注册路由",
+      "4. 测试功能完整性",
+      "5. 更新相关文档"
+    ],
+    "database_changes": [
+      "1. 在sql/创建迁移脚本",
+      "2. 更新相关模型和查询",
+      "3. 测试数据完整性",
+      "4. 备份现有数据"
+    ],
+    "remote_rendering_setup": [
+      "1. 创建remote-rendering/目录结构",
+      "2. 实现渲染服务器 (port 3001)",
+      "3. 创建客户端页面",
+      "4. 配置视频流和交互",
+      "5. 测试端到端功能"
+    ]
+  },
+  
+  "bestPractices": {
+    "performance": [
+      "使用数据库连接池",
+      "实现适当的缓存策略",
+      "优化大数据量查询",
+      "使用WebSocket减少HTTP请求"
+    ],
+    "security": [
+      "参数化查询防止SQL注入",
+      "输入验证和过滤",
+      "文件上传类型检查",
+      "API访问控制"
+    ],
+    "maintainability": [
+      "模块化代码结构",
+      "统一的错误处理",
+      "详细的日志记录",
+      "完整的文档说明"
+    ],
+    "scalability": [
+      "连接池管理",
+      "异步操作处理",
+      "合理的架构分离",
+      "资源使用监控"
+    ]
+  },
+  
+  "commonPatterns": {
+    "route_template": {
+      "description": "标准路由模板",
+      "code": "const express = require('express'); const router = express.Router(); const dbManager = require('../modbus/db-manager'); router.get('/api/endpoint', async (req, res) => { try { const result = await dbManager.query(sql, params); res.json({ success: true, data: result }); } catch (error) { console.error('Error:', error); res.status(500).json({ success: false, error: error.message }); } }); module.exports = router;"
+    },
+    "websocket_broadcast": {
+      "description": "WebSocket数据广播模式",
+      "code": "function broadcastToClients(data) { wss.clients.forEach(client => { if (client.readyState === WebSocket.OPEN) { client.send(JSON.stringify(data)); } }); }"
+    },
+    "database_transaction": {
+      "description": "数据库事务处理模式",
+      "code": "const connection = await dbManager.getConnection(); try { await connection.beginTransaction(); const result1 = await connection.query(sql1, params1); const result2 = await connection.query(sql2, params2); await connection.commit(); return { success: true }; } catch (error) { await connection.rollback(); throw error; } finally { connection.release(); }"
+    },
+    "excel_processing": {
+      "description": "Excel文件处理模式",
+      "code": "const xlsx = require('xlsx'); const multer = require('multer'); const upload = multer({ dest: 'uploads/' }); router.post('/upload', upload.single('file'), (req, res) => { const workbook = xlsx.readFile(req.file.path); const worksheet = workbook.Sheets[workbook.SheetNames[0]]; const data = xlsx.utils.sheet_to_json(worksheet); res.json({ success: true, data }); });"
+    }
+  },
+  
+  "troubleshooting": {
+    "common_issues": [
+      {
+        "issue": "依赖包缺失",
+        "solution": "运行 npm install 安装所有依赖",
+        "prevention": "检查package.json中的dependencies"
+      },
+      {
+        "issue": "数据库连接失败", 
+        "solution": "检查modbus/db-config.js配置",
+        "prevention": "使用连接池和错误处理"
+      },
+      {
+        "issue": "WebSocket连接断开",
+        "solution": "实现重连机制和心跳检测",
+        "prevention": "添加连接状态监控"
+      },
+      {
+        "issue": "3D渲染性能问题",
+        "solution": "使用远程渲染架构分离计算负载",
+        "prevention": "监控GPU和内存使用情况"
+      }
+    ]
+  },
+  
+  "testing_strategy": {
+    "manual_testing": [
+      "启动服务器: node app.js",
+      "访问主页: http://localhost:3000",
+      "测试各功能模块",
+      "检查WebSocket连接",
+      "验证数据库操作"
+    ],
+    "api_testing": [
+      "使用Postman或curl测试API端点",
+      "验证输入参数验证",
+      "检查错误处理",
+      "测试并发访问"
+    ]
+  },
+  
+  "deployment_configs": {
+    "single_server": {
+      "description": "高配置电脑单服务器部署",
+      "requirements": {
+        "cpu": "8核心16线程以上",
+        "memory": "16GB以上（推荐32GB）",
+        "gpu": "GTX 1660以上/RTX 2060以上",
+        "storage": "SSD固态硬盘"
+      },
+      "ports": ["3000"]
+    },
+    "dual_server": {
+      "description": "数据服务器 + 渲染服务器架构",
+      "data_server": {
+        "requirements": "中等配置即可",
+        "ports": ["3000"]
+      },
+      "rendering_server": {
+        "requirements": "高配置GPU服务器",
+        "ports": ["3001", "3002"]
+      }
+    },
+    "cloud_rendering": {
+      "description": "云渲染服务架构",
+      "components": ["负载均衡", "渲染节点池", "流媒体服务", "客户端分发"]
+    }
+  }
+} 

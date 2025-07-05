@@ -1,0 +1,255 @@
+[
+  {
+    "id": 1750696864064,
+    "name": "调节池提升泵1号故障",
+    "category": "1",
+    "content": "调节池提升泵1号运行但是电流为零，可能故障原因是跳闸、变频器报错以及回路硬件故障，请现场查看",
+    "level": "medium",
+    "enabled": true,
+    "conditions": [
+      {
+        "datapoint": "TJT1",
+        "operator": "equals",
+        "value": "1",
+        "logic": "and"
+      },
+      {
+        "datapoint": "TJ1DL",
+        "operator": "equals",
+        "value": "0",
+        "logic": "and"
+      }
+    ],
+    "createdAt": "2025-06-23T16:41:04.064Z"
+  },
+  {
+    "id": 1750732460519,
+    "name": "硝化液回流泵1号",
+    "category": "1",
+    "content": "硝化液回流泵1号运行但是电流为零，可能故障原因是跳闸、变频器报错以及回路硬件故障，请现场查看",
+    "level": "medium",
+    "enabled": true,
+    "conditions": [
+      {
+        "datapoint": "XH1DL",
+        "operator": "equals",
+        "value": "0",
+        "logic": "and"
+      },
+      {
+        "datapoint": "XHHL1",
+        "operator": "equals",
+        "value": "1",
+        "logic": "and"
+      }
+    ],
+    "createdAt": "2025-06-24T02:34:20.519Z"
+  },
+  {
+    "id": 1750732687281,
+    "name": "硝化液回流泵2号",
+    "category": "1",
+    "content": "硝化液回流泵2号运行但是电流为零，可能故障原因是跳闸、变频器报错以及回路硬件故障，请现场查看",
+    "level": "medium",
+    "enabled": true,
+    "conditions": [
+      {
+        "datapoint": "XHHL2",
+        "operator": "equals",
+        "value": "1",
+        "logic": "and"
+      },
+      {
+        "datapoint": "XH2DL",
+        "operator": "equals",
+        "value": "0",
+        "logic": "and"
+      }
+    ],
+    "createdAt": "2025-06-24T02:38:07.281Z"
+  },
+  {
+    "id": 1750732744135,
+    "name": "风机1号",
+    "category": "1",
+    "content": "风机1号运行但是电流为零，可能故障原因是跳闸、变频器报错以及回路硬件故障，请现场查看",
+    "level": "medium",
+    "enabled": true,
+    "conditions": [
+      {
+        "datapoint": "FJ1",
+        "operator": "equals",
+        "value": "1",
+        "logic": "and"
+      },
+      {
+        "datapoint": "FJ1DL",
+        "operator": "equals",
+        "value": "0",
+        "logic": "and"
+      }
+    ],
+    "createdAt": "2025-06-24T02:39:04.135Z"
+  },
+  {
+    "id": 1750732800381,
+    "name": "风机2号",
+    "category": "1",
+    "content": "风机2号运行但是电流为零，可能故障原因是跳闸、变频器报错以及回路硬件故障，请现场查看",
+    "level": "medium",
+    "enabled": true,
+    "conditions": [
+      {
+        "datapoint": "FJ2",
+        "operator": "equals",
+        "value": "1",
+        "logic": "and"
+      },
+      {
+        "datapoint": "FJ2DL",
+        "operator": "equals",
+        "value": "0",
+        "logic": "and"
+      }
+    ],
+    "createdAt": "2025-06-24T02:40:00.381Z"
+  },
+  {
+    "id": 1750732866188,
+    "name": "污泥回流泵1号",
+    "category": "1",
+    "content": "\"污泥回流泵1号\"运行但是电流为零，可能故障原因是跳闸、变频器报错以及回路硬件故障，请现场查看",
+    "level": "medium",
+    "enabled": true,
+    "conditions": [
+      {
+        "datapoint": "WN1DL",
+        "operator": "equals",
+        "value": "0",
+        "logic": "and"
+      },
+      {
+        "datapoint": "WNHL1",
+        "operator": "equals",
+        "value": "1",
+        "logic": "and"
+      }
+    ],
+    "createdAt": "2025-06-24T02:41:06.188Z"
+  },
+  {
+    "id": 1750732897536,
+    "name": "污泥回流泵2号",
+    "category": "1",
+    "content": "\"污泥回流泵2号\"运行但是电流为零，可能故障原因是跳闸、变频器报错以及回路硬件故障，请现场查看",
+    "level": "medium",
+    "enabled": true,
+    "conditions": [
+      {
+        "datapoint": "WNHL2",
+        "operator": "equals",
+        "value": "1",
+        "logic": "and"
+      },
+      {
+        "datapoint": "WN2DL",
+        "operator": "equals",
+        "value": "0",
+        "logic": "and"
+      }
+    ],
+    "createdAt": "2025-06-24T02:41:37.536Z"
+  },
+  {
+    "id": 1750732966060,
+    "name": "潜水搅拌机1号",
+    "category": "1",
+    "content": "\"潜水搅拌机1号\"运行但是电流为零，可能故障原因是跳闸、变频器报错以及回路硬件故障，请现场查看",
+    "level": "medium",
+    "enabled": true,
+    "conditions": [
+      {
+        "datapoint": "QS1DL",
+        "operator": "equals",
+        "value": "0",
+        "logic": "and"
+      },
+      {
+        "datapoint": "QJJB1",
+        "operator": "equals",
+        "value": "1",
+        "logic": "and"
+      }
+    ],
+    "createdAt": "2025-06-24T02:42:46.060Z"
+  },
+  {
+    "id": 1750733036625,
+    "name": "潜水搅拌机2号",
+    "category": "1",
+    "content": "\"潜水搅拌机2号\"运行但是电流为零，可能故障原因是跳闸、变频器报错以及回路硬件故障，请现场查看",
+    "level": "medium",
+    "enabled": true,
+    "conditions": [
+      {
+        "datapoint": "QS2DL",
+        "operator": "equals",
+        "value": "0",
+        "logic": "and"
+      },
+      {
+        "datapoint": "QSJB2",
+        "operator": "equals",
+        "value": "1",
+        "logic": "and"
+      }
+    ],
+    "createdAt": "2025-06-24T02:43:56.625Z"
+  },
+  {
+    "id": 1750733077483,
+    "name": "机械格栅",
+    "category": "1",
+    "content": "\"机械格栅\"运行但是电流为零，可能故障原因是跳闸、变频器报错以及回路硬件故障，请现场查看",
+    "level": "medium",
+    "enabled": true,
+    "conditions": [
+      {
+        "datapoint": "JXGS",
+        "operator": "equals",
+        "value": "1",
+        "logic": "and"
+      },
+      {
+        "datapoint": "JXDL",
+        "operator": "equals",
+        "value": "0",
+        "logic": "and"
+      }
+    ],
+    "createdAt": "2025-06-24T02:44:37.483Z"
+  },
+  {
+    "id": 1750901594989,
+    "name": "调节池提升泵2号",
+    "category": "1",
+    "content": "调节池提升泵2号运行但是电流为零，可能故障原因是跳闸、变频器报错以及回路硬件故障，请现场查看",
+    "level": "medium",
+    "enabled": true,
+    "conditions": [
+      {
+        "datapoint": "TJT2",
+        "operator": "equals",
+        "value": "1",
+        "logic": "and"
+      },
+      {
+        "datapoint": "TJ2DL",
+        "operator": "equals",
+        "value": "0",
+        "logic": "and"
+      }
+    ],
+    "createdAt": "2025-06-26T01:33:14.989Z"
+  }
+]

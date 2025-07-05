@@ -1,0 +1,10 @@
+{
+  "timestamp": "2025-07-05T02:43:59.319Z",
+  "database": "mqtt_data",
+  "totalTables": 14,
+  "actualTables": 19,
+  "createdTables": 0,
+  "skippedTables": 14,
+  "createdViews": 1,
+  "success": true
+}

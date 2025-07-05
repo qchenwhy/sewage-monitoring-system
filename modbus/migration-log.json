@@ -1,0 +1,1312 @@
+[
+  {
+    "date": "2025-05-22T11:49:23.486Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-22T11:56:59.349Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-24T01:07:22.820Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-24T09:24:58.254Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-24T14:11:37.619Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-24T14:40:39.265Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-24T15:03:57.546Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-24T15:16:09.816Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-24T23:22:29.825Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-24T23:42:31.180Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-24T23:59:52.566Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-25T00:15:00.881Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-25T00:40:49.451Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-25T08:07:58.022Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-25T14:29:17.660Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-25T15:06:55.140Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-25T15:25:30.131Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-25T23:28:58.257Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-25T23:46:07.585Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T00:33:14.918Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T00:52:19.228Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T00:57:32.784Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T01:00:30.322Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T01:35:53.482Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T02:05:37.683Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T02:28:52.561Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T02:41:15.927Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T04:01:38.391Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T06:04:54.208Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T06:12:48.582Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T12:20:19.677Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T12:38:28.813Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T12:47:14.554Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T12:59:24.590Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T13:17:58.338Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T13:47:06.639Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T14:26:46.505Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T15:00:59.666Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-26T15:23:49.561Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T04:25:36.477Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T06:20:43.914Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T07:31:07.397Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T08:06:41.649Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T08:13:38.080Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T08:32:33.328Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T08:40:19.516Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T08:45:01.124Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T08:56:47.651Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T10:01:25.953Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T11:38:27.512Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T11:47:24.796Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T11:53:36.167Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T11:59:22.025Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T12:01:57.245Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T12:08:34.000Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T12:15:39.164Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T12:17:18.769Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T12:21:23.632Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T12:28:15.548Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T13:04:35.125Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T15:40:40.753Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T16:04:00.612Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-27T16:16:50.330Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-28T00:24:21.230Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-28T01:21:18.631Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-28T01:38:55.284Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-28T01:42:49.363Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-28T01:53:19.702Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-28T02:03:08.708Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-28T13:19:03.815Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-28T15:31:39.080Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-28T15:52:21.746Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-29T01:30:01.696Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-29T01:51:03.458Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-29T09:30:46.913Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-29T10:33:19.444Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-05-29T10:40:20.823Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T02:33:18.024Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T05:17:44.911Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T05:23:15.076Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T06:16:05.740Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T08:31:30.911Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T08:38:41.818Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T08:43:57.523Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T08:51:46.390Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T08:55:04.300Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T09:00:53.411Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T09:05:28.393Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T11:44:25.564Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T11:48:34.799Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T11:51:24.499Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T12:13:09.042Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T12:27:40.444Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T12:45:07.274Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-01T16:36:18.575Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-04T03:06:17.070Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-05T13:17:19.672Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-05T13:23:54.743Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-07T11:24:00.940Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-07T12:32:12.128Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-07T13:12:05.048Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-07T13:36:22.308Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-08T06:31:00.705Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-08T06:47:42.153Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-08T11:52:07.658Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-08T13:41:25.903Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-08T13:46:14.248Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-08T14:22:24.614Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-09T02:58:46.610Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-09T04:40:09.578Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-09T06:43:45.323Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-09T06:47:58.356Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-09T11:54:05.066Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-09T12:06:29.439Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-09T12:19:36.087Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-09T12:30:50.532Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-09T12:46:52.660Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-09T12:58:24.407Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-09T13:39:14.743Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-10T01:04:28.309Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-10T01:26:43.320Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-10T01:41:06.157Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-10T04:01:29.297Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-10T04:34:46.744Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-10T04:49:57.818Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-10T06:43:05.248Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-10T06:56:27.450Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-10T07:50:01.931Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-10T08:09:12.070Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-10T09:24:11.341Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T01:53:11.568Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T02:01:38.546Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T02:17:37.963Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T02:26:11.917Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T02:40:20.072Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T02:49:19.975Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T03:25:16.086Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T03:58:25.037Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T06:07:19.061Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T06:22:26.926Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T06:30:47.088Z",
+    "description": "添加工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T06:37:56.281Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T13:34:18.437Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T13:40:20.067Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T14:20:01.295Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T16:44:45.580Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T16:59:15.970Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T17:00:32.106Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T17:05:17.427Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-11T17:08:58.647Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-12T03:50:49.530Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-12T06:22:36.711Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-12T06:39:06.285Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-12T06:54:10.084Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-12T07:00:01.159Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-12T07:03:06.077Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-12T07:12:34.875Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-12T07:19:46.616Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-12T07:33:41.308Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T00:03:47.891Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T00:14:56.764Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T00:45:26.400Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T01:03:31.073Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T01:41:56.040Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T02:22:22.777Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T02:36:12.270Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T03:12:58.008Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T03:20:50.749Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T03:24:46.434Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T03:28:36.758Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T03:36:04.325Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T03:54:26.891Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T04:06:44.414Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T06:43:05.842Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T07:49:11.752Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T08:00:01.445Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T08:12:49.505Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T08:19:52.888Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T08:31:18.822Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T08:42:24.000Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T10:23:02.430Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T13:44:55.749Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T14:04:03.173Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T14:08:04.688Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T14:16:51.494Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T14:22:46.310Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T15:17:47.524Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T15:32:47.275Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-13T16:32:42.015Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-14T01:21:51.343Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-14T03:37:17.227Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-14T06:57:16.410Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-14T08:09:26.854Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-14T09:04:45.557Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-15T12:29:44.287Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-18T15:55:10.466Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-18T16:48:35.950Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-18T17:10:57.676Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-19T06:33:06.159Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-19T10:21:25.695Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-20T03:13:18.964Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-20T07:07:12.423Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-20T07:20:14.174Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-20T07:27:47.458Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-21T06:08:59.776Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-21T06:12:17.440Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-21T15:46:48.961Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-21T15:55:48.586Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-21T16:12:09.129Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-21T16:41:23.470Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-22T01:22:53.130Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-23T15:58:53.909Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-23T16:15:26.281Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-23T16:28:35.762Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-24T01:08:46.403Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-24T02:55:04.815Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-24T03:10:14.370Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-24T03:17:05.452Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-24T10:23:06.257Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-24T16:46:49.016Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-24T17:03:16.149Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-24T23:58:57.466Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-25T02:56:33.985Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-25T03:53:39.063Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-25T04:07:00.318Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T04:13:03.177Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T04:43:22.142Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T08:04:02.820Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T14:24:30.684Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T15:20:17.805Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T15:38:38.702Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T15:49:35.974Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T15:56:41.185Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T16:05:04.220Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T16:17:36.957Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T16:26:17.953Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T16:35:18.400Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T16:38:01.872Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T16:42:15.387Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T16:51:51.193Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T16:57:37.983Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-26T20:56:51.472Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-27T02:04:50.086Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-27T02:18:23.948Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-27T02:53:10.999Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-27T03:02:19.648Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-27T03:37:56.740Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-27T03:46:19.233Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-27T03:53:03.535Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-27T04:11:05.110Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-28T01:22:28.764Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-28T09:39:04.912Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-29T04:01:58.318Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-30T07:48:28.712Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-06-30T08:04:24.220Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-07-04T08:26:05.769Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-07-04T08:28:43.745Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-07-05T01:55:58.603Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-07-05T02:13:58.333Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-07-05T02:22:54.304Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-07-05T02:37:54.451Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-07-05T02:43:59.362Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  }
+]

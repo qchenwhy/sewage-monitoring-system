@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作计划API测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+        }
+        .work-plan {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .work-plan h3 {
+            margin-top: 0;
+            color: #444;
+        }
+        .work-plan p {
+            margin: 5px 0;
+        }
+        .work-plan-content {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .btn-complete {
+            background-color: #2196F3;
+        }
+        .btn-complete:hover {
+            background-color: #0b7dda;
+        }
+        .btn-refresh {
+            background-color: #ff9800;
+        }
+        .btn-refresh:hover {
+            background-color: #e68a00;
+        }
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 5px;
+            color: white;
+        }
+        .tag-regular {
+            background-color: #9c27b0;
+        }
+        .tag-temporary {
+            background-color: #e91e63;
+        }
+        .tag-pending {
+            background-color: #ff9800;
+        }
+        .tag-completed {
+            background-color: #4CAF50;
+        }
+        .no-plans {
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .date-selector {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .date-selector input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>工作计划API测试</h1>
+    
+    <p>
+        <a href="/work-plans-api-docs" style="display: inline-block; background-color: #3498db; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-bottom: 20px;">查看API文档</a>
+    </p>
+    
+    <div class="card">
+        <h2>待处理的工作计划</h2>
+        <button class="btn btn-refresh" onclick="loadPendingWorkPlans()">刷新数据</button>
+        <div id="pending-plans-container">
+            <p>加载中...</p>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2>按日期查询工作计划</h2>
+        <div class="date-selector">
+            <input type="date" id="planDate" value="" placeholder="选择日期">
+            <button class="btn" onclick="loadWorkPlansByDate()">查询</button>
+        </div>
+        <div id="date-plans-container">
+            <p>请选择日期查询</p>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载时获取数据
+        window.onload = function() {
+            // 设置日期选择器默认值为今天
+            document.getElementById('planDate').valueAsDate = new Date();
+            // 加载待处理工作计划
+            loadPendingWorkPlans();
+        };
+        
+        // 加载待处理的工作计划
+        function loadPendingWorkPlans() {
+            const container = document.getElementById('pending-plans-container');
+            container.innerHTML = '<p>加载中...</p>';
+            
+            fetch('/api/work-plans/pending')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayWorkPlans(data.data, container);
+                    } else {
+                        container.innerHTML = `<p>获取数据失败: ${data.error || '未知错误'}</p>`;
+                    }
+                })
+                .catch(error => {
+                    container.innerHTML = `<p>请求错误: ${error.message}</p>`;
+                    console.error('获取工作计划失败:', error);
+                });
+        }
+        
+        // 按日期加载工作计划
+        function loadWorkPlansByDate() {
+            const container = document.getElementById('date-plans-container');
+            const date = document.getElementById('planDate').value;
+            
+            if (!date) {
+                container.innerHTML = '<p>请选择日期</p>';
+                return;
+            }
+            
+            container.innerHTML = '<p>加载中...</p>';
+            
+            fetch(`/api/work-plans/date/${date}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        container.innerHTML = `<h3>${date} 的工作计划</h3>`;
+                        displayWorkPlans(data.data, container);
+                    } else {
+                        container.innerHTML = `<p>获取数据失败: ${data.error || '未知错误'}</p>`;
+                    }
+                })
+                .catch(error => {
+                    container.innerHTML = `<p>请求错误: ${error.message}</p>`;
+                    console.error('获取工作计划失败:', error);
+                });
+        }
+        
+        // 显示工作计划
+        function displayWorkPlans(plans, container) {
+            if (!plans || plans.length === 0) {
+                container.innerHTML = '<div class="no-plans">没有待处理的工作计划</div>';
+                return;
+            }
+            
+            let html = '';
+            plans.forEach(plan => {
+                const isCompleted = plan.status === 'completed';
+                
+                html += `
+                    <div class="work-plan" data-id="${plan.id}">
+                        <h3>${plan.name || '未命名计划'}</h3>
+                        <div>
+                            <span class="tag tag-${plan.type}">${plan.type === 'regular' ? '常规' : '临时'}</span>
+                            <span class="tag tag-${plan.status}">${plan.status === 'pending' ? '待处理' : '已完成'}</span>
+                        </div>
+                        <p><strong>数据点:</strong> ${plan.identifier || '无'}</p>
+                        <p><strong>任务ID:</strong> ${plan.taskId || '无'}</p>
+                        <p><strong>计划日期:</strong> ${plan.planDate || '无'}</p>
+                        <p><strong>更新时间:</strong> ${new Date(plan.updatedAt).toLocaleString()}</p>
+                        <div class="work-plan-content">
+                            <strong>工作内容:</strong><br>
+                            ${plan.content || '无内容'}
+                        </div>
+                        ${!isCompleted ? `<button class="btn btn-complete" onclick="markAsCompleted(${plan.id})">标记为已完成</button>` : ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // 标记工作计划为已完成
+        function markAsCompleted(id) {
+            if (!confirm('确定要将此工作计划标记为已完成吗?')) {
+                return;
+            }
+            
+            fetch(`/api/work-plans/${id}/complete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('工作计划已标记为已完成');
+                    // 刷新列表
+                    loadPendingWorkPlans();
+                    // 如果有日期查询，也刷新日期查询结果
+                    const date = document.getElementById('planDate').value;
+                    if (date) {
+                        loadWorkPlansByDate();
+                    }
+                } else {
+                    alert(`操作失败: ${data.error || '未知错误'}`);
+                }
+            })
+            .catch(error => {
+                alert(`请求错误: ${error.message}`);
+                console.error('标记工作计划失败:', error);
+            });
+        }
+    </script>
+</body>
+</html> 

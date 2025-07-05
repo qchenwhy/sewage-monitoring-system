@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工作内容管理API文档</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    body {
+      padding-top: 60px;
+      background-color: #f8f9fa;
+      color: #333;
+    }
+    .api-card {
+      margin-bottom: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .api-card .card-header {
+      display: flex;
+      align-items: center;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .method {
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: white;
+      font-weight: bold;
+      margin-right: 10px;
+      min-width: 60px;
+      text-align: center;
+    }
+    .method-get {
+      background-color: #0d6efd;
+    }
+    .method-post {
+      background-color: #198754;
+    }
+    .method-put {
+      background-color: #fd7e14;
+    }
+    .method-delete {
+      background-color: #dc3545;
+    }
+    .method-patch {
+      background-color: #6f42c1;
+    }
+    .api-path {
+      font-family: monospace;
+      font-weight: bold;
+    }
+    .card-body pre {
+      background-color: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .nav-tabs .nav-link {
+      color: #495057;
+    }
+    .nav-tabs .nav-link.active {
+      font-weight: bold;
+      color: #0d6efd;
+    }
+    .section-title {
+      margin-top: 30px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #dee2e6;
+    }
+  </style>
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="bi bi-cpu"></i> Modbus监控系统
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="切换导航">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/modbus">
+              <i class="bi bi-speedometer2"></i> 监控面板
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/work-tasks">
+              <i class="bi bi-list-task"></i> 工作管理
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/work-tasks-api.html">
+              <i class="bi bi-file-code"></i> API文档
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 class="mb-4">工作内容管理API文档</h1>
+    <p class="lead">本文档提供工作内容管理相关API的详细说明，包括请求方法、URL、参数和响应格式等。</p>
+
+    <!-- 导航标签 -->
+    <ul class="nav nav-tabs mb-4" id="apiTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-selected="true">概览</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="regular-tab" data-bs-toggle="tab" data-bs-target="#regular" type="button" role="tab" aria-selected="false">常规工作</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="temporary-tab" data-bs-toggle="tab" data-bs-target="#temporary" type="button" role="tab" aria-selected="false">临时工作</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="daily-tab" data-bs-toggle="tab" data-bs-target="#daily" type="button" role="tab" aria-selected="false">日常计划</button>
+      </li>
+    </ul>
+
+    <!-- 标签内容 -->
+    <div class="tab-content" id="apiTabContent">
+      <!-- 概览标签 -->
+      <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+        <h3 class="section-title">API概览</h3>
+        <p>工作内容管理API主要分为三类：</p>
+        <ul>
+          <li><strong>常规工作内容</strong>：周期性的工作，如每日、每周或每月重复的任务</li>
+          <li><strong>临时工作内容</strong>：一次性的工作，指定在特定日期执行的任务</li>
+          <li><strong>日常工作计划</strong>：汇总当日或指定日期的所有工作计划，包括当日适用的常规工作和临时工作</li>
+        </ul>
+        <p>所有API均采用JSON格式进行数据交换，返回结果统一包含以下字段：</p>
+        <ul>
+          <li><code>success</code>：布尔值，表示操作是否成功</li>
+          <li><code>message</code>：字符串，包含操作结果的说明信息</li>
+          <li><code>data</code>：对象或数组，包含返回的数据（如果有）</li>
+          <li><code>error</code>：字符串，当操作失败时包含错误详情（如果有）</li>
+        </ul>
+      </div>
+
+      <!-- 常规工作标签 -->
+      <div class="tab-pane fade" id="regular" role="tabpanel" aria-labelledby="regular-tab">
+        <h3 class="section-title">常规工作内容API</h3>
+
+        <!-- 获取所有常规工作 -->
+        <div class="card api-card shadow-sm">
+          <div class="card-header">
+            <span class="method method-get">GET</span>
+            <span class="api-path">/api/work-tasks/regular</span>
+            <span class="ms-auto">获取所有常规工作内容</span>
+          </div>
+          <div class="card-body">
+            <p>获取系统中所有常规工作内容列表。</p>
+            <h6>请求参数：</h6>
+            <p>无</p>
+            <h6>响应示例：</h6>
+            <pre>{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "title": "每日例会",
+      "description": "产品部每日晨会",
+      "cycle_type": "daily",
+      "cycle_value": null,
+      "start_time": "09:00:00",
+      "duration": 30,
+      "status": "active",
+      "priority": 2,
+      "created_at": "2023-03-01T08:00:00Z",
+      "updated_at": "2023-03-01T08:00:00Z"
+    },
+    // ...更多工作内容
+  ]
+}</pre>
+          </div>
+        </div>
+
+        <!-- 获取单个常规工作 -->
+        <div class="card api-card shadow-sm">
+          <div class="card-header">
+            <span class="method method-get">GET</span>
+            <span class="api-path">/api/work-tasks/regular/:id</span>
+            <span class="ms-auto">获取单个常规工作内容</span>
+          </div>
+          <div class="card-body">
+            <p>根据ID获取特定常规工作内容的详细信息。</p>
+            <h6>URL参数：</h6>
+            <ul>
+              <li><code>id</code>：工作内容的唯一标识符</li>
+            </ul>
+            <h6>响应示例：</h6>
+            <pre>{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "每日例会",
+    "description": "产品部每日晨会",
+    "cycle_type": "daily",
+    "cycle_value": null,
+    "start_time": "09:00:00",
+    "duration": 30,
+    "status": "active",
+    "priority": 2,
+    "created_at": "2023-03-01T08:00:00Z",
+    "updated_at": "2023-03-01T08:00:00Z"
+  }
+}</pre>
+          </div>
+        </div>
+
+        <!-- 添加常规工作 -->
+        <div class="card api-card shadow-sm">
+          <div class="card-header">
+            <span class="method method-post">POST</span>
+            <span class="api-path">/api/work-tasks/regular</span>
+            <span class="ms-auto">添加常规工作内容</span>
+          </div>
+          <div class="card-body">
+            <p>创建新的常规工作内容。</p>
+            <h6>请求体：</h6>
+            <pre>{
+  "title": "每周例会",              // 必填，工作标题
+  "description": "团队周会",        // 可选，工作描述
+  "cycle_type": "weekly",         // 必填，周期类型：daily, weekly, monthly, custom
+  "cycle_value": "1",             // 可选，周期值，如weekly时可为1-7表示周一到周日
+  "start_time": "14:00",          // 可选，开始时间
+  "duration": 60,                 // 可选，持续时间(分钟)，默认60
+  "priority": 1                   // 可选，优先级，默认0
+}</pre>
+            <h6>响应示例：</h6>
+            <pre>{
+  "success": true,
+  "message": "常规工作内容添加成功",
+  "data": {
+    "id": 2,
+    "title": "每周例会",
+    "description": "团队周会",
+    "cycle_type": "weekly",
+    "cycle_value": "1",
+    "start_time": "14:00",
+    "duration": 60,
+    "priority": 1
+  }
+}</pre>
+          </div>
+        </div>
+
+        <!-- 更新常规工作 -->
+        <div class="card api-card shadow-sm">
+          <div class="card-header">
+            <span class="method method-put">PUT</span>
+            <span class="api-path">/api/work-tasks/regular/:id</span>
+            <span class="ms-auto">更新常规工作内容</span>
+          </div>
+          <div class="card-body">
+            <p>更新指定ID的常规工作内容。</p>
+            <h6>URL参数：</h6>
+            <ul>
+              <li><code>id</code>：工作内容的唯一标识符</li>
+            </ul>
+            <h6>请求体：</h6>
+            <pre>{
+  "title": "每周产品例会",            // 必填，工作标题
+  "description": "产品部周会",       // 可选，工作描述
+  "cycle_type": "weekly",          // 必填，周期类型
+  "cycle_value": "1",              // 可选，周期值
+  "start_time": "15:00",           // 可选，开始时间
+  "duration": 90,                  // 可选，持续时间(分钟)
+  "priority": 2,                   // 可选，优先级
+  "status": "active"               // 可选，状态：active或inactive
+}</pre>
+            <h6>响应示例：</h6>
+            <pre>{
+  "success": true,
+  "message": "常规工作内容更新成功",
+  "data": {
+    "id": 2,
+    "title": "每周产品例会",
+    "description": "产品部周会",
+    "cycle_type": "weekly",
+    "cycle_value": "1",
+    "start_time": "15:00",
+    "duration": 90,
+    "priority": 2,
+    "status": "active"
+  }
+}</pre>
+          </div>
+        </div>
+
+        <!-- 删除常规工作 -->
+        <div class="card api-card shadow-sm">
+          <div class="card-header">
+            <span class="method method-delete">DELETE</span>
+            <span class="api-path">/api/work-tasks/regular/:id</span>
+            <span class="ms-auto">删除常规工作内容</span>
+          </div>
+          <div class="card-body">
+            <p>删除指定ID的常规工作内容。</p>
+            <h6>URL参数：</h6>
+            <ul>
+              <li><code>id</code>：工作内容的唯一标识符</li>
+            </ul>
+            <h6>响应示例：</h6>
+            <pre>{
+  "success": true,
+  "message": "常规工作内容删除成功"
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 临时工作标签 -->
+      <div class="tab-pane fade" id="temporary" role="tabpanel" aria-labelledby="temporary-tab">
+        <h3 class="section-title">临时工作内容API</h3>
+
+        <!-- 获取所有临时工作 -->
+        <div class="card api-card shadow-sm">
+          <div class="card-header">
+            <span class="method method-get">GET</span>
+            <span class="api-path">/api/work-tasks/temporary</span>
+            <span class="ms-auto">获取所有临时工作内容</span>
+          </div>
+          <div class="card-body">
+            <p>获取系统中所有临时工作内容列表。</p>
+            <h6>请求参数：</h6>
+            <p>无</p>
+            <h6>响应示例：</h6>
+            <pre>{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "title": "项目启动会",
+      "description": "新项目启动会议",
+      "scheduled_date": "2023-05-15",
+      "start_time": "10:00:00",
+      "duration": 120,
+      "status": "pending",
+      "priority": 2,
+      "created_at": "2023-05-10T08:00:00Z",
+      "updated_at": "2023-05-10T08:00:00Z"
+    },
+    // ...更多工作内容
+  ]
+}</pre>
+          </div>
+        </div>
+
+        <!-- 获取单个临时工作 -->
+        <div class="card api-card shadow-sm">
+          <div class="card-header">
+            <span class="method method-get">GET</span>
+            <span class="api-path">/api/work-tasks/temporary/:id</span>
+            <span class="ms-auto">获取单个临时工作内容</span>
+          </div>
+          <div class="card-body">
+            <p>根据ID获取特定临时工作内容的详细信息。</p>
+            <h6>URL参数：</h6>
+            <ul>
+              <li><code>id</code>：工作内容的唯一标识符</li>
+            </ul>
+            <h6>响应示例：</h6>
+            <pre>{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "项目启动会",
+    "description": "新项目启动会议",
+    "scheduled_date": "2023-05-15",
+    "start_time": "10:00:00",
+    "duration": 120,
+    "status": "pending",
+    "priority": 2,
+    "created_at": "2023-05-10T08:00:00Z",
+    "updated_at": "2023-05-10T08:00:00Z"
+  }
+}</pre>
+          </div>
+        </div>
+
+        <!-- 添加临时工作 -->
+        <div class="card api-card shadow-sm">
+          <div class="card-header">
+            <span class="method method-post">POST</span>
+            <span class="api-path">/api/work-tasks/temporary</span>
+            <span class="ms-auto">添加临时工作内容</span>
+          </div>
+          <div class="card-body">
+            <p>创建新的临时工作内容。</p>
+            <h6>请求体：</h6>
+            <pre>{
+  "title": "客户会议",              // 必填，工作标题
+  "description": "与客户讨论需求",    // 可选，工作描述
+  "scheduled_date": "2023-05-20",  // 必填，计划日期
+  "start_time": "14:00",           // 可选，开始时间
+  "duration": 60,                  // 可选，持续时间(分钟)，默认60
+  "priority": 1                    // 可选，优先级，默认0
+}</pre>
+            <h6>响应示例：</h6>
+            <pre>{
+  "success": true,
+  "message": "临时工作内容添加成功",
+  "data": {
+    "id": 2,
+    "title": "客户会议",
+    "description": "与客户讨论需求",
+    "scheduled_date": "2023-05-20",
+    "start_time": "14:00",
+    "duration": 60,
+    "priority": 1
+  }
+}</pre>
+          </div>
+        </div>
+
+        <!-- 更新临时工作 -->
+        <div class="card api-card shadow-sm">
+          <div class="card-header">
+            <span class="method method-put">PUT</span>
+            <span class="api-path">/api/work-tasks/temporary/:id</span>
+            <span class="ms-auto">更新临时工作内容</span>
+          </div>
+          <div class="card-body">
+            <p>更新指定ID的临时工作内容。</p>
+            <h6>URL参数：</h6>
+            <ul>
+              <li><code>id</code>：工作内容的唯一标识符</li>
+            </ul>
+            <h6>请求体：</h6>
+            <pre>{
+  "title": "重要客户会议",            // 必填，工作标题
+  "description": "与重要客户讨论合作", // 可选，工作描述
+  "scheduled_date": "2023-05-21",   // 必填，计划日期
+  "start_time": "15:00",            // 可选，开始时间
+  "duration": 90,                   // 可选，持续时间(分钟)
+  "status": "in_progress",          // 可选，状态：pending, in_progress, completed, cancelled
+  "priority": 2                     // 可选，优先级
+}</pre>
+            <h6>响应示例：</h6>
+            <pre>{
+  "success": true,
+  "message": "临时工作内容更新成功",
+  "data": {
+    "id": 2,
+    "title": "重要客户会议",
+    "description": "与重要客户讨论合作",
+    "scheduled_date": "2023-05-21",
+    "start_time": "15:00",
+    "duration": 90,
+    "status": "in_progress",
+    "priority": 2
+  }
+}</pre>
+          </div>
+        </div>
+
+        <!-- 删除临时工作 -->
+        <div class="card api-card shadow-sm">
+          <div class="card-header">
+            <span class="method method-delete">DELETE</span>
+            <span class="api-path">/api/work-tasks/temporary/:id</span>
+            <span class="ms-auto">删除临时工作内容</span>
+          </div>
+          <div class="card-body">
+            <p>删除指定ID的临时工作内容。</p>
+            <h6>URL参数：</h6>
+            <ul>
+              <li><code>id</code>：工作内容的唯一标识符</li>
+            </ul>
+            <h6>响应示例：</h6>
+            <pre>{
+  "success": true,
+  "message": "临时工作内容删除成功"
+}</pre>
+          </div>
+        </div>
+
+        <!-- 更新临时工作状态 -->
+        <div class="card api-card shadow-sm">
+          <div class="card-header">
+            <span class="method method-patch">PATCH</span>
+            <span class="api-path">/api/work-tasks/temporary/:id/status</span>
+            <span class="ms-auto">更新临时工作状态</span>
+          </div>
+          <div class="card-body">
+            <p>更新指定ID的临时工作内容状态。</p>
+            <h6>URL参数：</h6>
+            <ul>
+              <li><code>id</code>：工作内容的唯一标识符</li>
+            </ul>
+            <h6>请求体：</h6>
+            <pre>{
+  "status": "completed"  // 必填，状态值：pending, in_progress, completed, cancelled
+}</pre>
+            <h6>响应示例：</h6>
+            <pre>{
+  "success": true,
+  "message": "临时工作内容状态更新成功",
+  "data": {
+    "id": 2,
+    "status": "completed"
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 日常计划标签 -->
+      <div class="tab-pane fade" id="daily" role="tabpanel" aria-labelledby="daily-tab">
+        <h3 class="section-title">日常工作计划API</h3>
+
+        <!-- 获取日常工作计划 -->
+        <div class="card api-card shadow-sm">
+          <div class="card-header">
+            <span class="method method-get">GET</span>
+            <span class="api-path">/api/work-tasks/daily-plan</span>
+            <span class="ms-auto">获取日常工作计划</span>
+          </div>
+          <div class="card-body">
+            <p>获取今日或指定日期的工作计划，包含适用于当日的常规工作和临时工作。</p>
+            <h6>查询参数：</h6>
+            <ul>
+              <li><code>date</code>：可选，指定日期，格式为YYYY-MM-DD，默认为当天</li>
+            </ul>
+            <h6>请求示例：</h6>
+            <ul>
+              <li>获取今日工作计划：<code>GET /api/work-tasks/daily-plan</code></li>
+              <li>获取指定日期工作计划：<code>GET /api/work-tasks/daily-plan?date=2023-05-20</code></li>
+            </ul>
+            <h6>响应示例：</h6>
+            <pre>{
+  "success": true,
+  "data": [
+    {
+      "task_type": "regular",
+      "id": 1,
+      "title": "每日例会",
+      "description": "产品部每日晨会",
+      "start_time": "09:00:00",
+      "duration": 30,
+      "priority": 2,
+      "status": "pending"
+    },
+    {
+      "task_type": "temporary",
+      "id": 2,
+      "title": "客户会议",
+      "description": "与客户讨论需求",
+      "start_time": "14:00:00",
+      "duration": 60,
+      "priority": 1,
+      "status": "pending"
+    },
+    // ...更多工作内容
+  ]
+}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="my-5">
+      <h3>使用示例</h3>
+      <p>以下是使用JavaScript进行API调用的示例代码：</p>
+      <pre>// 获取常规工作内容
+async function getRegularTasks() {
+  try {
+    const response = await fetch('/api/work-tasks/regular');
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log('获取成功:', data.data);
+      return data.data;
+    } else {
+      console.error('获取失败:', data.message);
+      return [];
+    }
+  } catch (error) {
+    console.error('API调用出错:', error);
+    return [];
+  }
+}
+
+// 添加临时工作内容
+async function addTemporaryTask(task) {
+  try {
+    const response = await fetch('/api/work-tasks/temporary', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(task)
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log('添加成功:', data.data);
+      return data.data;
+    } else {
+      console.error('添加失败:', data.message);
+      return null;
+    }
+  } catch (error) {
+    console.error('API调用出错:', error);
+    return null;
+  }
+}
+
+// 使用示例
+document.addEventListener('DOMContentLoaded', async () => {
+  // 获取今日工作计划
+  const dailyPlan = await fetch('/api/work-tasks/daily-plan').then(res => res.json());
+  
+  // 添加临时工作
+  const newTask = {
+    title: '文档整理',
+    description: '整理项目文档',
+    scheduled_date: '2023-05-25',
+    start_time: '10:00',
+    duration: 120,
+    priority: 1
+  };
+  
+  const addedTask = await addTemporaryTask(newTask);
+});</pre>
+    </div>
+  </div>
+
+  <footer class="bg-light py-4 mt-5">
+    <div class="container text-center">
+      <p class="mb-0">© 2023 Modbus监控系统 - 工作内容管理API文档</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

@@ -1,0 +1,50 @@
+{
+  "hour_21": {
+    "timestamp": "2025-05-27T21:00:00",
+    "recordCount": 1,
+    "data": [
+      {
+        "id": 1,
+        "dataPointId": "test-dp-1745808693346-1",
+        "dataPointName": "测试数据点1",
+        "value": 42,
+        "formattedValue": "42 °C",
+        "quality": "GOOD",
+        "dataType": "INT16",
+        "updatedAt": "2025-05-27T08:56:48.000Z"
+      }
+    ]
+  },
+  "hour_22": {
+    "timestamp": "2025-05-27T22:00:00",
+    "recordCount": 1,
+    "data": [
+      {
+        "id": 1,
+        "dataPointId": "test-dp-1745808693346-1",
+        "dataPointName": "测试数据点1",
+        "value": 42,
+        "formattedValue": "42 °C",
+        "quality": "GOOD",
+        "dataType": "INT16",
+        "updatedAt": "2025-05-27T08:56:48.000Z"
+      }
+    ]
+  },
+  "hour_23": {
+    "timestamp": "2025-05-27T23:00:00",
+    "recordCount": 1,
+    "data": [
+      {
+        "id": 1,
+        "dataPointId": "test-dp-1745808693346-1",
+        "dataPointName": "测试数据点1",
+        "value": 42,
+        "formattedValue": "42 °C",
+        "quality": "GOOD",
+        "dataType": "INT16",
+        "updatedAt": "2025-05-27T08:56:48.000Z"
+      }
+    ]
+  }
+}

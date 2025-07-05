@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音频循环播放演示</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .control-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+        }
+        select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .code-block {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: Consolas, monospace;
+            margin: 10px 0;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .controls label {
+            min-width: 80px;
+        }
+        input[type="range"] {
+            width: 150px;
+        }
+        .range-value {
+            min-width: 40px;
+            text-align: center;
+        }
+        .log-panel {
+            height: 150px;
+            overflow-y: auto;
+            background-color: #333;
+            color: #f0f0f0;
+            padding: 10px;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>音频循环播放演示</h1>
+        
+        <div class="section">
+            <h2>基本功能演示</h2>
+            <div class="control-panel">
+                <div class="controls">
+                    <label for="audioSelect">选择音频:</label>
+                    <select id="audioSelect">
+                        <option value="/audio/alert.mp3">默认提示音</option>
+                        <option value="/audio/notification.mp3">通知提示音</option>
+                        <option value="/audio/alarm.mp3">警报提示音</option>
+                    </select>
+                </div>
+                
+                <div class="controls">
+                    <label for="volumeRange">音量:</label>
+                    <input type="range" id="volumeRange" min="0" max="1" step="0.1" value="0.7">
+                    <span id="volumeValue" class="range-value">0.7</span>
+                </div>
+                
+                <div class="controls">
+                    <label for="durationRange">持续时间:</label>
+                    <input type="range" id="durationRange" min="1" max="10" step="1" value="3">
+                    <span id="durationValue" class="range-value">3秒</span>
+                </div>
+            </div>
+            
+            <div class="buttons">
+                <button id="startLoopBtn">开始循环播放</button>
+                <button id="stopLoopBtn">停止播放</button>
+                <button id="playWithVoiceBtn">播放带语音通知</button>
+            </div>
+            
+            <div id="statusDisplay" class="status">
+                准备就绪，请选择操作。
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>功能说明</h2>
+            <p>本演示页面展示了音频循环播放功能的修复和增强：</p>
+            <ul>
+                <li>支持使用AudioAutoplay.playLoop循环播放音频</li>
+                <li>增强的音频停止功能，确保所有声音正确停止</li>
+                <li>集成语音通知功能，可以在音频播放后播报通知内容</li>
+                <li>支持音量控制和持续时间设置</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>使用代码示例</h2>
+            <div class="code-block">
+// 循环播放音频
+AudioAutoplay.playLoop('/audio/alert.mp3', function() {
+    console.log('循环播放已结束');
+});
+
+// 停止播放
+AudioAutoplay.stop();
+
+// 高级用法 - 使用TimerAudioHelper
+TimerAudioHelper.playAlert('/audio/alert.mp3', {
+    duration: 3000,
+    volume: 0.7
+});
+
+// 播放语音通知
+TimerAudioHelper.playTimerCompleteNotification('测试计时器', {
+    useAudio: true,
+    useVoice: true
+});
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>日志输出</h2>
+            <div id="logPanel" class="log-panel"></div>
+        </div>
+    </div>
+    
+    <!-- 先加载基础脚本 -->
+    <script src="/js/audio-autoplay.js"></script>
+    
+    <!-- 然后加载修复脚本 -->
+    <script src="/js/timer-audioPlayback-fix.js"></script>
+    
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 记录日志的函数
+            function log(message) {
+                const logPanel = document.getElementById('logPanel');
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.innerHTML = `<span style="color:#999">[${timestamp}]</span> ${message}`;
+                logPanel.appendChild(logEntry);
+                logPanel.scrollTop = logPanel.scrollHeight;
+                console.log(`[${timestamp}] ${message}`);
+            }
+            
+            // 初始化页面元素
+            const audioSelect = document.getElementById('audioSelect');
+            const volumeRange = document.getElementById('volumeRange');
+            const volumeValue = document.getElementById('volumeValue');
+            const durationRange = document.getElementById('durationRange');
+            const durationValue = document.getElementById('durationValue');
+            const startLoopBtn = document.getElementById('startLoopBtn');
+            const stopLoopBtn = document.getElementById('stopLoopBtn');
+            const playWithVoiceBtn = document.getElementById('playWithVoiceBtn');
+            const statusDisplay = document.getElementById('statusDisplay');
+            
+            // 更新音量值显示
+            volumeRange.addEventListener('input', function() {
+                volumeValue.textContent = this.value;
+            });
+            
+            // 更新持续时间值显示
+            durationRange.addEventListener('input', function() {
+                durationValue.textContent = this.value + '秒';
+            });
+            
+            // 检查AudioAutoplay是否可用
+            if (!window.AudioAutoplay) {
+                log('警告: AudioAutoplay模块未找到，功能将受限');
+                startLoopBtn.disabled = true;
+                stopLoopBtn.disabled = true;
+                statusDisplay.textContent = '错误: AudioAutoplay模块未找到，无法执行音频操作';
+                statusDisplay.style.backgroundColor = '#ffebee';
+            } else {
+                log('AudioAutoplay模块已加载');
+            }
+            
+            // 开始循环播放按钮点击事件
+            startLoopBtn.addEventListener('click', function() {
+                const audioUrl = audioSelect.value;
+                const volume = parseFloat(volumeRange.value);
+                const durationSeconds = parseInt(durationRange.value);
+                
+                log(`开始循环播放: ${audioUrl}, 音量: ${volume}, 持续: ${durationSeconds}秒`);
+                statusDisplay.textContent = `正在循环播放: ${audioUrl.split('/').pop()}`;
+                statusDisplay.style.backgroundColor = '#fff9c4';
+                
+                // 使用AudioAutoplay播放循环音频
+                if (window.AudioAutoplay && window.AudioAutoplay.playLoop) {
+                    // 设置音量 (如果有全局currentAudio变量)
+                    setTimeout(function() {
+                        if (window.currentAudio) {
+                            window.currentAudio.volume = volume;
+                        }
+                    }, 100);
+                    
+                    window.AudioAutoplay.playLoop(audioUrl, function() {
+                        log('循环播放完成回调');
+                    });
+                    
+                    // 设置定时停止
+                    setTimeout(function() {
+                        if (window.AudioAutoplay.stop) {
+                            window.AudioAutoplay.stop();
+                            log(`循环播放已在${durationSeconds}秒后自动停止`);
+                            statusDisplay.textContent = '循环播放已自动停止';
+                            statusDisplay.style.backgroundColor = '#e8f5e9';
+                        }
+                    }, durationSeconds * 1000);
+                } else if (window.TimerAudioHelper) {
+                    // 使用TimerAudioHelper播放
+                    window.TimerAudioHelper.playAlert(audioUrl, {
+                        duration: durationSeconds * 1000,
+                        volume: volume
+                    });
+                } else {
+                    // 降级处理
+                    log('警告: 找不到合适的音频播放方法');
+                    statusDisplay.textContent = '错误: 无法播放音频';
+                    statusDisplay.style.backgroundColor = '#ffebee';
+                }
+            });
+            
+            // 停止播放按钮点击事件
+            stopLoopBtn.addEventListener('click', function() {
+                log('停止所有音频播放');
+                statusDisplay.textContent = '已停止所有音频播放';
+                statusDisplay.style.backgroundColor = '#e8f5e9';
+                
+                // 使用TimerAudioHelper停止所有声音
+                if (window.TimerAudioHelper) {
+                    window.TimerAudioHelper.stopAllSounds();
+                } else if (window.AudioAutoplay && window.AudioAutoplay.stop) {
+                    window.AudioAutoplay.stop();
+                }
+            });
+            
+            // 带语音通知按钮点击事件
+            playWithVoiceBtn.addEventListener('click', function() {
+                log('播放带语音通知的提示音');
+                statusDisplay.textContent = '正在播放带语音通知的提示音';
+                statusDisplay.style.backgroundColor = '#fff9c4';
+                
+                const durationSeconds = parseInt(durationRange.value);
+                
+                // 使用TimerAudioHelper播放计时器完成通知
+                if (window.TimerAudioHelper) {
+                    window.TimerAudioHelper.playTimerCompleteNotification('演示计时器', {
+                        useAudio: true,
+                        useVoice: true
+                    });
+                    
+                    // 设置状态更新
+                    setTimeout(function() {
+                        statusDisplay.textContent = '语音通知播放完成';
+                        statusDisplay.style.backgroundColor = '#e8f5e9';
+                    }, durationSeconds * 1000 + 5000); // 预估语音通知的时间
+                } else {
+                    log('警告: TimerAudioHelper未找到，无法播放语音通知');
+                    statusDisplay.textContent = '错误: 无法播放语音通知';
+                    statusDisplay.style.backgroundColor = '#ffebee';
+                }
+            });
+            
+            // 页面加载完成，记录日志
+            log('页面加载完成，音频循环播放演示准备就绪');
+        });
+    </script>
+</body>
+</html>
+
+
+
+

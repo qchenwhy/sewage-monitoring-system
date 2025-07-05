@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>污水处理站3D可视化大屏</title>
+    <link rel="stylesheet" href="css/3d-dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- 3D渲染区域 -->
+        <div class="render-container">
+            <!-- Three.js 3D场景容器 -->
+            <div id="threejs-container"></div>
+            
+            <!-- Canvas 2D降级容器 -->
+            <canvas id="canvas2d-container"></canvas>
+            
+            <!-- 性能信息面板 -->
+            <div class="performance-info">
+                <div class="status" id="performance-status">检测中...</div>
+                <div id="performance-details">
+                    <div>FPS: <span id="fps-counter">0</span></div>
+                    <div>渲染模式: <span id="render-mode">自动</span></div>
+                    <div>设备性能: <span id="device-performance">检测中</span></div>
+                </div>
+            </div>
+            
+            <!-- 渲染模式切换按钮 -->
+            <div class="render-mode-switch">
+                <button id="btn-auto" class="active">自动</button>
+                <button id="btn-3d">3D模式</button>
+                <button id="btn-2d">2D模式</button>
+            </div>
+            
+            <!-- 加载动画 -->
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <div style="margin-top: 10px; color: #fff;">正在加载3D场景...</div>
+            </div>
+        </div>
+        
+        <!-- 侧边控制面板 -->
+        <div class="control-panel">
+            <h3>设备监控</h3>
+            
+            <!-- 设备列表 -->
+            <div class="device-list" id="device-list">
+                <!-- 设备项将通过JavaScript动态生成 -->
+            </div>
+            
+            <!-- 设备详情面板 -->
+            <div class="device-details" id="device-details">
+                <h4>设备详情</h4>
+                <div id="device-info">
+                    <p style="color: #adb5bd; text-align: center; margin-top: 50px;">
+                        点击左侧设备查看详细信息
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 库文件 -->
+    <script>
+        console.log('🎬 开始初始化3D可视化大屏...');
+        
+        // Three.js资源列表（按优先级排序）
+        const threeJSSources = [
+            'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.149.0/three.min.js',
+            'https://unpkg.com/three@0.149.0/build/three.min.js',
+            'https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js',
+            'https://threejs.org/build/three.min.js',
+            'js/libs/three.min.js'  // 本地备用方案
+        ];
+        
+        let currentSourceIndex = 0;
+        let loadAttempts = 0;
+        const maxAttempts = 1; // 每个源只尝试一次，避免无限循环
+        
+        // 网络诊断函数
+        function diagnoseEnvironment() {
+            console.log('🔍 环境诊断信息:');
+            console.log('- 页面URL:', window.location.href);
+            console.log('- 协议:', window.location.protocol);
+            console.log('- 域名:', window.location.hostname);
+            console.log('- 端口:', window.location.port);
+            console.log('- 在线状态:', navigator.onLine);
+            console.log('- 用户代理:', navigator.userAgent.substring(0, 100) + '...');
+            console.log('- 连接类型:', navigator.connection ? navigator.connection.effectiveType : '未知');
+        }
+        
+        // 加载Three.js的主函数
+        function loadThreeJS() {
+            // 防止无限循环
+            if (currentSourceIndex >= threeJSSources.length) {
+                console.error('❌ 所有Three.js资源都加载失败');
+                diagnoseEnvironment();
+                showError('所有Three.js资源都加载失败<br>请检查网络连接或联系管理员');
+                return;
+            }
+            
+            const currentSource = threeJSSources[currentSourceIndex];
+            const isLocalFile = !currentSource.startsWith('http');
+            
+            console.log(`🔄 尝试加载Three.js源 (${currentSourceIndex + 1}/${threeJSSources.length}):`);
+            console.log(`   源地址: ${currentSource}`);
+            console.log(`   类型: ${isLocalFile ? '本地文件' : '远程CDN'}`);
+            
+            // 创建script标签
+            const script = document.createElement('script');
+            script.src = currentSource;
+            script.async = true;
+            
+            const startTime = Date.now();
+            
+            // 设置超时机制
+            const timeoutDuration = isLocalFile ? 3000 : 8000;
+            const timeoutId = setTimeout(() => {
+                const elapsed = Date.now() - startTime;
+                console.warn(`⏰ 加载超时 (${elapsed}ms): ${currentSource}`);
+                script.remove();
+                nextSource();
+            }, timeoutDuration);
+            
+            // 成功加载处理
+            script.onload = function() {
+                clearTimeout(timeoutId);
+                const elapsed = Date.now() - startTime;
+                console.log(`✅ 资源加载成功 (${elapsed}ms): ${currentSource}`);
+                
+                // 验证THREE对象
+                if (typeof THREE !== 'undefined') {
+                    console.log('✅ THREE对象验证成功');
+                    console.log('📦 Three.js版本:', THREE.REVISION);
+                    initializeApplication();
+                } else {
+                    console.warn('⚠️ THREE对象未定义，尝试下一个资源');
+                    nextSource();
+                }
+            };
+            
+            // 加载失败处理
+            script.onerror = function(error) {
+                clearTimeout(timeoutId);
+                const elapsed = Date.now() - startTime;
+                console.warn(`❌ 资源加载失败 (${elapsed}ms): ${currentSource}`);
+                
+                if (!isLocalFile) {
+                    console.log('🔍 可能的CDN加载失败原因:');
+                    console.log('   - 网络连接问题');
+                    console.log('   - 防火墙/代理阻止');
+                    console.log('   - DNS解析失败');
+                    console.log('   - CORS策略限制');
+                } else {
+                    console.log('🔍 可能的本地文件加载失败原因:');
+                    console.log('   - 文件路径错误');
+                    console.log('   - 文件不存在或损坏');
+                    console.log('   - 服务器配置问题');
+                }
+                
+                nextSource();
+            };
+            
+            // 添加到页面
+            document.head.appendChild(script);
+        }
+        
+        // 尝试下一个资源
+        function nextSource() {
+            currentSourceIndex++;
+            loadAttempts++;
+            
+            // 防止无限循环
+            if (loadAttempts > threeJSSources.length * maxAttempts) {
+                console.error('❌ 超出最大尝试次数，停止加载');
+                diagnoseEnvironment();
+                showError('Three.js加载失败<br>已达到最大尝试次数');
+                return;
+            }
+            
+            // 短暂延迟后尝试下一个资源
+            setTimeout(loadThreeJS, 100);
+        }
+        
+        // 显示错误信息
+        function showError(message) {
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.innerHTML = `<div style="color: #ff6b6b; text-align: center;">${message}</div>`;
+            }
+        }
+        
+        // 应用初始化
+        function initializeApplication() {
+            console.log('🎯 开始应用初始化...');
+            
+            // 等待DOM加载完成
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', startApplication);
+            } else {
+                startApplication();
+            }
+        }
+        
+        // 启动应用
+        function startApplication() {
+            console.log('📄 DOM已准备就绪');
+            
+            // 最终验证THREE对象
+            if (typeof THREE === 'undefined') {
+                console.error('❌ 最终验证失败：THREE对象未定义');
+                showError('Three.js未正确加载<br>请刷新页面重试');
+                return;
+            }
+            
+            console.log('✅ 最终验证成功，THREE对象可用');
+            console.log('📦 Three.js版本:', THREE.REVISION);
+            
+            // 加载3D引擎核心模块
+            loadCoreEngine();
+        }
+        
+        // 加载3D引擎核心模块
+        function loadCoreEngine() {
+            console.log('🔧 开始加载3D引擎核心模块...');
+            
+            const script = document.createElement('script');
+            script.src = 'js/3d-engine/core.js';
+            
+            script.onload = function() {
+                console.log('✅ 3D引擎核心模块加载完成');
+                initializeDashboard();
+            };
+            
+            script.onerror = function() {
+                console.error('❌ 3D引擎核心模块加载失败');
+                showError('3D引擎核心模块加载失败<br>请刷新页面重试');
+            };
+            
+            document.head.appendChild(script);
+        }
+        
+        // 初始化3D仪表板
+        function initializeDashboard() {
+            console.log('🚀 开始初始化3D仪表板...');
+            
+            // 验证THREE对象仍然可用
+            if (typeof THREE === 'undefined') {
+                console.error('❌ THREE对象在初始化时丢失');
+                showError('THREE.js对象丢失');
+                return;
+            }
+            
+            console.log('✅ THREE对象验证通过');
+            
+            // 检查3D引擎是否可用
+            if (typeof ThreeDEngine !== 'undefined') {
+                try {
+                    window.dashboard = new ThreeDEngine();
+                    window.dashboard.init();
+                    console.log('🎉 3D仪表板初始化成功');
+                    
+                    // 隐藏加载动画
+                    const loading = document.getElementById('loading');
+                    if (loading) {
+                        loading.style.display = 'none';
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ 3D仪表板初始化失败:', error);
+                    showError('3D仪表板初始化失败: ' + error.message);
+                }
+            } else {
+                console.error('❌ 3D引擎核心模块未加载');
+                showError('3D引擎核心模块未加载');
+            }
+            
+            // 设置UI事件处理
+            setupUIEvents();
+            
+            // 启动数据更新循环
+            startDataUpdateLoop();
+        }
+        
+        // 设置UI事件处理
+        function setupUIEvents() {
+            console.log('🎮 设置UI事件处理...');
+            
+            // 渲染模式切换按钮
+            const buttons = document.querySelectorAll('.render-mode-switch button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 移除所有按钮的active状态
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    // 添加当前按钮的active状态
+                    this.classList.add('active');
+                    
+                    // 切换渲染模式
+                    const mode = this.id.replace('btn-', '');
+                    if (window.dashboard) {
+                        window.dashboard.setRenderMode(mode);
+                    }
+                });
+            });
+        }
+        
+        // 启动数据更新循环
+        function startDataUpdateLoop() {
+            console.log('🔄 启动数据更新循环...');
+            
+            // 定期更新设备数据
+            setInterval(function() {
+                if (window.dashboard) {
+                    window.dashboard.updateDeviceData();
+                }
+            }, 2000);
+        }
+        
+        // 全局错误处理
+        window.addEventListener('error', function(event) {
+            console.error('💥 全局错误:', event.error);
+            if (event.error && event.error.stack) {
+                console.error('错误堆栈:', event.error.stack);
+            }
+        });
+        
+        // 初始化超时保护
+        setTimeout(function() {
+            if (!window.dashboard) {
+                console.warn('⏰ 应用初始化超时 (30秒)');
+                diagnoseEnvironment();
+                showError('应用初始化超时<br>请刷新页面重试或联系管理员');
+            }
+        }, 30000);
+        
+        // 开始加载流程
+        console.log('🚀 启动Three.js加载流程...');
+        loadThreeJS();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,38 @@
+{
+  "name": "dify-knowledge-integration",
+  "version": "1.0.0",
+  "description": "Dify知识库集成功能依赖和配置摘要",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "form-data": "^4.0.0",
+    "moment": "^2.29.4",
+    "node-cron": "^3.0.2",
+    "fs": "0.0.1-security",
+    "path": "^0.12.7"
+  },
+  "config": {
+    "apiEndpoint": "http://localhost/v1",
+    "syncInterval": 3600000,
+    "documentsPerDay": 24
+  },
+  "api": {
+    "endpoints": {
+      "status": "/api/dify/status",
+      "config": "/api/dify/config",
+      "sync": "/api/dify/sync",
+      "manualSync": "/api/dify/sync/manual",
+      "documents": "/api/dify/documents",
+      "document": "/api/dify/documents/:id",
+      "createKnowledge": "/api/dify/knowledge"
+    }
+  },
+  "files": {
+    "service": "modbus/dify-knowledge-service.js",
+    "scheduler": "modbus/modbus-data-scheduler.js",
+    "config": "modbus/config.json",
+    "ui": "public/dify-knowledge.html"
+  },
+  "installation": {
+    "command": "npm install axios@0.27.2 form-data@4.0.0 moment@2.29.4 node-cron@3.0.2 fs@0.0.1-security path@0.12.7"
+  }
+} 

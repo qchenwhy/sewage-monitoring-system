@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MQTT测试工具</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    body {
+      padding-top: 20px;
+      background-color: #f8f9fa;
+    }
+    .card {
+      margin-bottom: 20px;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      border-radius: 10px;
+    }
+    .message-item {
+      border-left: 3px solid #0d6efd;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #f8f9fa;
+    }
+    .message-item.sent {
+      border-left-color: #28a745;
+    }
+    .message-item.received {
+      border-left-color: #0d6efd;
+    }
+    .message-topic {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .message-payload {
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .message-time {
+      font-size: 12px;
+      color: #6c757d;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 0.25rem;
+    }
+    .status-badge.connected {
+      background-color: #d1e7dd;
+      color: #0f5132;
+    }
+    .status-badge.disconnected {
+      background-color: #f8d7da;
+      color: #842029;
+    }
+    .status-badge.connecting {
+      background-color: #fff3cd;
+      color: #664d03;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="mb-4 text-center">MQTT测试工具</h1>
+    
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">MQTT连接</h5>
+          </div>
+          <div class="card-body">
+            <form id="connectionForm">
+              <div class="mb-3">
+                <label for="brokerUrl" class="form-label">MQTT服务器地址</label>
+                <input type="text" class="form-control" id="brokerUrl" value="ws://localhost:8083/mqtt">
+                <div class="form-text">例如: ws://localhost:8083/mqtt 或 mqtt://localhost:1883 (需要代理)</div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="clientId" class="form-label">客户端ID</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="clientId" value="mqttjs_" readonly>
+                    <button class="btn btn-outline-secondary" type="button" id="generateClientId">生成</button>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label for="keepAlive" class="form-label">保活间隔(秒)</label>
+                  <input type="number" class="form-control" id="keepAlive" value="60">
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="username" class="form-label">用户名</label>
+                  <input type="text" class="form-control" id="username">
+                </div>
+                <div class="col-md-6">
+                  <label for="password" class="form-label">密码</label>
+                  <input type="password" class="form-control" id="password">
+                </div>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-primary" id="connectBtn">
+                  <i class="bi bi-plug"></i> 连接
+                </button>
+                <button type="button" class="btn btn-danger" id="disconnectBtn" disabled>
+                  <i class="bi bi-plug-fill"></i> 断开连接
+                </button>
+                <div class="ms-auto d-flex align-items-center">
+                  状态: <span id="connectionStatus" class="status-badge disconnected ms-2">未连接</span>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">发布消息</h5>
+          </div>
+          <div class="card-body">
+            <form id="publishForm">
+              <div class="mb-3">
+                <label for="publishTopic" class="form-label">主题</label>
+                <input type="text" class="form-control" id="publishTopic" value="data/modbus/test">
+              </div>
+              <div class="mb-3">
+                <label for="publishQos" class="form-label">QoS</label>
+                <select class="form-select" id="publishQos">
+                  <option value="0">0 - 至多一次</option>
+                  <option value="1">1 - 至少一次</option>
+                  <option value="2">2 - 确保只有一次</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="publishPayload" class="form-label">消息内容</label>
+                <textarea class="form-control" id="publishPayload" rows="4">{"value": 123, "timestamp": "2023-01-01T00:00:00Z"}</textarea>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-success" id="publishBtn" disabled>
+                  <i class="bi bi-send"></i> 发布
+                </button>
+                <button type="button" class="btn btn-secondary" id="generateRandomBtn" disabled>
+                  <i class="bi bi-shuffle"></i> 生成随机值
+                </button>
+                <div class="form-check ms-auto d-flex align-items-center">
+                  <input class="form-check-input" type="checkbox" id="retainCheck">
+                  <label class="form-check-label ms-2" for="retainCheck">保留消息</label>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">订阅主题</h5>
+          </div>
+          <div class="card-body">
+            <form id="subscribeForm">
+              <div class="mb-3">
+                <label for="subscribeTopic" class="form-label">主题</label>
+                <input type="text" class="form-control" id="subscribeTopic" value="data/modbus/#">
+                <div class="form-text">支持通配符: # (多级) 和 + (单级)</div>
+              </div>
+              <div class="mb-3">
+                <label for="subscribeQos" class="form-label">QoS</label>
+                <select class="form-select" id="subscribeQos">
+                  <option value="0">0 - 至多一次</option>
+                  <option value="1">1 - 至少一次</option>
+                  <option value="2">2 - 确保只有一次</option>
+                </select>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-primary" id="subscribeBtn" disabled>
+                  <i class="bi bi-plus-circle"></i> 订阅
+                </button>
+                <button type="button" class="btn btn-danger" id="unsubscribeBtn" disabled>
+                  <i class="bi bi-dash-circle"></i> 取消订阅
+                </button>
+              </div>
+            </form>
+            <div class="mt-3">
+              <h6>已订阅的主题:</h6>
+              <ul class="list-group" id="subscriptionsList">
+                <li class="list-group-item text-muted">暂无订阅</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">消息记录</h5>
+            <button class="btn btn-sm btn-outline-secondary" id="clearMessagesBtn">
+              <i class="bi bi-trash"></i> 清空
+            </button>
+          </div>
+          <div class="card-body">
+            <div id="messagesContainer" style="max-height: 400px; overflow-y: auto;">
+              <div class="text-center text-muted py-4">
+                <i class="bi bi-chat-dots fs-3"></i>
+                <p class="mt-2">消息将显示在这里</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MQTT.js库 -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // MQTT客户端
+      let client = null;
+      
+      // 当前订阅的主题
+      const subscriptions = new Set();
+      
+      // 生成随机客户端ID
+      function generateClientId() {
+        return 'mqttjs_' + Math.random().toString(16).substr(2, 8);
+      }
+      
+      // 生成随机消息内容
+      function generateRandomMessage() {
+        const value = Math.floor(Math.random() * 100);
+        const timestamp = new Date().toISOString();
+        
+        return JSON.stringify({
+          value,
+          formatted: `${value}`,
+          timestamp
+        }, null, 2);
+      }
+      
+      // 更新连接状态显示
+      function updateConnectionStatus(status, message = '') {
+        const statusElement = document.getElementById('connectionStatus');
+        
+        statusElement.textContent = message || status;
+        statusElement.className = 'status-badge ms-2 ' + status;
+        
+        // 更新按钮状态
+        document.getElementById('connectBtn').disabled = status === 'connected';
+        document.getElementById('disconnectBtn').disabled = status !== 'connected';
+        document.getElementById('publishBtn').disabled = status !== 'connected';
+        document.getElementById('generateRandomBtn').disabled = status !== 'connected';
+        document.getElementById('subscribeBtn').disabled = status !== 'connected';
+        document.getElementById('unsubscribeBtn').disabled = status !== 'connected';
+      }
+      
+      // 添加消息到列表
+      function addMessage(topic, payload, type = 'received') {
+        const messagesContainer = document.getElementById('messagesContainer');
+        
+        // 创建消息元素
+        const messageElement = document.createElement('div');
+        messageElement.className = `message-item ${type}`;
+        
+        // 格式化消息内容
+        let formattedPayload = payload;
+        try {
+          if (typeof payload === 'object') {
+            formattedPayload = JSON.stringify(payload, null, 2);
+          } else if (typeof payload === 'string') {
+            // 尝试解析JSON
+            const parsedPayload = JSON.parse(payload);
+            formattedPayload = JSON.stringify(parsedPayload, null, 2);
+          }
+        } catch (e) {
+          // 解析失败，使用原始内容
+          formattedPayload = payload;
+        }
+        
+        // 时间戳
+        const timestamp = new Date().toLocaleTimeString();
+        
+        // 设置消息内容
+        messageElement.innerHTML = `
+          <div class="message-topic">${topic}</div>
+          <pre class="message-payload">${formattedPayload}</pre>
+          <div class="message-time">
+            <span class="badge ${type === 'sent' ? 'bg-success' : 'bg-primary'}">${type === 'sent' ? '已发送' : '已接收'}</span>
+            <span class="ms-2">${timestamp}</span>
+          </div>
+        `;
+        
+        // 添加到容器
+        messagesContainer.innerHTML = '';
+        messagesContainer.appendChild(messageElement);
+        
+        // 滚动到底部
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+      
+      // 更新订阅列表
+      function updateSubscriptionsList() {
+        const subscriptionsList = document.getElementById('subscriptionsList');
+        
+        if (subscriptions.size === 0) {
+          subscriptionsList.innerHTML = '<li class="list-group-item text-muted">暂无订阅</li>';
+          return;
+        }
+        
+        subscriptionsList.innerHTML = '';
+        
+        subscriptions.forEach(topic => {
+          const listItem = document.createElement('li');
+          listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+          listItem.innerHTML = `
+            <span>${topic}</span>
+            <button class="btn btn-sm btn-outline-danger unsubscribe-btn" data-topic="${topic}">
+              <i class="bi bi-x-circle"></i>
+            </button>
+          `;
+          subscriptionsList.appendChild(listItem);
+        });
+        
+        // 添加取消订阅按钮事件
+        document.querySelectorAll('.unsubscribe-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const topic = this.getAttribute('data-topic');
+            unsubscribeTopic(topic);
+          });
+        });
+      }
+      
+      // 订阅主题
+      function subscribeTopic(topic, qos = 0) {
+        if (!client || !client.connected) {
+          showToast('请先连接到MQTT服务器', 'danger');
+          return;
+        }
+        
+        client.subscribe(topic, { qos: parseInt(qos) }, (err) => {
+          if (err) {
+            showToast(`订阅失败: ${err.message}`, 'danger');
+            console.error('订阅失败:', err);
+            return;
+          }
+          
+          showToast(`已成功订阅主题: ${topic}`, 'success');
+          subscriptions.add(topic);
+          updateSubscriptionsList();
+          
+          // 清空输入框
+          document.getElementById('subscribeTopic').value = '';
+        });
+      }
+      
+      // 取消订阅主题
+      function unsubscribeTopic(topic) {
+        if (!client || !client.connected) {
+          showToast('请先连接到MQTT服务器', 'danger');
+          return;
+        }
+        
+        client.unsubscribe(topic, (err) => {
+          if (err) {
+            showToast(`取消订阅失败: ${err.message}`, 'danger');
+            console.error('取消订阅失败:', err);
+            return;
+          }
+          
+          showToast(`已取消订阅主题: ${topic}`, 'success');
+          subscriptions.delete(topic);
+          updateSubscriptionsList();
+        });
+      }
+      
+      // 发布消息
+      function publishMessage(topic, payload, qos = 0, retain = false) {
+        if (!client || !client.connected) {
+          showToast('请先连接到MQTT服务器', 'danger');
+          return;
+        }
+        
+        client.publish(topic, payload, { qos: parseInt(qos), retain }, (err) => {
+          if (err) {
+            showToast(`发布失败: ${err.message}`, 'danger');
+            console.error('发布失败:', err);
+            return;
+          }
+          
+          showToast('消息已成功发布', 'success');
+          
+          // 添加到消息列表
+          addMessage(topic, payload, 'sent');
+        });
+      }
+      
+      // 显示提示消息
+      function showToast(message, type = 'info') {
+        const toastId = 'mqtt-toast';
+        let toastElement = document.getElementById(toastId);
+        
+        // 如果不存在，创建一个
+        if (!toastElement) {
+          toastElement = document.createElement('div');
+          toastElement.id = toastId;
+          toastElement.className = 'toast align-items-center text-white border-0';
+          toastElement.setAttribute('role', 'alert');
+          toastElement.setAttribute('aria-live', 'assertive');
+          toastElement.setAttribute('aria-atomic', 'true');
+          
+          toastElement.innerHTML = `
+            <div class="d-flex">
+              <div class="toast-body"></div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+          `;
+          
+          // 添加到页面
+          const toastContainer = document.createElement('div');
+          toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+          toastContainer.appendChild(toastElement);
+          document.body.appendChild(toastContainer);
+        }
+        
+        // 设置内容和样式
+        toastElement.querySelector('.toast-body').textContent = message;
+        
+        // 设置类型
+        toastElement.className = 'toast align-items-center text-white border-0';
+        switch (type) {
+          case 'success':
+            toastElement.classList.add('bg-success');
+            break;
+          case 'danger':
+            toastElement.classList.add('bg-danger');
+            break;
+          case 'warning':
+            toastElement.classList.add('bg-warning');
+            break;
+          default:
+            toastElement.classList.add('bg-info');
+        }
+        
+        // 显示toast
+        const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+        toast.show();
+      }
+      
+      // 生成客户端ID按钮点击事件
+      document.getElementById('generateClientId').addEventListener('click', function() {
+        document.getElementById('clientId').value = generateClientId();
+      });
+      
+      // 连接按钮点击事件
+      document.getElementById('connectBtn').addEventListener('click', function() {
+        // 获取连接参数
+        const brokerUrl = document.getElementById('brokerUrl').value;
+        const clientId = document.getElementById('clientId').value || generateClientId();
+        const keepAlive = parseInt(document.getElementById('keepAlive').value);
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        
+        // 验证参数
+        if (!brokerUrl) {
+          showToast('请输入MQTT服务器地址', 'danger');
+          return;
+        }
+        
+        // 更新状态
+        updateConnectionStatus('connecting', '正在连接...');
+        
+        // 连接选项
+        const options = {
+          clientId,
+          keepalive: keepAlive,
+          clean: true
+        };
+        
+        // 如果提供了用户名和密码，添加到选项中
+        if (username) {
+          options.username = username;
+        }
+        
+        if (password) {
+          options.password = password;
+        }
+        
+        try {
+          // 创建MQTT客户端
+          client = mqtt.connect(brokerUrl, options);
+          
+          // 连接事件
+          client.on('connect', function() {
+            updateConnectionStatus('connected', '已连接');
+            showToast('已成功连接到MQTT服务器', 'success');
+            
+            // 恢复之前的订阅
+            if (subscriptions.size > 0) {
+              subscriptions.forEach(topic => {
+                client.subscribe(topic);
+              });
+            }
+          });
+          
+          // 重连事件
+          client.on('reconnect', function() {
+            updateConnectionStatus('connecting', '正在重连...');
+          });
+          
+          // 断开连接事件
+          client.on('close', function() {
+            updateConnectionStatus('disconnected', '已断开连接');
+          });
+          
+          // 离线事件
+          client.on('offline', function() {
+            updateConnectionStatus('disconnected', '离线');
+          });
+          
+          // 错误事件
+          client.on('error', function(err) {
+            updateConnectionStatus('disconnected', '连接错误');
+            showToast(`连接错误: ${err.message}`, 'danger');
+            console.error('MQTT错误:', err);
+          });
+          
+          // 消息事件
+          client.on('message', function(topic, message) {
+            console.log('收到消息:', topic, message.toString());
+            addMessage(topic, message.toString());
+          });
+        } catch (err) {
+          updateConnectionStatus('disconnected', '连接失败');
+          showToast(`连接失败: ${err.message}`, 'danger');
+          console.error('创建MQTT客户端失败:', err);
+        }
+      });
+      
+      // 断开连接按钮点击事件
+      document.getElementById('disconnectBtn').addEventListener('click', function() {
+        if (client && client.connected) {
+          client.end(true, function() {
+            updateConnectionStatus('disconnected', '已断开连接');
+            showToast('已断开与MQTT服务器的连接', 'info');
+          });
+        }
+      });
+      
+      // 订阅按钮点击事件
+      document.getElementById('subscribeBtn').addEventListener('click', function() {
+        const topic = document.getElementById('subscribeTopic').value;
+        const qos = document.getElementById('subscribeQos').value;
+        
+        if (!topic) {
+          showToast('请输入要订阅的主题', 'warning');
+          return;
+        }
+        
+        subscribeTopic(topic, qos);
+      });
+      
+      // 取消订阅按钮点击事件
+      document.getElementById('unsubscribeBtn').addEventListener('click', function() {
+        const topic = document.getElementById('subscribeTopic').value;
+        
+        if (!topic) {
+          showToast('请输入要取消订阅的主题', 'warning');
+          return;
+        }
+        
+        unsubscribeTopic(topic);
+      });
+      
+      // 发布按钮点击事件
+      document.getElementById('publishBtn').addEventListener('click', function() {
+        const topic = document.getElementById('publishTopic').value;
+        const payload = document.getElementById('publishPayload').value;
+        const qos = document.getElementById('publishQos').value;
+        const retain = document.getElementById('retainCheck').checked;
+        
+        if (!topic) {
+          showToast('请输入发布主题', 'warning');
+          return;
+        }
+        
+        publishMessage(topic, payload, qos, retain);
+      });
+      
+      // 生成随机消息按钮点击事件
+      document.getElementById('generateRandomBtn').addEventListener('click', function() {
+        document.getElementById('publishPayload').value = generateRandomMessage();
+      });
+      
+      // 清空消息按钮点击事件
+      document.getElementById('clearMessagesBtn').addEventListener('click', function() {
+        document.getElementById('messagesContainer').innerHTML = `
+          <div class="text-center text-muted py-4">
+            <i class="bi bi-chat-dots fs-3"></i>
+            <p class="mt-2">消息将显示在这里</p>
+          </div>
+        `;
+      });
+      
+      // 初始化
+      document.getElementById('clientId').value = generateClientId();
+      updateConnectionStatus('disconnected', '未连接');
+      updateSubscriptionsList();
+    });
+  </script>
+  
+  <!-- Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

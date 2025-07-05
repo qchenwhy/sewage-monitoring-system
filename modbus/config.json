@@ -1,0 +1,11 @@
+{
+  "dify": {
+    "enabled": true,
+    "apiEndpoint": "http://localhost/v1",
+    "apiKey": "dataset-CBdZ3tu2yaTpd1mpjGhsLhaR",
+    "datasetId": "c94272de-e4a0-4075-b708-db42ee1b3c29",
+    "syncInterval": 3600000,
+    "documentsPerDay": 24,
+    "debug": true
+  }
+}

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计时器设置演示</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1, h2 {
+            color: #4CAF50;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button.stop {
+            background-color: #f44336;
+        }
+        
+        button.stop:hover {
+            background-color: #d32f2f;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        .log-panel {
+            margin-top: 20px;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+        
+        /* 模态窗口样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close-btn:hover {
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>计时器设置演示</h1>
+        
+        <div class="card">
+            <h2>计时器控制</h2>
+            <div class="form-group">
+                <label for="timerTitle">计时器标题</label>
+                <input type="text" id="timerTitle" value="测试计时器">
+            </div>
+            <div class="form-group">
+                <label for="timerDuration">持续时间（秒）</label>
+                <input type="number" id="timerDuration" value="5" min="1">
+            </div>
+            <div class="form-group">
+                <label for="timerMessage">结束消息</label>
+                <input type="text" id="timerMessage" value="时间到！">
+            </div>
+            <button id="startTimerBtn">开始计时器</button>
+            <button id="stopTimerBtn" class="stop">停止计时器</button>
+            <button id="timerSettingsBtn">计时器设置</button>
+        </div>
+        
+        <div class="card">
+            <h2>当前状态</h2>
+            <div id="statusPanel">
+                <p>计时器状态: <span id="timerStatus">未启动</span></p>
+                <p>当前设置: <span id="currentSettings">加载中...</span></p>
+            </div>
+        </div>
+        
+        <div class="log-panel" id="logPanel">
+            <!-- 日志内容 -->
+        </div>
+        
+        <!-- 设置模态窗口 -->
+        <div id="timerSettingsModal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h2>计时器设置</h2>
+                <form id="timerSettingsForm">
+                    <div class="form-group">
+                        <label for="notificationSound">提醒音效</label>
+                        <select id="notificationSound" name="notificationSound">
+                            <option value="default">默认音效</option>
+                            <option value="alert.mp3">提醒音效</option>
+                            <option value="notification.mp3">通知音效</option>
+                            <option value="complete.mp3">完成音效</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="notificationVolume">音量</label>
+                        <input type="range" id="notificationVolume" name="notificationVolume" min="0" max="1" step="0.1" value="0.5">
+                        <span id="volumeValue">50%</span>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="loopNotification" name="loopNotification"> 循环播放提醒音效
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="useVoiceNotification" name="useVoiceNotification" checked> 使用语音通知
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="voiceLanguage">语音语言</label>
+                        <select id="voiceLanguage" name="voiceLanguage">
+                            <option value="zh-CN">中文</option>
+                            <option value="en-US">英文</option>
+                            <option value="ja-JP">日文</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="reminderRepeatCount">提醒重复次数</label>
+                        <input type="number" id="reminderRepeatCount" name="reminderRepeatCount" min="1" max="5" value="1">
+                    </div>
+                    <button type="button" id="saveTimerSettings">保存设置</button>
+                    <button type="button" id="testAudioBtn">测试音效</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 基本脚本 -->
+    <script src="/js/audio-autoplay.js"></script>
+    
+    <!-- 模拟timerSettings-fix.js的功能 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('计时器设置基础功能初始化');
+            
+            // 简化版计时器处理
+            let activeTimer = null;
+            let timerInterval = null;
+            
+            // 日志函数
+            function log(message) {
+                const logPanel = document.getElementById('logPanel');
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.innerHTML = `<span style="color:#999">[${timestamp}]</span> ${message}`;
+                logPanel.appendChild(logEntry);
+                
+                // 自动滚动到底部
+                logPanel.scrollTop = logPanel.scrollHeight;
+            }
+            
+            // 更新状态显示
+            function updateStatusDisplay() {
+                const statusSpan = document.getElementById('timerStatus');
+                const settingsSpan = document.getElementById('currentSettings');
+                
+                if (activeTimer) {
+                    statusSpan.textContent = `计时中: ${activeTimer.title} (剩余 ${activeTimer.remainingTime}秒)`;
+                    statusSpan.style.color = '#4CAF50';
+                } else {
+                    statusSpan.textContent = '未启动';
+                    statusSpan.style.color = '#999';
+                }
+                
+                // 显示当前设置
+                if (window.timerSettings) {
+                    const settings = window.timerSettings;
+                    settingsSpan.textContent = `音效: ${settings.notificationSound}, 音量: ${Math.round(settings.notificationVolume * 100)}%, 循环: ${settings.loopNotification ? '是' : '否'}, 语音: ${settings.useVoiceNotification ? '启用' : '禁用'}`;
+                } else {
+                    settingsSpan.textContent = '设置未初始化';
+                }
+            }
+            
+            // 初始化模态框
+            const modal = document.getElementById('timerSettingsModal');
+            const settingsBtn = document.getElementById('timerSettingsBtn');
+            const closeBtn = document.querySelector('.close-btn');
+            const saveBtn = document.getElementById('saveTimerSettings');
+            const testBtn = document.getElementById('testAudioBtn');
+            
+            // 音量显示
+            const volumeInput = document.getElementById('notificationVolume');
+            const volumeValue = document.getElementById('volumeValue');
+            
+            volumeInput.addEventListener('input', function() {
+                volumeValue.textContent = Math.round(this.value * 100) + '%';
+            });
+            
+            // 打开设置
+            settingsBtn.addEventListener('click', function() {
+                log('打开计时器设置');
+                modal.style.display = 'block';
+                
+                // 加载当前设置到表单
+                const form = document.getElementById('timerSettingsForm');
+                if (window.timerSettings) {
+                    const settings = window.timerSettings;
+                    
+                    if (form.elements['notificationSound']) {
+                        form.elements['notificationSound'].value = settings.notificationSound || 'default';
+                    }
+                    
+                    if (form.elements['notificationVolume']) {
+                        form.elements['notificationVolume'].value = settings.notificationVolume || 0.5;
+                        volumeValue.textContent = Math.round((settings.notificationVolume || 0.5) * 100) + '%';
+                    }
+                    
+                    if (form.elements['loopNotification']) {
+                        form.elements['loopNotification'].checked = settings.loopNotification || false;
+                    }
+                    
+                    if (form.elements['useVoiceNotification']) {
+                        form.elements['useVoiceNotification'].checked = settings.useVoiceNotification !== false;
+                    }
+                    
+                    if (form.elements['voiceLanguage']) {
+                        form.elements['voiceLanguage'].value = settings.voiceLanguage || 'zh-CN';
+                    }
+                    
+                    if (form.elements['reminderRepeatCount']) {
+                        form.elements['reminderRepeatCount'].value = settings.repeatCount || 1;
+                    }
+                }
+            });
+            
+            // 关闭设置
+            closeBtn.addEventListener('click', function() {
+                log('关闭计时器设置');
+                modal.style.display = 'none';
+            });
+            
+            // 点击模态框外部关闭
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // 保存按钮（这里故意不添加事件监听器，展示问题）
+            // saveBtn故意不绑定事件，让timer-settings-patch.js负责修复
+            
+            // 测试音效按钮
+            testBtn.addEventListener('click', function() {
+                log('测试音效');
+                const form = document.getElementById('timerSettingsForm');
+                const soundFile = form.elements['notificationSound'].value;
+                const volume = parseFloat(form.elements['notificationVolume'].value);
+                const loop = form.elements['loopNotification'].checked;
+                
+                // 创建音频元素
+                log(`播放音效: ${soundFile}, 音量: ${volume}, 循环: ${loop}`);
+                
+                if (window.AudioAutoplay) {
+                    if (loop && window.AudioAutoplay.playLoop) {
+                        window.AudioAutoplay.playLoop('/audio/' + (soundFile === 'default' ? 'alert.mp3' : soundFile), function() {
+                            log('音频播放完成');
+                        });
+                        
+                        // 3秒后停止
+                        setTimeout(function() {
+                            window.AudioAutoplay.stop();
+                            log('自动停止音频');
+                        }, 3000);
+                    } else {
+                        window.AudioAutoplay.play('/audio/' + (soundFile === 'default' ? 'alert.mp3' : soundFile), function() {
+                            log('音频播放完成');
+                        });
+                    }
+                } else {
+                    const audio = new Audio('/audio/' + (soundFile === 'default' ? 'alert.mp3' : soundFile));
+                    audio.volume = volume;
+                    audio.loop = loop;
+                    audio.play().catch(err => {
+                        log('播放音频失败: ' + err.message);
+                    });
+                    
+                    if (loop) {
+                        setTimeout(function() {
+                            audio.pause();
+                            log('自动停止音频');
+                        }, 3000);
+                    }
+                }
+            });
+            
+            // 开始计时器
+            document.getElementById('startTimerBtn').addEventListener('click', function() {
+                const title = document.getElementById('timerTitle').value;
+                const duration = parseInt(document.getElementById('timerDuration').value);
+                const message = document.getElementById('timerMessage').value;
+                
+                if (!title || !duration || !message) {
+                    log('请填写所有计时器信息');
+                    return;
+                }
+                
+                // 停止已有计时器
+                if (activeTimer) {
+                    clearInterval(timerInterval);
+                }
+                
+                // 创建新计时器
+                activeTimer = {
+                    id: Date.now().toString(),
+                    title: title,
+                    duration: duration,
+                    remainingTime: duration,
+                    message: message,
+                    startTime: new Date()
+                };
+                
+                log(`开始计时器: ${title}, 持续时间: ${duration}秒`);
+                updateStatusDisplay();
+                
+                // 开始倒计时
+                timerInterval = setInterval(function() {
+                    activeTimer.remainingTime--;
+                    updateStatusDisplay();
+                    
+                    if (activeTimer.remainingTime <= 0) {
+                        clearInterval(timerInterval);
+                        log(`计时器完成: ${title}`);
+                        
+                        // 触发计时器完成事件
+                        handleTimerCompleted({
+                            id: activeTimer.id,
+                            title: activeTimer.title,
+                            message: activeTimer.message,
+                            audioUrl: '/audio/alert.mp3'
+                        });
+                        
+                        activeTimer = null;
+                        updateStatusDisplay();
+                    }
+                }, 1000);
+            });
+            
+            // 停止计时器
+            document.getElementById('stopTimerBtn').addEventListener('click', function() {
+                if (activeTimer) {
+                    log(`手动停止计时器: ${activeTimer.title}`);
+                    clearInterval(timerInterval);
+                    activeTimer = null;
+                    updateStatusDisplay();
+                } else {
+                    log('没有正在运行的计时器');
+                }
+            });
+            
+            // 计时器完成处理函数 - 这里故意引用timerSettings变量但不初始化它
+            window.handleTimerCompleted = function(timerData) {
+                log(`处理计时器完成: ${timerData.title}, ${timerData.message}`);
+                
+                // 故意引用timerSettings但不初始化，这会导致错误
+                // 错误: Cannot access 'timerSettings' before initialization
+                const useVoice = timerSettings.useVoiceNotification;
+                const loop = timerSettings.loopNotification;
+                
+                // 播放提示音
+                if (window.AudioAutoplay) {
+                    if (loop) {
+                        window.AudioAutoplay.playLoop('/audio/alert.mp3', function() {
+                            log('提示音播放完成');
+                        });
+                    } else {
+                        window.AudioAutoplay.play('/audio/alert.mp3', function() {
+                            log('提示音播放完成');
+                            
+                            // 播放语音消息
+                            if (useVoice && window.speechSynthesis) {
+                                const utterance = new SpeechSynthesisUtterance(timerData.message);
+                                utterance.lang = timerSettings.voiceLanguage || 'zh-CN';
+                                utterance.volume = timerSettings.notificationVolume || 0.5;
+                                window.speechSynthesis.speak(utterance);
+                            }
+                        });
+                    }
+                }
+            };
+            
+            // 初始更新状态
+            updateStatusDisplay();
+            log('计时器演示页面初始化完成');
+        });
+    </script>
+    
+    <!-- 增强功能 -->
+    <script src="/js/audio-helper.js"></script>
+    
+    <!-- 修复补丁（放在最后确保修复上述脚本中的问题） -->
+    <script src="/js/timer-settings-patch.js"></script>
+</body>
+</html>

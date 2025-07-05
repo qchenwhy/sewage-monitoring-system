@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API文档</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 14px;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .nav-link {
+            padding: 6px 12px;
+            text-decoration: none;
+            color: white;
+            border-radius: 4px;
+            font-size: 13px;
+            background-color: #007AFF;
+        }
+        
+        h2 {
+            font-size: 18px;
+            margin: 20px 0 10px;
+            color: #333;
+        }
+        
+        h3 {
+            font-size: 16px;
+            margin: 15px 0 10px;
+            color: #333;
+        }
+        
+        p {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        pre {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        code {
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">API文档</h1>
+            <a href="/" class="nav-link">返回首页</a>
+        </div>
+        
+        <h2>计时器API</h2>
+        <p>计时器API允许您创建、查询和取消计时器。当计时器结束时，系统会通过WebSocket向前端发送消息，并播放语音提示。</p>
+        
+        <h3>创建计时器</h3>
+        <p><strong>请求方法:</strong> POST</p>
+        <p><strong>URL:</strong> /api/timers</p>
+        <p><strong>内容类型:</strong> application/json</p>
+        <p><strong>请求参数:</strong></p>
+        <table>
+            <tr>
+                <th>参数名</th>
+                <th>类型</th>
+                <th>必填</th>
+                <th>描述</th>
+            </tr>
+            <tr>
+                <td>title</td>
+                <td>String</td>
+                <td>是</td>
+                <td>计时器标题</td>
+            </tr>
+            <tr>
+                <td>duration</td>
+                <td>Number</td>
+                <td>是</td>
+                <td>计时时长（秒）</td>
+            </tr>
+            <tr>
+                <td>message</td>
+                <td>String</td>
+                <td>是</td>
+                <td>计时结束后播报的消息</td>
+            </tr>
+        </table>
+        
+        <p><strong>请求示例:</strong></p>
+        <pre><code>{
+  "title": "煮面计时",
+  "duration": 180,
+  "message": "面条煮好了，请关火"
+}</code></pre>
+        
+        <p><strong>响应示例:</strong></p>
+        <pre><code>{
+  "id": "1621234567890",
+  "title": "煮面计时",
+  "duration": 180,
+  "message": "面条煮好了，请关火",
+  "endTime": 1621234747890,
+  "status": "active"
+}</code></pre>
+        
+        <h3>获取所有活动计时器</h3>
+        <p><strong>请求方法:</strong> GET</p>
+        <p><strong>URL:</strong> /api/timers</p>
+        
+        <h3>取消计时器</h3>
+        <p><strong>请求方法:</strong> DELETE</p>
+        <p><strong>URL:</strong> /api/timers/:id</p>
+        <p><strong>URL参数:</strong></p>
+        <table>
+            <tr>
+                <th>参数名</th>
+                <th>类型</th>
+                <th>描述</th>
+            </tr>
+            <tr>
+                <td>id</td>
+                <td>String</td>
+                <td>计时器ID</td>
+            </tr>
+        </table>
+        
+        <h2>语音合成API</h2>
+        <p>使用阿里云CosyVoice模型将文本转换为语音。</p>
+        
+        <h3>文本转语音</h3>
+        <p><strong>请求方法:</strong> POST</p>
+        <p><strong>URL:</strong> /api/tts</p>
+        <p><strong>内容类型:</strong> application/json</p>
+        <p><strong>请求参数:</strong></p>
+        <table>
+            <tr>
+                <th>参数名</th>
+                <th>类型</th>
+                <th>必填</th>
+                <th>描述</th>
+            </tr>
+            <tr>
+                <td>text</td>
+                <td>String</td>
+                <td>是</td>
+                <td>要转换为语音的文本</td>
+            </tr>
+        </table>
+        
+        <p><strong>请求示例:</strong></p>
+        <pre><code>{
+  "text": "这是一段测试文本，将被转换为语音。"
+}</code></pre>
+        
+        <p><strong>响应示例:</strong></p>
+        <pre><code>{
+  "success": true,
+  "audioUrl": "/audio/tts_1621234567890.mp3"
+}</code></pre>
+        
+        <h2>通过Dify调用计时器API</h2>
+        <p>您可以在Dify中配置以下提示词，使AI助手能够创建计时器：</p>
+        
+        <pre><code>如果用户要求设置计时器或闹钟，请执行以下操作：
+1. 提取用户想要计时的时长（秒）
+2. 提取用户想要的计时器标题
+3. 提取计时结束后要播报的消息
+4. 使用以下格式调用API：
+
+</code_block_to_apply_changes_from> 

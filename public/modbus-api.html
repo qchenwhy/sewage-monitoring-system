@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modbus API 文档</title>
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      padding-top: 56px;
+      font-family: "Microsoft YaHei", sans-serif;
+    }
+    .sidebar {
+      position: sticky;
+      top: 56px;
+      height: calc(100vh - 56px);
+      padding-top: 1rem;
+      overflow-y: auto;
+    }
+    pre {
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 0.25rem;
+    }
+    .api-section {
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .method {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      color: white;
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+    .method.get {
+      background-color: #28a745;
+    }
+    .method.post {
+      background-color: #007bff;
+    }
+    .method.put {
+      background-color: #fd7e14;
+    }
+    .method.delete {
+      background-color: #dc3545;
+    }
+    .endpoint {
+      font-family: monospace;
+      font-weight: bold;
+    }
+    .code-block {
+      position: relative;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .copy-btn:hover {
+      background-color: #5a6268;
+    }
+  </style>
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Modbus API 文档</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="#write-api">数据写入</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#query-api">数据查询</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#connection-api">连接管理</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#examples">使用示例</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row">
+      <!-- 侧边栏导航 -->
+      <div class="col-lg-3 col-md-12 d-none d-lg-block sidebar border-end">
+        <nav id="sidebar-menu" class="nav flex-column">
+          <h5 class="mt-4 mb-3">目录</h5>
+          
+          <div class="mb-3">
+            <strong id="write-api">数据写入接口</strong>
+            <nav class="nav flex-column">
+              <a class="nav-link py-1" href="#write-by-name">通过名称写入</a>
+              <a class="nav-link py-1" href="#write-by-id">通过标识符写入</a>
+              <a class="nav-link py-1" href="#write-cmd">命令式写入</a>
+            </nav>
+          </div>
+          
+          <div class="mb-3">
+            <strong id="query-api">数据查询接口</strong>
+            <nav class="nav flex-column">
+              <a class="nav-link py-1" href="#get-values">获取当前值</a>
+              <a class="nav-link py-1" href="#get-latest">获取最新存储值</a>
+              <a class="nav-link py-1" href="#get-history">查询历史数据</a>
+              <a class="nav-link py-1" href="#get-multi-history">查询多点历史</a>
+            </nav>
+          </div>
+          
+          <div class="mb-3">
+            <strong id="connection-api">连接管理</strong>
+            <nav class="nav flex-column">
+              <a class="nav-link py-1" href="#connection-status">检查连接状态</a>
+              <a class="nav-link py-1" href="#connect">建立连接</a>
+              <a class="nav-link py-1" href="#disconnect">断开连接</a>
+            </nav>
+          </div>
+          
+          <div class="mb-3">
+            <strong id="examples">使用示例</strong>
+            <nav class="nav flex-column">
+              <a class="nav-link py-1" href="#js-example">JavaScript</a>
+              <a class="nav-link py-1" href="#python-example">Python</a>
+              <a class="nav-link py-1" href="#curl-example">cURL</a>
+            </nav>
+          </div>
+        </nav>
+      </div>
+
+      <!-- 主内容区域 -->
+      <div class="col-lg-9 col-md-12 py-4">
+        <h1 class="mb-4">Modbus API 接口文档</h1>
+        <p class="lead">
+          本文档详细说明了Modbus系统提供的API接口，包括数据查询和写入功能。这些API接口可用于与PLC设备进行通信，获取或修改设备状态。
+        </p>
+
+        <hr class="my-4">
+        
+        <!-- 数据写入接口 -->
+        <h2 class="mb-4">数据写入接口</h2>
+        
+        <div id="write-by-name" class="api-section">
+          <h3 class="mb-3">通过名称写入数据</h3>
+          <p>该接口支持通过数据点名称进行模糊匹配写入，适合于人工操作或前端界面使用。</p>
+          
+          <div class="mb-3">
+            <span class="method post">POST</span>
+            <span class="endpoint">/api/modbus/write-by-name</span>
+          </div>
+          
+          <h5>请求体：</h5>
+          <div class="code-block">
+            <pre><code>{
+  "name": "调节池泵2",
+  "value": 1
+}</code></pre>
+            <button class="copy-btn">复制</button>
+          </div>
+          
+          <h5 class="mt-3">参数说明：</h5>
+          <ul>
+            <li><code>name</code>: 数据点名称，支持模糊匹配</li>
+            <li><code>value</code>: 要写入的值，根据数据点类型自动转换</li>
+          </ul>
+          
+          <h5 class="mt-3">成功响应：</h5>
+          <div class="code-block">
+            <pre><code>{
+  "success": true,
+  "dataName": "调节池提升泵2",
+  "usedName": "调节池泵2",
+  "value": 1,
+  "formattedValue": "1",
+  "timestamp": "2023-04-22T08:30:25.123Z"
+}</code></pre>
+            <button class="copy-btn">复制</button>
+          </div>
+        </div>
+        
+        <div id="write-by-id" class="api-section">
+          <h3 class="mb-3">通过标识符写入数据</h3>
+          <p>该接口通过数据点唯一标识符进行写入，适合系统间集成使用。</p>
+          
+          <div class="mb-3">
+            <span class="method post">POST</span>
+            <span class="endpoint">/api/modbus/write</span>
+          </div>
+          
+          <h5>请求体：</h5>
+          <div class="code-block">
+            <pre><code>{
+  "identifier": "TjT2",
+  "value": 1
+}</code></pre>
+            <button class="copy-btn">复制</button>
+          </div>
+          
+          <h5 class="mt-3">参数说明：</h5>
+          <ul>
+            <li><code>identifier</code>: 数据点唯一标识符，需精确匹配</li>
+            <li><code>value</code>: 要写入的值，根据数据点类型自动转换</li>
+          </ul>
+        </div>
+        
+        <div id="write-cmd" class="api-section">
+          <h3 class="mb-3">命令式写入接口</h3>
+          <p>该接口通过URL参数进行写入，适合简单集成或快速测试使用。</p>
+          
+          <div class="mb-3">
+            <span class="method get">GET</span>
+            <span class="endpoint">/api/modbus/cmd/write?dataName=调节池泵2&value=1</span>
+          </div>
+          
+          <h5 class="mt-3">参数说明：</h5>
+          <ul>
+            <li><code>dataName</code>: 数据点名称，支持模糊匹配</li>
+            <li><code>value</code>: 要写入的值，根据数据点类型自动转换</li>
+          </ul>
+        </div>
+        
+        <!-- 数据查询接口 -->
+        <h2 class="mb-4">数据查询接口</h2>
+        
+        <div id="get-values" class="api-section">
+          <h3 class="mb-3">获取所有数据点当前值</h3>
+          <p>获取所有数据点的实时读取值，这些值来自PLC设备的实时读取，未经过存储。</p>
+          
+          <div class="mb-3">
+            <span class="method get">GET</span>
+            <span class="endpoint">/api/modbus/values</span>
+          </div>
+        </div>
+        
+        <div id="get-latest" class="api-section">
+          <h3 class="mb-3">获取最新存储值</h3>
+          <p>获取存储在数据库中的所有数据点的最新值。这些值是最后一次存储在数据库的数据。</p>
+          
+          <div class="mb-3">
+            <span class="method get">GET</span>
+            <span class="endpoint">/api/modbus/latest-values</span> 或 
+            <span class="endpoint">/api/modbus/values/latest</span>（两者等效）
+          </div>
+        </div>
+        
+        <div id="get-history" class="api-section">
+          <h3 class="mb-3">查询单个数据点历史数据</h3>
+          <p>查询指定数据点的历史记录，可指定时间范围和数量限制。</p>
+          
+          <div class="mb-3">
+            <span class="method get">GET</span>
+            <span class="endpoint">/api/modbus/history/TjT2?startTime=2023-04-20T00:00:00Z&endTime=2023-04-22T23:59:59Z&limit=100</span>
+          </div>
+          
+          <h5 class="mt-3">参数说明：</h5>
+          <ul>
+            <li><code>startTime</code>: 开始时间，ISO格式</li>
+            <li><code>endTime</code>: 结束时间，ISO格式</li>
+            <li><code>limit</code>: 返回结果数量限制，默认100</li>
+          </ul>
+        </div>
+        
+        <div id="get-multi-history" class="api-section">
+          <h3 class="mb-3">查询多个数据点历史数据</h3>
+          <p>同时查询多个数据点在指定时间段内的历史数据。</p>
+          
+          <div class="mb-3">
+            <span class="method post">POST</span>
+            <span class="endpoint">/api/modbus/history/multi</span>
+          </div>
+          
+          <h5>请求体：</h5>
+          <div class="code-block">
+            <pre><code>{
+  "identifiers": ["TjT1", "TjT2"],
+  "startTime": "2023-04-20T00:00:00Z",
+  "endTime": "2023-04-22T23:59:59Z",
+  "limit": 50
+}</code></pre>
+            <button class="copy-btn">复制</button>
+          </div>
+          
+          <h5 class="mt-3">参数说明：</h5>
+          <ul>
+            <li><code>identifiers</code>: 数据点标识符数组</li>
+            <li><code>startTime</code>: 开始时间，ISO格式</li>
+            <li><code>endTime</code>: 结束时间，ISO格式</li>
+            <li><code>limit</code>: 每个数据点的返回结果数量限制，默认100</li>
+          </ul>
+        </div>
+        
+        <!-- 连接管理 -->
+        <h2 id="connection-status" class="mb-4">连接管理</h2>
+        
+        <div class="api-section">
+          <h3 class="mb-3">检查连接状态</h3>
+          <p>检查当前与PLC设备的连接状态。</p>
+          
+          <div class="mb-3">
+            <span class="method get">GET</span>
+            <span class="endpoint">/api/modbus/connection</span>
+          </div>
+        </div>
+        
+        <!-- 使用示例 -->
+        <h2 id="js-example" class="mb-4">使用示例</h2>
+        
+        <div class="api-section">
+          <h3 class="mb-3">JavaScript (fetch) 示例</h3>
+          <div class="code-block">
+            <pre><code>// 写入数据示例
+async function writeDataPoint() {
+  try {
+    const response = await fetch('/api/modbus/write-by-name', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: '调节池泵2',
+        value: 1
+      })
+    });
+    
+    const result = await response.json();
+    console.log('写入结果:', result);
+  } catch (error) {
+    console.error('写入失败:', error);
+  }
+}
+
+// 查询历史数据示例
+async function queryHistory() {
+  try {
+    const response = await fetch('/api/modbus/history/multi', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        identifiers: ['TjT1', 'TjT2'],
+        startTime: '2023-04-20T00:00:00Z',
+        endTime: '2023-04-22T23:59:59Z',
+        limit: 50
+      })
+    });
+    
+    const result = await response.json();
+    console.log('历史数据:', result);
+  } catch (error) {
+    console.error('查询失败:', error);
+  }
+}</code></pre>
+            <button class="copy-btn">复制</button>
+          </div>
+        </div>
+        
+        <div id="python-example" class="api-section">
+          <h3 class="mb-3">Python 示例</h3>
+          <div class="code-block">
+            <pre><code>import requests
+import json
+from datetime import datetime, timedelta
+
+# 设置API基础URL
+BASE_URL = 'http://localhost:3000/api/modbus'
+
+# 写入数据示例
+def write_data_point():
+    url = f"{BASE_URL}/write-by-name"
+    payload = {
+        "name": "调节池泵2",
+        "value": 1
+    }
+    
+    response = requests.post(url, json=payload)
+    if response.status_code == 200:
+        result = response.json()
+        print(f"写入成功: {result}")
+    else:
+        print(f"写入失败: {response.text}")
+
+# 查询历史数据示例
+def query_history():
+    url = f"{BASE_URL}/history/multi"
+    
+    # 计算时间范围（过去7天）
+    end_time = datetime.now().isoformat()
+    start_time = (datetime.now() - timedelta(days=7)).isoformat()
+    
+    payload = {
+        "identifiers": ["TjT1", "TjT2"],
+        "startTime": start_time,
+        "endTime": end_time,
+        "limit": 50
+    }
+    
+    response = requests.post(url, json=payload)
+    if response.status_code == 200:
+        result = response.json()
+        print(f"查询成功，数据点数量: {len(result['results'])}")
+    else:
+        print(f"查询失败: {response.text}")</code></pre>
+            <button class="copy-btn">复制</button>
+          </div>
+        </div>
+        
+        <div id="curl-example" class="api-section">
+          <h3 class="mb-3">cURL 示例</h3>
+          <div class="code-block">
+            <pre><code># 命令式写入（更简单）- Windows环境
+curl -G "http://localhost:3000/api/modbus/cmd/write" ^
+  --data-urlencode "dataName=调节池泵2" ^
+  --data-urlencode "value=1"
+
+# 查询历史数据 - Windows环境
+curl -X POST http://localhost:3000/api/modbus/history/multi ^
+  -H "Content-Type: application/json" ^
+  -d "{\"identifiers\":[\"TjT1\",\"TjT2\"],\"startTime\":\"2023-04-20T00:00:00Z\",\"endTime\":\"2023-04-22T23:59:59Z\",\"limit\":50}"</code></pre>
+            <button class="copy-btn">复制</button>
+          </div>
+        </div>
+        
+        <h2 class="mt-5 mb-4">注意事项</h2>
+        <ul class="mb-5">
+          <li>所有时间格式均使用ISO 8601标准（例如：<code>2023-04-22T08:30:25.123Z</code>）</li>
+          <li>数据值类型根据数据点格式自动转换</li>
+          <li>模糊匹配功能会返回最相似的数据点，并在响应中包含<code>usedName</code>字段</li>
+          <li>在写入不存在的数据点时，API会返回可用的数据点列表作为参考</li>
+          <li>数据库查询API可能受到数据库性能的影响，请合理设置查询时间范围和限制</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-light p-3 mt-5 text-center">
+    <div class="container">
+      <p class="text-muted mb-0">© 2023 Modbus API 文档 | 更新时间: 2023-09-01</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 复制按钮功能
+    document.querySelectorAll('.copy-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const code = this.previousElementSibling.textContent;
+        navigator.clipboard.writeText(code).then(() => {
+          this.textContent = '已复制!';
+          setTimeout(() => {
+            this.textContent = '复制';
+          }, 2000);
+        }).catch(err => {
+          console.error('复制失败:', err);
+        });
+      });
+    });
+    
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 70,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html> 

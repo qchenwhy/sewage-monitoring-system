@@ -1,0 +1,16 @@
+{
+  "database": {
+    "host": "localhost",
+    "user": "root",
+    "password": "753456Chen*",
+    "database": "mqtt_data",
+    "connectionLimit": 10
+  },
+  "docker": {
+    "host": "mysql",
+    "user": "root", 
+    "password": "wzh123456",
+    "database": "mqtt_data",
+    "connectionLimit": 10
+  }
+} 

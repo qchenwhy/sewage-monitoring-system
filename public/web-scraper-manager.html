@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页爬取管理 - 水质数据采集</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-online { background-color: #28a745; }
+        .status-offline { background-color: #dc3545; }
+        .status-warning { background-color: #ffc107; }
+        
+        .config-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .data-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .log-container {
+            background: #1e1e1e;
+            color: #ffffff;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            word-wrap: break-word;
+        }
+        
+        .log-timestamp {
+            color: #888;
+        }
+        
+        .log-info { color: #17a2b8; }
+        .log-success { color: #28a745; }
+        .log-warning { color: #ffc107; }
+        .log-error { color: #dc3545; }
+        
+        .btn-group-custom {
+            gap: 10px;
+        }
+        
+        .form-floating textarea {
+            min-height: 100px;
+        }
+        
+        .data-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .data-timestamp {
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .progress-custom {
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        .alert-custom {
+            border-left: 4px solid;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .alert-info-custom {
+            border-left-color: #17a2b8;
+            background-color: #d1ecf1;
+        }
+        
+        .alert-success-custom {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        
+        .alert-warning-custom {
+            border-left-color: #ffc107;
+            background-color: #fff3cd;
+        }
+        
+        .alert-danger-custom {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-globe"></i> 网页爬取管理
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/modbus">
+                    <i class="bi bi-arrow-left"></i> 返回主页
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- 使用说明 -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <button class="btn btn-link text-decoration-none p-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#helpCollapse">
+                            <i class="bi bi-question-circle"></i> 使用说明与故障排除
+                        </button>
+                    </div>
+                    <div class="collapse" id="helpCollapse">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-exclamation-triangle text-warning"></i> 登录失败解决方案</h6>
+                                    <ul class="list-unstyled">
+                                        <li><strong>1. 选择器错误：</strong> 使用"检测页面结构"功能自动识别正确的选择器</li>
+                                        <li><strong>2. 滑块验证：</strong> 开启"调试模式"手动完成滑块验证，或勾选"跳过登录"</li>
+                                        <li><strong>3. 验证码：</strong> 开启"调试模式"手动输入验证码</li>
+                                        <li><strong>4. 无需登录：</strong> 直接勾选"跳过登录直接爬取"选项</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="bi bi-lightbulb text-info"></i> 使用建议</h6>
+                                    <ul class="list-unstyled">
+                                        <li><strong>调试模式：</strong> 开启后会显示浏览器窗口，便于观察和手动操作</li>
+                                        <li><strong>跳过登录：</strong> 适用于公开数据页面或已保持登录状态的页面</li>
+                                        <li><strong>页面检测：</strong> 输入URL后点击"检测页面结构"获取建议配置</li>
+                                        <li><strong>定时爬取：</strong> 配置合适的刷新和爬取间隔，避免过于频繁</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="alert alert-info mt-3">
+                                <strong>常见错误处理：</strong>
+                                <br>• <code>Waiting for selector failed</code> → 检查选择器是否正确，使用页面检测功能
+                                <br>• <code>检测到滑块验证</code> → 开启调试模式或跳过登录
+                                <br>• <code>登录失败</code> → 检查用户名密码，或尝试跳过登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- 左侧配置面板 -->
+            <div class="col-lg-6">
+                <!-- 服务状态卡片 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle"></i> 服务状态
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="status-indicator status-offline" id="serviceStatus"></span>
+                                    <span id="serviceStatusText">未初始化</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="status-indicator status-offline" id="loginStatus"></span>
+                                    <span id="loginStatusText">未登录</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="status-indicator status-offline" id="browserStatus"></span>
+                                    <span id="browserStatusText">浏览器未启动</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="status-indicator status-offline" id="refreshTimerStatus"></span>
+                                    <span id="refreshTimerStatusText">刷新定时器未启动</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="status-indicator status-offline" id="scrapeTimerStatus"></span>
+                                    <span id="scrapeTimerStatusText">爬取定时器未启动</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex btn-group-custom mt-3">
+                            <button class="btn btn-success" id="startServiceBtn">
+                                <i class="bi bi-play-fill"></i> 启动服务
+                            </button>
+                            <button class="btn btn-warning" id="restartServiceBtn">
+                                <i class="bi bi-arrow-clockwise"></i> 重启服务
+                            </button>
+                            <button class="btn btn-danger" id="stopServiceBtn">
+                                <i class="bi bi-stop-fill"></i> 停止服务
+                            </button>
+                            <button class="btn btn-info" id="refreshStatusBtn">
+                                <i class="bi bi-arrow-clockwise"></i> 刷新状态
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 配置面板 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="bi bi-gear"></i> 爬取配置
+                        <div class="float-end">
+                            <button class="btn btn-sm btn-outline-light" id="loadTemplateBtn">
+                                <i class="bi bi-file-text"></i> 加载模板
+                            </button>
+                            <button class="btn btn-sm btn-outline-light" id="quickConfigBtn">
+                                <i class="bi bi-lightning"></i> 水质监测快速配置
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" id="skipLoginConfigBtn">
+                                <i class="bi bi-skip-forward"></i> 跳过登录配置
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form id="configForm">
+                            <!-- 基本配置 -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="url" class="form-control" id="targetUrl" placeholder="目标网页URL" required>
+                                        <label for="targetUrl">目标网页URL *</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="url" class="form-control" id="loginUrl" placeholder="登录页面URL">
+                                        <label for="loginUrl">登录页面URL (可选)</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 新增：浏览器路径配置 -->
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="executablePath" placeholder="浏览器可执行文件路径" value="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe">
+                                        <label for="executablePath">浏览器可执行文件路径 (可选)</label>
+                                        <small class="form-text text-muted">如需兼容性更好，可填写本地Chrome/Edge/360等浏览器的完整路径</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 登录信息 -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="username" placeholder="用户名">
+                                        <label for="username">用户名</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="password" class="form-control" id="password" placeholder="密码">
+                                        <label for="password">密码</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CSS选择器配置 -->
+                            <div class="config-section">
+                                <h6><i class="bi bi-code-slash"></i> CSS选择器配置</h6>
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="usernameField" value="#username" placeholder="用户名输入框选择器">
+                                            <label for="usernameField">用户名输入框</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="passwordField" value="#password" placeholder="密码输入框选择器">
+                                            <label for="passwordField">密码输入框</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="loginButton" value="#loginBtn" placeholder="登录按钮选择器">
+                                            <label for="loginButton">登录按钮</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="dataTable" value="table" placeholder="数据表格选择器">
+                                            <label for="dataTable">数据表格</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="dataRows" value="tr" placeholder="数据行选择器">
+                                    <label for="dataRows">数据行</label>
+                                </div>
+                            </div>
+
+                            <!-- 定时器配置 -->
+                            <div class="config-section">
+                                <h6><i class="bi bi-clock"></i> 定时器配置</h6>
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="number" class="form-control" id="refreshInterval" value="300000" min="30000" placeholder="页面刷新间隔">
+                                            <label for="refreshInterval">页面刷新间隔 (毫秒)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="number" class="form-control" id="scrapeInterval" value="60000" min="10000" placeholder="数据爬取间隔">
+                                            <label for="scrapeInterval">数据爬取间隔 (毫秒)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 数据映射配置 -->
+                            <div class="config-section">
+                                <h6><i class="bi bi-arrow-left-right"></i> 数据字段映射</h6>
+                                <div class="form-floating">
+                                    <textarea class="form-control" id="dataMapping" placeholder="JSON格式的字段映射配置" style="height: 120px;">
+{
+  "化学需氧量": "COD",
+  "氨氮": "NH3N",
+  "总磷": "TP",
+  "总氮": "TN",
+  "pH值": "PH",
+  "溶解氧": "DO",
+  "浊度": "TURBIDITY",
+  "水温": "TEMP"
+}</textarea>
+                                    <label for="dataMapping">字段映射 (JSON格式)</label>
+                                </div>
+                            </div>
+
+                            <!-- 其他配置 -->
+                            <div class="config-section">
+                                <h6><i class="bi bi-sliders"></i> 其他配置</h6>
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="headless" checked>
+                                            <label class="form-check-label" for="headless">
+                                                无头模式运行
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="number" class="form-control" id="timeout" value="30000" min="5000" placeholder="操作超时时间">
+                                            <label for="timeout">操作超时 (毫秒)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- 新增：分辨率配置 -->
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="number" class="form-control" id="viewportWidth" value="1024" min="800" placeholder="浏览器窗口宽度">
+                                            <label for="viewportWidth">窗口宽度 (像素)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="number" class="form-control" id="viewportHeight" value="768" min="600" placeholder="浏览器窗口高度">
+                                            <label for="viewportHeight">窗口高度 (像素)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- 快速分辨率选择 -->
+                                <div class="row mb-2">
+                                    <div class="col-12">
+                                        <small class="text-muted">快速选择分辨率：</small>
+                                        <div class="btn-group btn-group-sm mt-1" role="group">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="setResolution(1024, 768)">1024×768</button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="setResolution(1280, 720)">1280×720</button>
+                                            <button type="button" class="btn btn-outline-primary" onclick="setResolution(1366, 768)">1366×768</button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="setResolution(1600, 900)">1600×900</button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="setResolution(1920, 1080)">1920×1080</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="skipLogin">
+                                            <label class="form-check-label" for="skipLogin">
+                                                跳过登录直接爬取
+                                            </label>
+                                            <small class="form-text text-muted">适用于无需登录的页面</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="debugMode">
+                                            <label class="form-check-label" for="debugMode">
+                                                调试模式
+                                            </label>
+                                            <small class="form-text text-muted">开启后使用非无头模式</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex btn-group-custom">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> 保存并初始化
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="testLoginBtn">
+                                    <i class="bi bi-shield-check"></i> 测试登录
+                                </button>
+                                <button type="button" class="btn btn-info" id="manualScrapeBtn">
+                                    <i class="bi bi-download"></i> 手动爬取
+                                </button>
+                                <button type="button" class="btn btn-warning" id="detectPageBtn">
+                                    <i class="bi bi-search"></i> 检测页面结构
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧监控面板 -->
+            <div class="col-lg-6">
+                <!-- 实时数据显示 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="bi bi-graph-up"></i> 实时数据
+                        <div class="float-end">
+                            <button class="btn btn-sm btn-outline-light" id="refreshDataBtn">
+                                <i class="bi bi-arrow-clockwise"></i> 刷新
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="dataContainer">
+                            <div class="text-center text-muted">
+                                <i class="bi bi-database"></i>
+                                <p>暂无数据</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作日志 -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-journal-text"></i> 操作日志
+                        <div class="float-end">
+                            <button class="btn btn-sm btn-outline-light" id="clearLogBtn">
+                                <i class="bi bi-trash"></i> 清空
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="log-container" id="logContainer">
+                            <div class="log-entry log-info">
+                                <span class="log-timestamp">[系统]</span> 网页爬取管理界面已加载
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <!-- 配置模板模态框 -->
+    <div class="modal fade" id="templateModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">配置模板</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        以下是常用的配置模板，您可以根据实际情况修改：
+                    </div>
+                    <pre id="templateContent" class="bg-light p-3 rounded" style="font-size: 12px; max-height: 400px; overflow-y: auto;"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="applyTemplateBtn">应用模板</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 全局变量
+        let statusUpdateInterval = null;
+        let dataUpdateInterval = null;
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            refreshStatus();
+            refreshData();
+            
+            // 启动定时刷新
+            statusUpdateInterval = setInterval(refreshStatus, 10000); // 每10秒刷新状态
+            dataUpdateInterval = setInterval(refreshData, 30000); // 每30秒刷新数据
+            
+            addLog('系统', '页面初始化完成', 'info');
+        });
+        
+        // 初始化事件监听器
+        function initializeEventListeners() {
+            // 绑定事件监听器
+            document.getElementById('configForm').addEventListener('submit', saveAndInitialize);
+            document.getElementById('startServiceBtn').addEventListener('click', startService);
+            document.getElementById('restartServiceBtn').addEventListener('click', restartService);
+            document.getElementById('stopServiceBtn').addEventListener('click', stopService);
+            document.getElementById('refreshStatusBtn').addEventListener('click', refreshStatus);
+            document.getElementById('testLoginBtn').addEventListener('click', testLogin);
+            document.getElementById('manualScrapeBtn').addEventListener('click', manualScrape);
+            document.getElementById('refreshDataBtn').addEventListener('click', refreshData);
+            document.getElementById('clearLogBtn').addEventListener('click', clearLog);
+            document.getElementById('loadTemplateBtn').addEventListener('click', loadTemplate);
+            document.getElementById('applyTemplateBtn').addEventListener('click', applyTemplate);
+            
+            // 检测页面结构
+            document.getElementById('detectPageBtn').addEventListener('click', detectPageStructure);
+            
+            // 水质监测快速配置
+            document.getElementById('quickConfigBtn').addEventListener('click', applyWaterQualityConfig);
+            document.getElementById('skipLoginConfigBtn').addEventListener('click', applySkipLoginConfig);
+        }
+        
+        // 添加日志
+        function addLog(source, message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}] [${source}]</span> ${message}`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // 限制日志条数
+            const logEntries = logContainer.querySelectorAll('.log-entry');
+            if (logEntries.length > 100) {
+                logEntries[0].remove();
+            }
+        }
+        
+        // 清空日志
+        function clearLog() {
+            const logContainer = document.getElementById('logContainer');
+            logContainer.innerHTML = '<div class="log-entry log-info"><span class="log-timestamp">[系统]</span> 日志已清空</div>';
+        }
+        
+        // 刷新服务状态
+        async function refreshStatus() {
+            try {
+                const response = await fetch('/api/web-scraper/status');
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateStatusDisplay(result.data);
+                } else {
+                    addLog('状态', '获取服务状态失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                addLog('状态', '获取服务状态失败: ' + error.message, 'error');
+                updateStatusDisplay({
+                    initialized: false,
+                    isLoggedIn: false,
+                    browserRunning: false,
+                    refreshTimerActive: false,
+                    scrapeTimerActive: false
+                });
+            }
+        }
+        
+        // 更新状态显示
+        function updateStatusDisplay(status) {
+            // 服务状态
+            const serviceStatus = document.getElementById('serviceStatus');
+            const serviceStatusText = document.getElementById('serviceStatusText');
+            if (status.initialized) {
+                serviceStatus.className = 'status-indicator status-online';
+                serviceStatusText.textContent = '已初始化';
+            } else {
+                serviceStatus.className = 'status-indicator status-offline';
+                serviceStatusText.textContent = '未初始化';
+            }
+            
+            // 登录状态
+            const loginStatus = document.getElementById('loginStatus');
+            const loginStatusText = document.getElementById('loginStatusText');
+            if (status.isLoggedIn) {
+                loginStatus.className = 'status-indicator status-online';
+                loginStatusText.textContent = '已登录';
+            } else {
+                loginStatus.className = 'status-indicator status-offline';
+                loginStatusText.textContent = '未登录';
+            }
+            
+            // 浏览器状态
+            const browserStatus = document.getElementById('browserStatus');
+            const browserStatusText = document.getElementById('browserStatusText');
+            if (status.browserRunning) {
+                browserStatus.className = 'status-indicator status-online';
+                browserStatusText.textContent = '浏览器运行中';
+            } else {
+                browserStatus.className = 'status-indicator status-offline';
+                browserStatusText.textContent = '浏览器未启动';
+            }
+            
+            // 刷新定时器状态
+            const refreshTimerStatus = document.getElementById('refreshTimerStatus');
+            const refreshTimerStatusText = document.getElementById('refreshTimerStatusText');
+            if (status.refreshTimerActive) {
+                refreshTimerStatus.className = 'status-indicator status-online';
+                refreshTimerStatusText.textContent = '刷新定时器运行中';
+            } else {
+                refreshTimerStatus.className = 'status-indicator status-offline';
+                refreshTimerStatusText.textContent = '刷新定时器未启动';
+            }
+            
+            // 爬取定时器状态
+            const scrapeTimerStatus = document.getElementById('scrapeTimerStatus');
+            const scrapeTimerStatusText = document.getElementById('scrapeTimerStatusText');
+            if (status.scrapeTimerActive) {
+                scrapeTimerStatus.className = 'status-indicator status-online';
+                scrapeTimerStatusText.textContent = '爬取定时器运行中';
+            } else {
+                scrapeTimerStatus.className = 'status-indicator status-offline';
+                scrapeTimerStatusText.textContent = '爬取定时器未启动';
+            }
+        }
+        
+        // 启动服务
+        async function startService() {
+            try {
+                addLog('服务', '正在启动服务...', 'info');
+                const response = await fetch('/api/web-scraper/start', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog('服务', '服务启动成功', 'success');
+                    refreshStatus();
+                } else {
+                    addLog('服务', '服务启动失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                addLog('服务', '服务启动失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 重启服务
+        async function restartService() {
+            try {
+                addLog('服务', '正在重启服务...', 'warning');
+                const response = await fetch('/api/web-scraper/restart', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog('服务', '服务重启成功', 'success');
+                    refreshStatus();
+                } else {
+                    addLog('服务', '服务重启失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                addLog('服务', '服务重启失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 停止服务
+        async function stopService() {
+            try {
+                addLog('服务', '正在停止服务...', 'warning');
+                const response = await fetch('/api/web-scraper/stop', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog('服务', '服务已停止', 'warning');
+                    refreshStatus();
+                } else {
+                    addLog('服务', '服务停止失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                addLog('服务', '服务停止失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 保存配置并初始化
+        async function saveAndInitialize(event) {
+            event.preventDefault();
+            
+            try {
+                const config = getConfigFromForm();
+                addLog('配置', '正在保存配置并初始化服务...', 'info');
+                
+                const response = await fetch('/api/web-scraper/initialize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(config)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog('配置', '配置保存成功，服务已初始化', 'success');
+                    refreshStatus();
+                } else {
+                    addLog('配置', '配置保存失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                addLog('配置', '配置保存失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 从表单获取配置
+        function getConfigFromForm() {
+            let dataMapping = {};
+            try {
+                dataMapping = JSON.parse(document.getElementById('dataMapping').value);
+            } catch (e) {
+                addLog('配置', '数据映射JSON格式错误，使用默认配置', 'warning');
+            }
+            
+            return {
+                url: document.getElementById('targetUrl').value,
+                loginUrl: document.getElementById('loginUrl').value || undefined,
+                username: document.getElementById('username').value || undefined,
+                password: document.getElementById('password').value || undefined,
+                executablePath: document.getElementById('executablePath').value || undefined,
+                skipLogin: document.getElementById('skipLogin').checked,
+                debugMode: document.getElementById('debugMode').checked,
+                selectors: {
+                    usernameField: document.getElementById('usernameField').value,
+                    passwordField: document.getElementById('passwordField').value,
+                    loginButton: document.getElementById('loginButton').value,
+                    dataTable: document.getElementById('dataTable').value,
+                    dataRows: document.getElementById('dataRows').value
+                },
+                refreshInterval: parseInt(document.getElementById('refreshInterval').value),
+                scrapeInterval: parseInt(document.getElementById('scrapeInterval').value),
+                headless: document.getElementById('headless').checked,
+                timeout: parseInt(document.getElementById('timeout').value),
+                viewportWidth: parseInt(document.getElementById('viewportWidth').value),
+                viewportHeight: parseInt(document.getElementById('viewportHeight').value),
+                dataMapping: dataMapping
+            };
+        }
+        
+        // 测试登录
+        async function testLogin() {
+            try {
+                addLog('登录', '正在测试登录...', 'info');
+                const response = await fetch('/api/web-scraper/test-login', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog('登录', '登录测试成功', 'success');
+                    refreshStatus();
+                } else {
+                    addLog('登录', '登录测试失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                addLog('登录', '登录测试失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 手动爬取
+        async function manualScrape() {
+            try {
+                addLog('爬取', '正在手动爬取数据...', 'info');
+                const response = await fetch('/api/web-scraper/scrape', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog('爬取', `数据爬取成功，获取到 ${Object.keys(result.data).length} 个数据点`, 'success');
+                    refreshData();
+                } else {
+                    addLog('爬取', '数据爬取失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                addLog('爬取', '数据爬取失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 刷新数据显示
+        async function refreshData() {
+            try {
+                const response = await fetch('/api/web-scraper/data');
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateDataDisplay(result.data);
+                } else {
+                    addLog('数据', '获取数据失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('获取数据失败:', error);
+            }
+        }
+        
+        // 更新数据显示
+        function updateDataDisplay(data) {
+            const container = document.getElementById('dataContainer');
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="bi bi-database"></i>
+                        <p>暂无数据</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            data.forEach(item => {
+                const timestamp = new Date(item.updated_at).toLocaleString();
+                html += `
+                    <div class="data-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">${item.data_point_name}</h6>
+                                <small class="text-muted">${item.data_point_identifier}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="data-value">${item.formatted_value}</div>
+                                <div class="data-timestamp">${timestamp}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // 加载配置模板
+        async function loadTemplate() {
+            try {
+                const response = await fetch('/api/web-scraper/config-template');
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('templateContent').textContent = JSON.stringify(result.template, null, 2);
+                    const modal = new bootstrap.Modal(document.getElementById('templateModal'));
+                    modal.show();
+                } else {
+                    addLog('模板', '加载配置模板失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                addLog('模板', '加载配置模板失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 应用模板
+        function applyTemplate() {
+            try {
+                const templateContent = document.getElementById('templateContent').textContent;
+                const template = JSON.parse(templateContent);
+                
+                // 填充表单
+                document.getElementById('targetUrl').value = template.url || '';
+                document.getElementById('loginUrl').value = template.loginUrl || '';
+                document.getElementById('username').value = template.username || '';
+                document.getElementById('password').value = template.password || '';
+                
+                document.getElementById('executablePath').value = template.executablePath || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+                
+                document.getElementById('usernameField').value = template.selectors.usernameField || '#username';
+                document.getElementById('passwordField').value = template.selectors.passwordField || '#password';
+                document.getElementById('loginButton').value = template.selectors.loginButton || '#loginBtn';
+                document.getElementById('dataTable').value = template.selectors.dataTable || 'table';
+                document.getElementById('dataRows').value = template.selectors.dataRows || 'tr';
+                
+                document.getElementById('refreshInterval').value = template.refreshInterval || 300000;
+                document.getElementById('scrapeInterval').value = template.scrapeInterval || 60000;
+                document.getElementById('headless').checked = template.headless !== false;
+                document.getElementById('timeout').value = template.timeout || 30000;
+                document.getElementById('viewportWidth').value = template.viewportWidth || 1366;
+                document.getElementById('viewportHeight').value = template.viewportHeight || 768;
+                
+                document.getElementById('dataMapping').value = JSON.stringify(template.dataMapping || {}, null, 2);
+                
+                // 关闭模态框
+                const modal = bootstrap.Modal.getInstance(document.getElementById('templateModal'));
+                modal.hide();
+                
+                addLog('模板', '配置模板已应用', 'success');
+            } catch (error) {
+                addLog('模板', '应用配置模板失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 检测页面结构
+        async function detectPageStructure() {
+            try {
+                const targetUrl = document.getElementById('targetUrl').value;
+                if (!targetUrl) {
+                    addLog('检测', '请先输入目标网页URL', 'warning');
+                    return;
+                }
+                
+                addLog('检测', '正在检测页面结构...', 'info');
+                const response = await fetch('/api/web-scraper/detect-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: targetUrl })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLog('检测', '页面结构检测完成', 'success');
+                    showPageStructureModal(result);
+                } else {
+                    addLog('检测', '页面结构检测失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                addLog('检测', '页面结构检测失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 显示页面结构检测结果
+        function showPageStructureModal(result) {
+            const { pageInfo, elements, suggestions } = result;
+            
+            let modalContent = `
+                <div class="modal fade" id="pageStructureModal" tabindex="-1">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">页面结构检测结果</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <!-- 页面基本信息 -->
+                                <div class="alert alert-info">
+                                    <h6><i class="bi bi-info-circle"></i> 页面信息</h6>
+                                    <p><strong>标题:</strong> ${pageInfo.title}</p>
+                                    <p><strong>URL:</strong> ${pageInfo.url}</p>
+                                    <p><strong>是否有滑块验证:</strong> ${pageInfo.hasSliderCaptcha ? '是' : '否'}</p>
+                                    <p><strong>是否有验证码:</strong> ${pageInfo.hasCaptcha ? '是' : '否'}</p>
+                                    <p><strong>是否有登录表单:</strong> ${pageInfo.hasLoginForm ? '是' : '否'}</p>
+                                </div>
+                                
+                                <!-- 建议的选择器 -->
+                                <div class="alert alert-success">
+                                    <h6><i class="bi bi-lightbulb"></i> 建议的选择器配置</h6>
+                                    ${suggestions.loginSelectors.usernameField ? 
+                                        `<p><strong>用户名输入框:</strong> input[name="${suggestions.loginSelectors.usernameField.name}"]</p>` : 
+                                        '<p><strong>用户名输入框:</strong> 未找到</p>'
+                                    }
+                                    ${suggestions.loginSelectors.passwordField ? 
+                                        `<p><strong>密码输入框:</strong> input[type="password"]</p>` : 
+                                        '<p><strong>密码输入框:</strong> 未找到</p>'
+                                    }
+                                    ${suggestions.loginSelectors.loginButton ? 
+                                        `<p><strong>登录按钮:</strong> 包含"${suggestions.loginSelectors.loginButton.text}"的按钮</p>` : 
+                                        '<p><strong>登录按钮:</strong> 未找到</p>'
+                                    }
+                                    ${suggestions.dataSelectors.dataTable ? 
+                                        `<p><strong>数据表格:</strong> table (${suggestions.dataSelectors.dataTable.rowCount}行)</p>` : 
+                                        '<p><strong>数据表格:</strong> 未找到</p>'
+                                    }
+                                </div>
+                                
+                                <!-- 详细元素信息 -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>表格元素 (${elements.tables.length}个)</h6>
+                                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr><th>索引</th><th>行数</th><th>ID</th><th>类名</th></tr>
+                                                </thead>
+                                                <tbody>
+                                                    ${elements.tables.map(table => 
+                                                        `<tr><td>${table.index}</td><td>${table.rowCount}</td><td>${table.id || '-'}</td><td>${table.className || '-'}</td></tr>`
+                                                    ).join('')}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>输入框元素 (${elements.inputs.length}个)</h6>
+                                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr><th>类型</th><th>名称</th><th>ID</th><th>占位符</th></tr>
+                                                </thead>
+                                                <tbody>
+                                                    ${elements.inputs.map(input => 
+                                                        `<tr><td>${input.type}</td><td>${input.name || '-'}</td><td>${input.id || '-'}</td><td>${input.placeholder || '-'}</td></tr>`
+                                                    ).join('')}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 警告信息 -->
+                                ${pageInfo.hasSliderCaptcha ? 
+                                    '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> 检测到滑块验证，建议开启调试模式或跳过登录</div>' : 
+                                    ''
+                                }
+                                ${pageInfo.hasCaptcha ? 
+                                    '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> 检测到验证码，可能需要手动处理</div>' : 
+                                    ''
+                                }
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" onclick="applySuggestedSelectors()">应用建议的选择器</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 移除已存在的模态框
+            const existingModal = document.getElementById('pageStructureModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // 添加新的模态框
+            document.body.insertAdjacentHTML('beforeend', modalContent);
+            
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('pageStructureModal'));
+            modal.show();
+            
+            // 保存检测结果供后续使用
+            window.lastDetectionResult = result;
+        }
+        
+        // 应用建议的选择器
+        function applySuggestedSelectors() {
+            if (!window.lastDetectionResult) return;
+            
+            const { suggestions } = window.lastDetectionResult;
+            
+            // 应用用户名输入框选择器
+            if (suggestions.loginSelectors.usernameField) {
+                const field = suggestions.loginSelectors.usernameField;
+                if (field.name) {
+                    document.getElementById('usernameField').value = `input[name="${field.name}"]`;
+                } else if (field.id) {
+                    document.getElementById('usernameField').value = `#${field.id}`;
+                }
+            }
+            
+            // 应用密码输入框选择器
+            if (suggestions.loginSelectors.passwordField) {
+                document.getElementById('passwordField').value = 'input[type="password"]';
+            }
+            
+            // 应用数据表格选择器
+            if (suggestions.dataSelectors.dataTable) {
+                document.getElementById('dataTable').value = 'table';
+            }
+            
+            // 关闭模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('pageStructureModal'));
+            modal.hide();
+            
+            addLog('配置', '已应用建议的选择器配置', 'success');
+        }
+        
+        // 水质监测快速配置
+        function applyWaterQualityConfig() {
+            // 基于你提供的页面结构，设置最适合的配置
+            document.getElementById('targetUrl').value = 'http://219.146.185.5:8006/Index.aspx';
+            document.getElementById('loginUrl').value = 'http://219.146.185.5:8006/Login.aspx'; // 设置登录页面
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            
+            // 关键设置：开启调试模式，便于手动登录
+            document.getElementById('skipLogin').checked = false; // 先不跳过登录
+            document.getElementById('debugMode').checked = true;  // 开启调试模式
+            document.getElementById('headless').checked = false;  // 非无头模式
+            
+            // 针对水质监测页面的选择器配置
+            document.getElementById('usernameField').value = 'input[name="username"], input[type="text"], #username';
+            document.getElementById('passwordField').value = 'input[name="password"], input[type="password"], #password';
+            document.getElementById('loginButton').value = 'button[type="submit"], input[type="submit"], .login-btn';
+            
+            // 水质数据选择器 - 针对这种卡片式布局
+            document.getElementById('dataTable').value = '.monitoring-card, .data-card, [class*="card"], .content-panel, table';
+            document.getElementById('dataRows').value = '.data-item, .parameter-item, [class*="data"], tr';
+            
+            // 设置合适的定时器间隔
+            document.getElementById('refreshInterval').value = '300000'; // 5分钟刷新
+            document.getElementById('scrapeInterval').value = '30000';   // 30秒爬取一次
+            document.getElementById('timeout').value = '30000'; // 增加超时时间
+            
+            // 水质参数映射
+            const waterQualityMapping = {
+                "氨氮": "NH3N",
+                "化学需氧量": "COD", 
+                "流量": "FLOW",
+                "总磷": "TP",
+                "总氮": "TN",
+                "pH值": "PH",
+                "溶解氧": "DO",
+                "浊度": "TURBIDITY",
+                "水温": "TEMP",
+                "电导率": "CONDUCTIVITY",
+                "悬浮物": "SS"
+            };
+            
+            document.getElementById('dataMapping').value = JSON.stringify(waterQualityMapping, null, 2);
+            
+            addLog('配置', '已应用水质监测快速配置 - 手动登录模式', 'success');
+            
+            // 显示配置说明
+            showWaterQualityManualLoginModal();
+        }
+        
+        // 显示水质监测配置说明
+        function showWaterQualityManualLoginModal() {
+            const modalContent = `
+                <div class="modal fade" id="waterQualityManualLoginModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title"><i class="bi bi-droplet"></i> 水质监测配置说明 - 手动登录模式</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-info">
+                                    <h6><i class="bi bi-info-circle"></i> 手动登录模式配置</h6>
+                                    <p>由于目标页面需要登录且存在滑块验证，已配置为手动登录模式：</p>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6><i class="bi bi-gear"></i> 核心配置</h6>
+                                        <ul class="list-unstyled">
+                                            <li>✅ <strong>调试模式：</strong> 已开启，显示浏览器窗口</li>
+                                            <li>✅ <strong>登录页面：</strong> 已设置登录URL</li>
+                                            <li>✅ <strong>目标页面：</strong> 登录后的数据页面</li>
+                                            <li>✅ <strong>会话保持：</strong> 5分钟自动刷新保持登录</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6><i class="bi bi-list-check"></i> 使用流程</h6>
+                                        <ol class="list-unstyled">
+                                            <li><strong>1.</strong> 点击"保存并初始化"</li>
+                                            <li><strong>2.</strong> 点击"启动服务"</li>
+                                            <li><strong>3.</strong> 浏览器窗口会自动打开</li>
+                                            <li><strong>4.</strong> 手动完成登录（包括滑块验证）</li>
+                                            <li><strong>5.</strong> 登录成功后自动开始爬取</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-success">
+                                    <h6><i class="bi bi-lightbulb"></i> 操作步骤详解</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>启动后操作：</strong></p>
+                                            <ul class="mb-0">
+                                                <li>浏览器会自动打开登录页面</li>
+                                                <li>手动输入用户名和密码</li>
+                                                <li>完成滑块拖动验证</li>
+                                                <li>点击登录按钮</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>登录成功后：</strong></p>
+                                            <ul class="mb-0">
+                                                <li>系统会自动导航到数据页面</li>
+                                                <li>开始每30秒爬取一次数据</li>
+                                                <li>每5分钟刷新页面保持会话</li>
+                                                <li>在右侧面板查看爬取结果</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-warning">
+                                    <h6><i class="bi bi-exclamation-triangle"></i> 重要提醒</h6>
+                                    <ul class="mb-0">
+                                        <li><strong>保持浏览器窗口：</strong> 不要关闭自动打开的浏览器窗口</li>
+                                        <li><strong>登录超时：</strong> 如果30秒内未完成登录，可能需要重新启动</li>
+                                        <li><strong>会话保持：</strong> 系统会自动刷新页面保持登录状态</li>
+                                        <li><strong>数据验证：</strong> 建议先手动爬取测试数据获取是否正常</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <h6><i class="bi bi-cpu"></i> 备选方案</h6>
+                                    <p>如果手动登录仍有问题，可以尝试：</p>
+                                    <ul class="mb-0">
+                                        <li><strong>方案A：</strong> 先在普通浏览器中登录，然后勾选"跳过登录"直接爬取</li>
+                                        <li><strong>方案B：</strong> 使用浏览器开发者工具获取登录后的Cookie，配置到爬虫中</li>
+                                        <li><strong>方案C：</strong> 联系网站管理员获取API接口直接获取数据</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" onclick="saveAndInitializeFromModal()">
+                                    <i class="bi bi-check-circle"></i> 保存并初始化
+                                </button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 移除已存在的模态框
+            const existingModal = document.getElementById('waterQualityManualLoginModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // 添加新的模态框
+            document.body.insertAdjacentHTML('beforeend', modalContent);
+            
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('waterQualityManualLoginModal'));
+            modal.show();
+        }
+        
+        // 从模态框保存并初始化
+        function saveAndInitializeFromModal() {
+            // 关闭模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('waterQualityManualLoginModal'));
+            modal.hide();
+            
+            // 触发保存并初始化
+            const event = new Event('submit');
+            saveAndInitialize(event);
+        }
+        
+        // 跳过登录配置
+        function applySkipLoginConfig() {
+            // 最简单的配置：直接爬取登录后的页面
+            document.getElementById('targetUrl').value = 'http://219.146.185.5:8006/Index.aspx';
+            document.getElementById('loginUrl').value = ''; // 不需要登录URL
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            
+            // 关键设置：跳过登录
+            document.getElementById('skipLogin').checked = true;  // 跳过登录
+            document.getElementById('debugMode').checked = false; // 可以使用无头模式
+            document.getElementById('headless').checked = true;   // 无头模式运行
+            
+            // 清空登录相关选择器（不需要）
+            document.getElementById('usernameField').value = '';
+            document.getElementById('passwordField').value = '';
+            document.getElementById('loginButton').value = '';
+            
+            // 水质数据选择器 - 针对这种卡片式布局
+            document.getElementById('dataTable').value = '.monitoring-card, .data-card, [class*="card"], .content-panel, table, .data-container';
+            document.getElementById('dataRows').value = '.data-item, .parameter-item, [class*="data"], tr, .value-item';
+            
+            // 设置合适的定时器间隔
+            document.getElementById('refreshInterval').value = '300000'; // 5分钟刷新
+            document.getElementById('scrapeInterval').value = '30000';   // 30秒爬取一次
+            document.getElementById('timeout').value = '30000'; // 增加超时时间
+            
+            // 水质参数映射
+            const waterQualityMapping = {
+                "氨氮": "NH3N",
+                "化学需氧量": "COD", 
+                "流量": "FLOW",
+                "总磷": "TP",
+                "总氮": "TN",
+                "pH值": "PH",
+                "溶解氧": "DO",
+                "浊度": "TURBIDITY",
+                "水温": "TEMP",
+                "电导率": "CONDUCTIVITY",
+                "悬浮物": "SS"
+            };
+            
+            document.getElementById('dataMapping').value = JSON.stringify(waterQualityMapping, null, 2);
+            
+            addLog('配置', '已应用跳过登录配置 - 直接爬取模式', 'success');
+            
+            // 显示配置说明
+            showSkipLoginConfigModal();
+        }
+        
+        // 显示跳过登录配置说明
+        function showSkipLoginConfigModal() {
+            const modalContent = `
+                <div class="modal fade" id="skipLoginConfigModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title"><i class="bi bi-skip-forward"></i> 跳过登录配置说明</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-success">
+                                    <h6><i class="bi bi-check-circle"></i> 最简单的爬取方案</h6>
+                                    <p>此配置将直接访问登录后的页面进行数据爬取，无需处理登录和滑块验证：</p>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6><i class="bi bi-gear"></i> 核心配置</h6>
+                                        <ul class="list-unstyled">
+                                            <li>✅ <strong>跳过登录：</strong> 直接访问数据页面</li>
+                                            <li>✅ <strong>无头模式：</strong> 后台运行，不显示浏览器</li>
+                                            <li>✅ <strong>智能识别：</strong> 自动识别页面数据结构</li>
+                                            <li>✅ <strong>定时爬取：</strong> 30秒获取一次数据</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6><i class="bi bi-list-check"></i> 使用条件</h6>
+                                        <ul class="list-unstyled">
+                                            <li><strong>前提：</strong> 页面URL可以直接访问</li>
+                                            <li><strong>或者：</strong> 服务器已经保持登录状态</li>
+                                            <li><strong>或者：</strong> 页面不需要登录验证</li>
+                                            <li><strong>或者：</strong> 使用了Cookie/Session保持</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <h6><i class="bi bi-lightbulb"></i> 使用步骤</h6>
+                                    <ol>
+                                        <li><strong>保存配置：</strong> 点击"保存并初始化"</li>
+                                        <li><strong>启动服务：</strong> 点击"启动服务"</li>
+                                        <li><strong>测试爬取：</strong> 点击"手动爬取"验证是否能获取数据</li>
+                                        <li><strong>查看结果：</strong> 在右侧"实时数据"面板查看爬取结果</li>
+                                    </ol>
+                                </div>
+                                
+                                <div class="alert alert-warning">
+                                    <h6><i class="bi bi-exclamation-triangle"></i> 可能遇到的问题</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>如果出现404错误：</strong></p>
+                                            <ul class="mb-0">
+                                                <li>页面需要登录才能访问</li>
+                                                <li>URL地址不正确</li>
+                                                <li>服务器拒绝访问</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>解决方案：</strong></p>
+                                            <ul class="mb-0">
+                                                <li>使用"水质监测快速配置"手动登录</li>
+                                                <li>检查URL是否正确</li>
+                                                <li>联系管理员确认访问权限</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-success">
+                                    <h6><i class="bi bi-cpu"></i> 优势特点</h6>
+                                    <ul class="mb-0">
+                                        <li><strong>简单快速：</strong> 无需处理复杂的登录流程</li>
+                                        <li><strong>稳定可靠：</strong> 避免滑块验证等不确定因素</li>
+                                        <li><strong>资源节省：</strong> 无头模式运行，占用资源少</li>
+                                        <li><strong>自动化程度高：</strong> 一次配置，持续运行</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" onclick="saveAndInitializeFromSkipLoginModal()">
+                                    <i class="bi bi-check-circle"></i> 保存并初始化
+                                </button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 移除已存在的模态框
+            const existingModal = document.getElementById('skipLoginConfigModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // 添加到页面
+            document.body.insertAdjacentHTML('beforeend', modalContent);
+            
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('skipLoginConfigModal'));
+            modal.show();
+        }
+        
+        // 从跳过登录模态框保存并初始化
+        function saveAndInitializeFromSkipLoginModal() {
+            // 关闭模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('skipLoginConfigModal'));
+            modal.hide();
+            
+            // 执行保存和初始化
+            const event = { preventDefault: () => {} };
+            saveAndInitialize(event);
+        }
+        
+        // 设置分辨率的快速选择函数
+        function setResolution(width, height) {
+            document.getElementById('viewportWidth').value = width;
+            document.getElementById('viewportHeight').value = height;
+            addLog('配置', `已设置分辨率为 ${width}×${height}`, 'info');
+            
+            // 更新按钮状态
+            const buttons = document.querySelectorAll('.btn-group button');
+            buttons.forEach(btn => {
+                btn.classList.remove('btn-outline-primary');
+                btn.classList.add('btn-outline-secondary');
+            });
+            
+            // 高亮当前选择的按钮
+            const currentButton = document.querySelector(`button[onclick="setResolution(${width}, ${height})"]`);
+            if (currentButton) {
+                currentButton.classList.remove('btn-outline-secondary');
+                currentButton.classList.add('btn-outline-primary');
+            }
+        }
+        
+        // 页面卸载时清理定时器
+        window.addEventListener('beforeunload', function() {
+            if (statusUpdateInterval) {
+                clearInterval(statusUpdateInterval);
+            }
+            if (dataUpdateInterval) {
+                clearInterval(dataUpdateInterval);
+            }
+        });
+    </script>
+</body>
+</html> 

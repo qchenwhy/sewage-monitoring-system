@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计时器设置调试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #4CAF50;
+            text-align: center;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .settings-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+        }
+        
+        .settings-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .settings-row label {
+            flex: 1;
+            margin-right: 10px;
+        }
+        
+        .settings-row input, .settings-row select {
+            width: 100px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .settings-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        /* 模态窗口样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            position: relative;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #555;
+        }
+        
+        .log-panel {
+            margin-top: 20px;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>计时器设置调试</h1>
+        
+        <button id="toggleSettings">打开计时器设置</button>
+        
+        <div class="log-panel" id="logPanel">
+            <!-- 日志输出会显示在这里 -->
+        </div>
+    </div>
+    
+    <!-- 计时器设置模态窗口 -->
+    <div id="timerSettingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeTimerSettings">&times;</span>
+            <h2>计时器音频设置</h2>
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h3>提醒重复设置</h3>
+                    <div class="settings-row">
+                        <label for="reminderRepeatCount">提醒重复次数:</label>
+                        <input type="number" id="reminderRepeatCount" min="1" max="10" value="2">
+                    </div>
+                    <div class="settings-row">
+                        <label for="reminderInterval">重复间隔时间(秒):</label>
+                        <input type="number" id="reminderInterval" min="1" max="60" value="5">
+                    </div>
+                    <div class="settings-row">
+                        <label for="autoStopReminders">无人应答时停止提醒:</label>
+                        <select id="autoStopReminders">
+                            <option value="true" selected>是</option>
+                            <option value="false">否</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>音频循环设置</h3>
+                    <div class="settings-row">
+                        <label for="audioLoopCount">音频循环次数:</label>
+                        <input type="number" id="audioLoopCount" min="1" max="5" value="1">
+                    </div>
+                    <div class="settings-row">
+                        <label for="audioLoopInterval">音频循环间隔(毫秒):</label>
+                        <input type="number" id="audioLoopInterval" min="0" max="5000" step="100" value="500">
+                    </div>
+                </div>
+                
+                <div class="settings-buttons">
+                    <button id="saveTimerSettings">保存设置</button>
+                    <button id="testAudioLoop">测试循环播放</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 日志函数
+        function log(message) {
+            const logPanel = document.getElementById('logPanel');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span style="color:#999">[${timestamp}]</span> ${message}`;
+            logPanel.appendChild(logEntry);
+            
+            // 自动滚动到底部
+            logPanel.scrollTop = logPanel.scrollHeight;
+            
+            // 同时在控制台输出
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        // 模拟的计时器设置
+        const timerSettings = {
+            repeatCount: 2,
+            intervalSeconds: 5,
+            autoStopOnResponse: true,
+            audioLoopCount: 1,
+            audioLoopInterval: 500
+        };
+        
+        // 初始化函数
+        function init() {
+            log('页面加载完成，初始化计时器设置调试...');
+            
+            const toggleBtn = document.getElementById('toggleSettings');
+            const modal = document.getElementById('timerSettingsModal');
+            const closeBtn = document.getElementById('closeTimerSettings');
+            const saveBtn = document.getElementById('saveTimerSettings');
+            const testBtn = document.getElementById('testAudioLoop');
+            
+            if (!toggleBtn) {
+                log('错误：找不到切换按钮！');
+                return;
+            }
+            
+            if (!modal) {
+                log('错误：找不到模态窗口！');
+                return;
+            }
+            
+            // 检查所有表单元素
+            const formElements = {
+                repeatCountInput: document.getElementById('reminderRepeatCount'),
+                intervalInput: document.getElementById('reminderInterval'),
+                autoStopSelect: document.getElementById('autoStopReminders'),
+                audioLoopCountInput: document.getElementById('audioLoopCount'),
+                audioLoopIntervalInput: document.getElementById('audioLoopInterval')
+            };
+            
+            for (const [name, element] of Object.entries(formElements)) {
+                if (!element) {
+                    log(`警告：找不到表单元素 ${name}`);
+                } else {
+                    log(`找到表单元素 ${name}`);
+                }
+            }
+            
+            // 设置按钮点击事件
+            toggleBtn.onclick = function() {
+                log('点击了切换按钮');
+                modal.style.display = 'block';
+            };
+            
+            // 关闭按钮点击事件
+            if (closeBtn) {
+                closeBtn.onclick = function() {
+                    log('点击了关闭按钮');
+                    modal.style.display = 'none';
+                };
+            } else {
+                log('警告：找不到关闭按钮');
+            }
+            
+            // 保存按钮点击事件
+            if (saveBtn) {
+                saveBtn.onclick = function() {
+                    log('点击了保存按钮');
+                    saveSettings(formElements);
+                    modal.style.display = 'none';
+                };
+            }
+            
+            // 测试按钮点击事件
+            if (testBtn) {
+                testBtn.onclick = function() {
+                    log('点击了测试按钮');
+                    saveSettings(formElements);
+                    log(`测试参数：循环${timerSettings.audioLoopCount}次，间隔${timerSettings.audioLoopInterval}ms`);
+                };
+            }
+            
+            // 点击模态窗口外部关闭
+            window.onclick = function(event) {
+                if (event.target === modal) {
+                    log('点击了模态窗口外部');
+                    modal.style.display = 'none';
+                }
+            };
+            
+            log('初始化完成，可以点击"打开计时器设置"按钮进行测试');
+        }
+        
+        // 保存设置
+        function saveSettings(formElements) {
+            try {
+                // 更新设置
+                if (formElements.repeatCountInput) {
+                    timerSettings.repeatCount = Math.max(1, Math.min(10, parseInt(formElements.repeatCountInput.value) || 2));
+                    formElements.repeatCountInput.value = timerSettings.repeatCount;
+                }
+                
+                if (formElements.intervalInput) {
+                    timerSettings.intervalSeconds = Math.max(1, Math.min(60, parseInt(formElements.intervalInput.value) || 5));
+                    formElements.intervalInput.value = timerSettings.intervalSeconds;
+                }
+                
+                if (formElements.autoStopSelect) {
+                    timerSettings.autoStopOnResponse = formElements.autoStopSelect.value === 'true';
+                }
+                
+                if (formElements.audioLoopCountInput) {
+                    timerSettings.audioLoopCount = Math.max(1, Math.min(5, parseInt(formElements.audioLoopCountInput.value) || 1));
+                    formElements.audioLoopCountInput.value = timerSettings.audioLoopCount;
+                }
+                
+                if (formElements.audioLoopIntervalInput) {
+                    timerSettings.audioLoopInterval = Math.max(0, Math.min(5000, parseInt(formElements.audioLoopIntervalInput.value) || 500));
+                    formElements.audioLoopIntervalInput.value = timerSettings.audioLoopInterval;
+                }
+                
+                log('保存设置成功：' + JSON.stringify(timerSettings));
+            } catch (error) {
+                log('保存设置失败：' + error.message);
+                console.error('保存设置失败:', error);
+            }
+        }
+        
+        // 页面加载完成后执行初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html> 

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MQTT数据源使用指南</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    body {
+      padding-top: 20px;
+      padding-bottom: 50px;
+      background-color: #f8f9fa;
+    }
+    .card {
+      margin-bottom: 20px;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      border-radius: 10px;
+    }
+    .code-block {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      margin-bottom: 20px;
+    }
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background-color: #0d6efd;
+      color: white;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    .terminal-cmd {
+      background-color: #212529;
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <h1 class="mb-4 text-center">MQTT数据源使用指南</h1>
+        
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">1. MQTT简介</h5>
+          </div>
+          <div class="card-body">
+            <p>MQTT（Message Queuing Telemetry Transport）是一种轻量级的发布/订阅消息传输协议，专为资源受限设备和低带宽、高延迟网络设计。它适用于IoT设备间的通信，具有以下优势：</p>
+            <ul>
+              <li><strong>轻量级</strong>：最小化网络带宽和设备资源消耗</li>
+              <li><strong>发布/订阅模式</strong>：解耦消息发送者和接收者</li>
+              <li><strong>可靠性</strong>：支持QoS（服务质量）保证消息可靠传递</li>
+              <li><strong>实时性</strong>：适合实时数据采集和控制</li>
+            </ul>
+            <p>相比ModbusTCP，MQTT提供更好的扩展性和稳定性，特别是在并发连接较多的情况下。</p>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">2. 系统架构</h5>
+          </div>
+          <div class="card-body">
+            <p>我们的系统支持两种数据源模式：</p>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card mb-3">
+                  <div class="card-header bg-light">ModbusTCP模式</div>
+                  <div class="card-body">
+                    <p><strong>数据流向</strong>: 系统 ⟷ ModbusTCP设备</p>
+                    <p><strong>特点</strong>：直接连接到ModbusTCP设备，使用轮询方式获取数据</p>
+                    <p><strong>适用场景</strong>：设备数量较少，实时性要求较高</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card mb-3">
+                  <div class="card-header bg-light">MQTT模式</div>
+                  <div class="card-body">
+                    <p><strong>数据流向</strong>: 系统 ⟷ MQTT Broker ⟷ 设备/数据源</p>
+                    <p><strong>特点</strong>：通过MQTT代理进行消息中转，使用发布/订阅模式</p>
+                    <p><strong>适用场景</strong>：设备数量多，需要高可靠性和扩展性</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i> 系统可以灵活切换这两种模式，或者同时使用，满足不同应用场景的需求。
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">3. 启动MQTT服务器</h5>
+          </div>
+          <div class="card-body">
+            <p>系统内置了一个MQTT服务器（Broker），支持TCP和WebSocket连接：</p>
+            <div class="terminal-cmd">
+              node mqtt-server.js
+            </div>
+            <p>启动后，服务器将在以下端口监听连接：</p>
+            <ul>
+              <li><strong>TCP端口</strong>：1883（标准MQTT端口）</li>
+              <li><strong>WebSocket端口</strong>：8083（用于浏览器连接）</li>
+            </ul>
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle me-2"></i> 确保这些端口未被其他应用占用。如需修改端口，请编辑 <code>mqtt-server.js</code> 文件。
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">4. 配置MQTT数据源</h5>
+          </div>
+          <div class="card-body">
+            <p>要切换到MQTT数据源模式，需要进行以下配置：</p>
+            <div class="mb-4">
+              <div class="d-flex align-items-center mb-2">
+                <span class="step-number">1</span>
+                <h6 class="mb-0">切换数据源类型</h6>
+              </div>
+              <p>在系统设置页面或通过API切换数据源类型为MQTT：</p>
+              <div class="code-block">
+// 通过API切换
+PUT /api/modbus/data-source/type
+Content-Type: application/json
+
+{
+  "type": "mqtt"
+}
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <div class="d-flex align-items-center mb-2">
+                <span class="step-number">2</span>
+                <h6 class="mb-0">配置MQTT连接参数</h6>
+              </div>
+              <p>设置MQTT服务器地址、客户端ID和认证信息：</p>
+              <div class="code-block">
+// 通过API配置
+PUT /api/modbus/mqtt/config
+Content-Type: application/json
+
+{
+  "url": "mqtt://localhost:1883",
+  "options": {
+    "clientId": "your_client_id",
+    "username": "",
+    "password": "",
+    "keepalive": 60,
+    "reconnectPeriod": 5000,
+    "connectTimeout": 30000,
+    "clean": true
+  },
+  "autoReconnect": true,
+  "maxReconnectAttempts": 5
+}
+              </div>
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i> 如果使用内置MQTT服务器，通常不需要设置用户名和密码。如果使用外部MQTT服务器，请根据其配置设置认证信息。
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <div class="d-flex align-items-center mb-2">
+                <span class="step-number">3</span>
+                <h6 class="mb-0">建立连接</h6>
+              </div>
+              <p>配置完成后，建立连接：</p>
+              <div class="code-block">
+// 通过API连接
+POST /api/modbus/connection
+Content-Type: application/json
+
+{
+  "skipPolling": false
+}
+              </div>
+              <p>系统将尝试连接到MQTT服务器，连接成功后会自动订阅已配置的数据点主题。</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">5. 创建MQTT数据点</h5>
+          </div>
+          <div class="card-body">
+            <p>MQTT数据点与Modbus数据点的主要区别是使用主题（Topic）而不是寄存器地址：</p>
+            <div class="mb-4">
+              <div class="d-flex align-items-center mb-2">
+                <span class="step-number">1</span>
+                <h6 class="mb-0">通过UI创建</h6>
+              </div>
+              <ol>
+                <li>在数据点创建界面，系统会自动识别当前数据源类型</li>
+                <li>选择MQTT数据源时，会显示MQTT特有的字段：
+                  <ul>
+                    <li><strong>MQTT主题</strong>：指定要订阅的主题，例如 <code>data/modbus/temperature</code></li>
+                  </ul>
+                </li>
+                <li>设置其他通用字段（名称、标识符、数据格式等）</li>
+                <li>点击保存创建数据点</li>
+              </ol>
+            </div>
+            
+            <div class="mb-4">
+              <div class="d-flex align-items-center mb-2">
+                <span class="step-number">2</span>
+                <h6 class="mb-0">通过API创建</h6>
+              </div>
+              <div class="code-block">
+// 创建MQTT数据点
+POST /api/modbus/datapoints
+Content-Type: application/json
+
+{
+  "name": "室内温度",
+  "identifier": "indoor_temp",
+  "topic": "data/modbus/indoor_temp",
+  "format": "FLOAT32",
+  "scale": 1,
+  "unit": "°C",
+  "description": "室内温度传感器",
+  "dataSourceType": "mqtt"
+}
+              </div>
+              <p>如果不指定主题，系统会自动使用 <code>data/modbus/{identifier}</code> 作为默认主题。</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">6. MQTT消息格式</h5>
+          </div>
+          <div class="card-body">
+            <p>系统期望以JSON格式接收MQTT消息，格式如下：</p>
+            <div class="code-block">
+{
+  "value": 23.5,
+  "formatted": "23.5 °C",
+  "timestamp": "2023-05-26T10:15:30Z",
+  "quality": "GOOD"
+}
+            </div>
+            <p>各字段说明：</p>
+            <ul>
+              <li><strong>value</strong>：数据点的原始值，可以是数字、字符串或布尔值</li>
+              <li><strong>formatted</strong>：（可选）格式化后的显示值，如果省略，系统会根据数据点配置自动格式化</li>
+              <li><strong>timestamp</strong>：（可选）数据的时间戳，ISO 8601格式，如果省略，系统会使用接收消息的时间</li>
+              <li><strong>quality</strong>：（可选）数据质量，可以是"GOOD"、"BAD"或"UNCERTAIN"，默认为"GOOD"</li>
+            </ul>
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i> 如果消息不是JSON格式或无法解析，系统会将整个消息作为原始值处理。
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">7. 测试MQTT连接</h5>
+          </div>
+          <div class="card-body">
+            <p>系统提供了一个MQTT测试工具，用于测试MQTT连接和消息发布/订阅：</p>
+            <div class="mb-3">
+              <a href="/mqtt-test.html" target="_blank" class="btn btn-primary">
+                <i class="bi bi-box-arrow-up-right me-2"></i> 打开MQTT测试工具
+              </a>
+            </div>
+            <p>使用测试工具的步骤：</p>
+            <ol>
+              <li>设置MQTT服务器地址：<code>ws://localhost:8083/mqtt</code>（使用WebSocket连接）</li>
+              <li>点击"连接"按钮建立连接</li>
+              <li>订阅主题，例如 <code>data/modbus/#</code>（订阅所有数据点）</li>
+              <li>发布消息到特定主题，测试数据点是否正常接收</li>
+            </ol>
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle me-2"></i> 确保MQTT服务器已启动，并且WebSocket端口(8083)可访问。
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">8. 故障排除</h5>
+          </div>
+          <div class="card-body">
+            <div class="accordion" id="troubleshootingAccordion">
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                    无法连接到MQTT服务器
+                  </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                  <div class="accordion-body">
+                    <ol>
+                      <li>确认MQTT服务器是否正在运行（使用<code>node mqtt-server.js</code>启动）</li>
+                      <li>检查连接地址和端口是否正确（TCP: 1883, WebSocket: 8083）</li>
+                      <li>检查防火墙设置，确保端口未被阻止</li>
+                      <li>如果使用外部MQTT服务器，确认用户名和密码是否正确</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                    连接成功但无法收到数据
+                  </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                  <div class="accordion-body">
+                    <ol>
+                      <li>确认数据点的主题是否正确配置</li>
+                      <li>检查发布者是否正在向正确的主题发送数据</li>
+                      <li>验证消息格式是否符合要求（JSON格式）</li>
+                      <li>使用MQTT测试工具监听主题，确认数据是否正在发送</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                    数据点显示值异常或未更新
+                  </button>
+                </h2>
+                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                  <div class="accordion-body">
+                    <ol>
+                      <li>检查数据点配置的数据格式是否与实际数据匹配</li>
+                      <li>确认MQTT消息的JSON格式是否正确</li>
+                      <li>查看浏览器控制台是否有错误信息</li>
+                      <li>尝试使用MQTT测试工具手动发布正确格式的消息进行测试</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

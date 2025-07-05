@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modbus数据写入示例</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    body {
+      padding-top: 70px;
+      background-color: #f8f9fa;
+    }
+    .card {
+      margin-bottom: 20px;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      border-radius: 10px;
+    }
+    .card-header {
+      border-radius: 10px 10px 0 0 !important;
+      background-color: #f1f5f9;
+    }
+    .code-block {
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      padding: 15px;
+      font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.875rem;
+      color: #212529;
+      overflow-x: auto;
+    }
+    .api-method {
+      display: inline-block;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-right: 6px;
+    }
+    .api-method.post {
+      background-color: #28a745;
+      color: white;
+    }
+    .api-method.get {
+      background-color: #0d6efd;
+      color: white;
+    }
+    .api-url {
+      font-weight: 500;
+      background-color: #e9ecef;
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+    .response-example {
+      background-color: #f0f8ff;
+      border-left: 4px solid #0d6efd;
+    }
+    .write-history-item {
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+    }
+    .write-history-item:hover {
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+    }
+    .write-history-success {
+      border-left: 4px solid #28a745;
+    }
+    .write-history-error {
+      border-left: 4px solid #dc3545;
+    }
+    .nav-pills .nav-link.active {
+      background-color: #0d6efd;
+    }
+    .scheduled-task-item {
+      border-left: 4px solid #6c757d;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      background-color: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .scheduled-task-item.active {
+      border-left-color: #28a745;
+    }
+    .scheduled-task-item.inactive {
+      border-left-color: #6c757d;
+      opacity: 0.7;
+    }
+    .task-badge {
+      font-size: 0.8em;
+      padding: 0.25em 0.6em;
+    }
+    .cron-expression {
+      font-family: monospace;
+      background-color: #f8f9fa;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="bi bi-cpu"></i> Modbus监控系统
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="切换导航">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/modbus">
+              <i class="bi bi-speedometer2"></i> 监控面板
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/modbus-data-write.html">
+              <i class="bi bi-pencil-square"></i> 数据写入
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/modbus-api.html">
+              <i class="bi bi-file-code"></i> API文档
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/work-tasks">
+              <i class="bi bi-list-task"></i> 工作管理
+            </a>
+          </li>
+        </ul>
+        <div class="d-flex">
+          <div class="me-3">
+            <span class="badge rounded-pill bg-light text-dark p-2">
+              状态: 
+              <span id="connectionStatus" class="connection-status status-disconnected">
+                未连接
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8">
+        <!-- 数据写入导航选项卡 -->
+        <ul class="nav nav-pills mb-3" id="writeTypeTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="manual-write-tab" data-bs-toggle="pill" data-bs-target="#manual-write-panel" type="button" role="tab" aria-selected="true">
+              <i class="bi bi-pencil-square"></i> 手动写入
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="scheduled-write-tab" data-bs-toggle="pill" data-bs-target="#scheduled-write-panel" type="button" role="tab" aria-selected="false">
+              <i class="bi bi-clock"></i> 定时写入
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="writeTypeTabsContent">
+          <!-- 手动写入面板 -->
+          <div class="tab-pane fade show active" id="manual-write-panel" role="tabpanel">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="card-title mb-0">Modbus手动数据写入</h5>
+              </div>
+              <div class="card-body">
+                <div id="writeForm">
+                  <div class="mb-3">
+                    <label for="dataPointSelect" class="form-label">选择数据点</label>
+                    <select class="form-select" id="dataPointSelect">
+                      <option value="">请选择数据点...</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="dataValueInput" class="form-label">写入值</label>
+                    <input type="text" class="form-control" id="dataValueInput" placeholder="输入要写入的值">
+                    <div class="form-text" id="formatHelpText"></div>
+                  </div>
+
+                  <div class="mb-3 d-none" id="bitPositionContainer">
+                    <label for="bitPositionInput" class="form-label">位位置 (0-15)</label>
+                    <input type="number" class="form-control" id="bitPositionInput" min="0" max="15" value="0">
+                    <div class="form-text">对于BIT格式，指定要写入的位的位置</div>
+                  </div>
+
+                  <div class="d-grid">
+                    <button type="button" class="btn btn-primary" id="writeButton">
+                      <i class="bi bi-pencil-square"></i> 写入数据
+                    </button>
+                  </div>
+                </div>
+
+                <div class="alert d-none mt-3" id="writeResult"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 定时写入面板 -->
+          <div class="tab-pane fade" id="scheduled-write-panel" role="tabpanel">
+            <div class="card">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">定时数据写入</h5>
+                <button class="btn btn-sm btn-primary" id="createTaskBtn">
+                  <i class="bi bi-plus"></i> 创建定时任务
+                </button>
+              </div>
+              <div class="card-body">
+                <div id="scheduledTasksList">
+                  <div class="text-center py-4 text-muted" id="noTasksMessage">
+                    <i class="bi bi-clock"></i> 暂无定时写入任务
+                  </div>
+                  <!-- 定时任务列表将在此显示 -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <!-- 数据写入接口说明 -->
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">数据写入API</h5>
+          </div>
+          <div class="card-body">
+            <h6>写入数据点值</h6>
+            <div class="mb-3">
+              <span class="api-method post">POST</span>
+              <span class="api-url">/api/modbus/write</span>
+            </div>
+            
+            <p>请求参数：</p>
+            <div class="code-block">
+{
+  "identifier": "数据点标识符",
+  "value": 数值,
+  "bitPosition": 位位置(可选，仅BIT格式需要)
+}
+            </div>
+
+            <p class="mt-3">响应示例：</p>
+            <div class="code-block response-example">
+{
+  "success": true,
+  "data": {
+    "identifier": "temperature",
+    "value": 25.5,
+    "rawResult": {...},
+    "timestamp": "2023-08-15T08:30:45.123Z"
+  }
+}
+            </div>
+            
+            <div class="mt-3">
+              <h6>数据格式说明</h6>
+              <ul class="list-group">
+                <li class="list-group-item">
+                  <strong>BIT</strong>: 位值，只能为0或1
+                </li>
+                <li class="list-group-item">
+                  <strong>INT16</strong>: 有符号16位整数，范围-32768~32767
+                </li>
+                <li class="list-group-item">
+                  <strong>UINT16</strong>: 无符号16位整数，范围0~65535
+                </li>
+                <li class="list-group-item">
+                  <strong>INT32</strong>: 有符号32位整数，范围-2147483648~2147483647
+                </li>
+                <li class="list-group-item">
+                  <strong>UINT32</strong>: 无符号32位整数，范围0~4294967295
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 创建/编辑定时任务模态框 -->
+  <div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="taskModalTitle">创建定时写入任务</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+        </div>
+        <div class="modal-body">
+          <form id="taskForm">
+            <input type="hidden" id="taskId" value="">
+            
+            <div class="mb-3">
+              <label for="taskName" class="form-label">任务名称</label>
+              <input type="text" class="form-control" id="taskName" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="taskDescription" class="form-label">描述</label>
+              <textarea class="form-control" id="taskDescription" rows="2"></textarea>
+            </div>
+            
+            <div class="mb-3">
+              <label for="taskDataPoint" class="form-label">数据点</label>
+              <select class="form-select" id="taskDataPoint" required>
+                <option value="">请选择数据点...</option>
+              </select>
+            </div>
+            
+            <div class="mb-3">
+              <label for="taskValue" class="form-label">写入值</label>
+              <input type="text" class="form-control" id="taskValue" required>
+              <div class="form-text" id="taskFormatHelp"></div>
+            </div>
+            
+            <div class="mb-3 d-none" id="taskBitPositionContainer">
+              <label for="taskBitPosition" class="form-label">位位置 (0-15)</label>
+              <input type="number" class="form-control" id="taskBitPosition" min="0" max="15" value="0">
+            </div>
+            
+            <div class="mb-3">
+              <label for="taskCronExpression" class="form-label">Cron表达式</label>
+              <input type="text" class="form-control" id="taskCronExpression" placeholder="* * * * *" required>
+              <div class="form-text">
+                格式: 分 时 日 月 周 (Cron表达式)
+                <button type="button" class="btn btn-sm btn-link p-0" data-bs-toggle="collapse" data-bs-target="#cronHelp">
+                  帮助
+                </button>
+              </div>
+              <div class="collapse mt-2" id="cronHelp">
+                <div class="card card-body">
+                  <h6 class="mb-2">Cron表达式示例:</h6>
+                  <ul class="mb-0 ps-3">
+                    <li><code>* * * * *</code> - 每分钟执行</li>
+                    <li><code>0 * * * *</code> - 每小时整点执行</li>
+                    <li><code>0 8 * * *</code> - 每天早上8点执行</li>
+                    <li><code>0 8,18 * * *</code> - 每天早上8点和晚上6点执行</li>
+                    <li><code>0 8-18 * * *</code> - 每天8点到18点之间每小时执行</li>
+                    <li><code>0 8 * * 1-5</code> - 工作日（周一至周五）早上8点执行</li>
+                    <li><code>0 0 1 * *</code> - 每月1日凌晨执行</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" id="taskActive" checked>
+              <label class="form-check-label" for="taskActive">启用任务</label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" id="saveTaskBtn">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 加载中遮罩 -->
+  <div id="loaderContainer" style="display: none;">
+    <div class="spinner-border text-light" role="status">
+      <span class="visually-hidden">加载中...</span>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="/js/modbus-data-write.js"></script>
+</body>
+</html> 

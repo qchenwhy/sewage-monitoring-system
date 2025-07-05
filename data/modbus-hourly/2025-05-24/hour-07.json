@@ -1,0 +1,302 @@
+[
+  {
+    "id": 7,
+    "dataPointId": "1745654231246",
+    "dataPointName": "COD值",
+    "value": 0,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "UINT16",
+    "updatedAt": "2025-05-22T13:42:02.000Z"
+  },
+  {
+    "id": 1375,
+    "dataPointId": "DP003",
+    "dataPointName": "压力传感器1",
+    "value": 101.30000305175781,
+    "formattedValue": "101.3kPa",
+    "quality": "GOOD",
+    "dataType": "FLOAT",
+    "updatedAt": "2025-05-12T06:33:49.000Z"
+  },
+  {
+    "id": 1376,
+    "dataPointId": "DP004",
+    "dataPointName": "开关状态1",
+    "value": 1,
+    "formattedValue": "开启",
+    "quality": "GOOD",
+    "dataType": "BOOLEAN",
+    "updatedAt": "2025-05-12T06:33:49.000Z"
+  },
+  {
+    "id": 1316,
+    "dataPointId": "1746416438142",
+    "dataPointName": "污泥回流泵",
+    "value": 1,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "BIT",
+    "updatedAt": "2025-05-22T13:42:02.000Z"
+  },
+  {
+    "id": 5305,
+    "dataPointId": "1747624193820",
+    "dataPointName": "污泥回流泵1故障1",
+    "value": 0,
+    "formattedValue": "0",
+    "quality": "GOOD",
+    "dataType": "BIT",
+    "updatedAt": "2025-05-19T07:10:32.000Z"
+  },
+  {
+    "id": 12,
+    "dataPointId": "test-write-1",
+    "dataPointName": "测试写入点1",
+    "value": 123,
+    "formattedValue": "123",
+    "quality": "GOOD",
+    "dataType": "UINT16",
+    "updatedAt": "2025-04-28T04:53:10.000Z"
+  },
+  {
+    "id": 1,
+    "dataPointId": "test-dp-1745808693346-1",
+    "dataPointName": "测试数据点1",
+    "value": 42,
+    "formattedValue": "42 °C",
+    "quality": "GOOD",
+    "dataType": "INT16",
+    "updatedAt": "2025-05-22T23:00:08.000Z"
+  },
+  {
+    "id": 9,
+    "dataPointId": "test-dp-1",
+    "dataPointName": "测试数据点1",
+    "value": 200,
+    "formattedValue": "200",
+    "quality": "GOOD",
+    "dataType": "FLOAT",
+    "updatedAt": "2025-05-15T11:36:04.000Z"
+  },
+  {
+    "id": 2,
+    "dataPointId": "test-dp-1745808693346-2",
+    "dataPointName": "测试数据点2",
+    "value": 3.141590118408203,
+    "formattedValue": "3.14 V",
+    "quality": "GOOD",
+    "dataType": "FLOAT32",
+    "updatedAt": "2025-04-28T02:51:33.000Z"
+  },
+  {
+    "id": 10,
+    "dataPointId": "test-dp-2",
+    "dataPointName": "测试数据点2",
+    "value": 45.66999816894531,
+    "formattedValue": "45.67 °C",
+    "quality": "GOOD",
+    "dataType": "FLOAT32",
+    "updatedAt": "2025-04-28T04:50:24.000Z"
+  },
+  {
+    "id": 3,
+    "dataPointId": "test-dp-1745808693346-3",
+    "dataPointName": "测试数据点3",
+    "value": 65000,
+    "formattedValue": "65000 rpm",
+    "quality": "UNCERTAIN",
+    "dataType": "UINT16",
+    "updatedAt": "2025-04-28T02:51:33.000Z"
+  },
+  {
+    "id": 11,
+    "dataPointId": "test-1",
+    "dataPointName": "测试点1",
+    "value": 123,
+    "formattedValue": "123",
+    "quality": "GOOD",
+    "dataType": "UINT16",
+    "updatedAt": "2025-04-28T04:52:17.000Z"
+  },
+  {
+    "id": 1746,
+    "dataPointId": "1747390142356",
+    "dataPointName": "消化液回流2告警",
+    "value": 0,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "BIT",
+    "updatedAt": "2025-05-23T13:47:05.000Z"
+  },
+  {
+    "id": 761,
+    "dataPointId": "1745907839532",
+    "dataPointName": "消化液回流泵1",
+    "value": 0,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "BIT",
+    "updatedAt": "2025-05-22T13:42:02.000Z"
+  },
+  {
+    "id": 818,
+    "dataPointId": "1745909889834",
+    "dataPointName": "消化液回流泵2",
+    "value": 0,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "BIT",
+    "updatedAt": "2025-05-22T13:42:02.000Z"
+  },
+  {
+    "id": 5043,
+    "dataPointId": "1747618594580",
+    "dataPointName": "消化液回流泵2号故障一",
+    "value": 0,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "BIT",
+    "updatedAt": "2025-05-22T13:42:02.000Z"
+  },
+  {
+    "id": 6,
+    "dataPointId": "1745650251523",
+    "dataPointName": "液位计",
+    "value": 4,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "UINT16",
+    "updatedAt": "2025-05-23T13:42:05.000Z"
+  },
+  {
+    "id": 8,
+    "dataPointId": "1745670977050",
+    "dataPointName": "液位计2",
+    "value": 0,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "UINT16",
+    "updatedAt": "2025-04-29T22:35:28.000Z"
+  },
+  {
+    "id": 233,
+    "dataPointId": "1745828214855",
+    "dataPointName": "温度",
+    "value": 0,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "UINT32",
+    "updatedAt": "2025-04-29T22:35:28.000Z"
+  },
+  {
+    "id": 1373,
+    "dataPointId": "DP001",
+    "dataPointName": "温度传感器1",
+    "value": 25.799999237060547,
+    "formattedValue": "25.8°C",
+    "quality": "GOOD",
+    "dataType": "FLOAT",
+    "updatedAt": "2025-05-12T06:33:49.000Z"
+  },
+  {
+    "id": 1374,
+    "dataPointId": "DP002",
+    "dataPointName": "湿度传感器1",
+    "value": 65.19999694824219,
+    "formattedValue": "65.2%",
+    "quality": "GOOD",
+    "dataType": "FLOAT",
+    "updatedAt": "2025-05-12T06:33:49.000Z"
+  },
+  {
+    "id": 5480,
+    "dataPointId": "1747627647765",
+    "dataPointName": "硝化液回流2号故障三",
+    "value": 0,
+    "formattedValue": "0",
+    "quality": "GOOD",
+    "dataType": "BIT",
+    "updatedAt": "2025-05-19T06:22:16.000Z"
+  },
+  {
+    "id": 5127,
+    "dataPointId": "1747620289388",
+    "dataPointName": "硝化液回流2号故障二",
+    "value": 0,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "BIT",
+    "updatedAt": "2025-05-22T13:42:02.000Z"
+  },
+  {
+    "id": 1377,
+    "dataPointId": "DP005",
+    "dataPointName": "计数器1",
+    "value": 1587,
+    "formattedValue": "1587",
+    "quality": "GOOD",
+    "dataType": "INT",
+    "updatedAt": "2025-05-12T06:33:49.000Z"
+  },
+  {
+    "id": 1437,
+    "dataPointId": "1747379790542",
+    "dataPointName": "调节池1号提升泵告警",
+    "value": 0,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "BIT",
+    "updatedAt": "2025-05-22T13:42:02.000Z"
+  },
+  {
+    "id": 5,
+    "dataPointId": "1745543433403",
+    "dataPointName": "调节池提升泵",
+    "value": 0,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "UINT16",
+    "updatedAt": "2025-05-22T13:42:02.000Z"
+  },
+  {
+    "id": 354,
+    "dataPointId": "1745836304356",
+    "dataPointName": "调节池提升泵1",
+    "value": 0,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "UINT16",
+    "updatedAt": "2025-05-22T13:42:02.000Z"
+  },
+  {
+    "id": 4,
+    "dataPointId": "1745543402517",
+    "dataPointName": "调节池提升泵2",
+    "value": 3,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "UINT16",
+    "updatedAt": "2025-05-23T13:42:05.000Z"
+  },
+  {
+    "id": 5834,
+    "dataPointId": "1747634895463",
+    "dataPointName": "调节池提升泵2故障一",
+    "value": 0,
+    "formattedValue": "0",
+    "quality": "GOOD",
+    "dataType": "BIT",
+    "updatedAt": "2025-05-19T06:22:16.000Z"
+  },
+  {
+    "id": 5979,
+    "dataPointId": "1747639045219",
+    "dataPointName": "调节池提升泵2故障三",
+    "value": 0,
+    "formattedValue": null,
+    "quality": "GOOD",
+    "dataType": "BIT",
+    "updatedAt": "2025-05-22T13:42:02.000Z"
+  }
+]

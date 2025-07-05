@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API路由测试</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-5">
+    <h1>API路由测试</h1>
+    
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5>API路径测试</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="apiPath" class="form-label">API路径</label>
+              <input type="text" class="form-control" id="apiPath" value="/api/modbus/polling/config">
+            </div>
+            <div class="mb-3">
+              <label for="methodSelect" class="form-label">请求方法</label>
+              <select class="form-select" id="methodSelect">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="requestBody" class="form-label">请求体 (JSON)</label>
+              <textarea class="form-control" id="requestBody" rows="5"></textarea>
+            </div>
+            <button id="sendRequestBtn" class="btn btn-primary">发送请求</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5>响应结果</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="statusCode" class="form-label">状态码</label>
+              <input type="text" class="form-control" id="statusCode" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="responseHeaders" class="form-label">响应头</label>
+              <textarea class="form-control" id="responseHeaders" rows="3" readonly></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="responseBody" class="form-label">响应体</label>
+              <textarea class="form-control" id="responseBody" rows="10" readonly></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5>常用API测试</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-outline-primary" data-api="/api/modbus/connection/config" data-method="GET">获取连接配置</button>
+              <button class="btn btn-outline-primary" data-api="/api/modbus/polling/config" data-method="GET">获取轮询配置</button>
+              <button class="btn btn-outline-primary" data-api="/api/modbus/values" data-method="GET">获取数据点值</button>
+              <button class="btn btn-outline-primary" data-api="/api/modbus/datapoints" data-method="GET">获取所有数据点</button>
+              <button class="btn btn-outline-primary" data-api="/api/modbus/mqtt/config" data-method="GET">获取MQTT配置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 发送请求按钮
+      document.getElementById('sendRequestBtn').addEventListener('click', sendRequest);
+      
+      // 快捷API测试按钮
+      document.querySelectorAll('[data-api]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.getElementById('apiPath').value = this.getAttribute('data-api');
+          document.getElementById('methodSelect').value = this.getAttribute('data-method');
+          sendRequest();
+        });
+      });
+      
+      // 发送请求函数
+      function sendRequest() {
+        // 获取参数
+        const apiPath = document.getElementById('apiPath').value;
+        const method = document.getElementById('methodSelect').value;
+        let requestBody = document.getElementById('requestBody').value;
+        
+        // 重置响应区域
+        document.getElementById('statusCode').value = '';
+        document.getElementById('responseHeaders').value = '';
+        document.getElementById('responseBody').value = '请求中...';
+        
+        // 创建请求配置
+        const options = {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        };
+        
+        // 添加请求体（如果需要）
+        if (method !== 'GET' && method !== 'HEAD' && requestBody.trim() !== '') {
+          try {
+            options.body = requestBody;
+          } catch (e) {
+            document.getElementById('responseBody').value = '请求体JSON格式错误: ' + e.message;
+            return;
+          }
+        }
+        
+        // 发送请求
+        fetch(apiPath, options)
+          .then(response => {
+            // 显示状态码
+            document.getElementById('statusCode').value = response.status + ' ' + response.statusText;
+            
+            // 显示响应头
+            let headers = '';
+            response.headers.forEach((value, key) => {
+              headers += `${key}: ${value}\n`;
+            });
+            document.getElementById('responseHeaders').value = headers;
+            
+            // 返回响应体
+            return response.text();
+          })
+          .then(text => {
+            // 尝试解析JSON
+            try {
+              const json = JSON.parse(text);
+              document.getElementById('responseBody').value = JSON.stringify(json, null, 2);
+            } catch (e) {
+              // 不是JSON，直接显示文本
+              document.getElementById('responseBody').value = text;
+            }
+          })
+          .catch(error => {
+            document.getElementById('responseBody').value = '请求错误: ' + error.message;
+          });
+      }
+    });
+  </script>
+</body>
+</html> 
