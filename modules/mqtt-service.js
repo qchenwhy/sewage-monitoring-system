@@ -1682,24 +1682,57 @@ class MQTTService extends EventEmitter {
         }
         
         const ruleId = rule.id.toString();
-        const lastState = this._multiConditionAlarmStates[ruleId] || { triggered: false };
+        const lastState = this._multiConditionAlarmStates[ruleId] || { 
+          triggered: false, 
+          consecutiveCount: 0,
+          lastTriggerTime: null
+        };
         
-        console.log(`[多条件告警检查] 规则 ${rule.name} 条件检查结果: ${allConditionsMet}, 上次状态: ${lastState.triggered}`);
+        console.log(`[多条件告警检查] 规则 ${rule.name} 条件检查结果: ${allConditionsMet}, 上次状态: ${lastState.triggered}, 连续触发计数: ${lastState.consecutiveCount}`);
         
-        // 检测状态变化
-        const isNewAlarm = !lastState.triggered && allConditionsMet;
-        const isAlarmCleared = lastState.triggered && !allConditionsMet;
+        // 获取规则的连续触发次数要求（默认为1，表示满足条件后立即触发）
+        const requiredConsecutiveCount = rule.consecutiveCount || 1;
+        console.log(`[多条件告警检查] 规则 ${rule.name} 需要连续触发 ${requiredConsecutiveCount} 次`);
+        
+        // 处理连续触发计数逻辑
+        let shouldTriggerAlarm = false;
+        let shouldClearAlarm = false;
+        let newConsecutiveCount = 0;
+        
+        if (allConditionsMet) {
+          // 条件满足，增加连续触发计数
+          newConsecutiveCount = (lastState.consecutiveCount || 0) + 1;
+          console.log(`[多条件告警检查] 条件满足，连续触发计数增加到: ${newConsecutiveCount}`);
+          
+          // 检查是否达到触发阈值
+          if (newConsecutiveCount >= requiredConsecutiveCount && !lastState.triggered) {
+            shouldTriggerAlarm = true;
+            console.log(`[多条件告警检查] 达到连续触发阈值 ${requiredConsecutiveCount}，准备触发报警`);
+          }
+        } else {
+          // 条件不满足，重置连续触发计数
+          newConsecutiveCount = 0;
+          console.log(`[多条件告警检查] 条件不满足，重置连续触发计数为 0`);
+          
+          // 如果之前已触发报警，现在需要解除
+          if (lastState.triggered) {
+            shouldClearAlarm = true;
+            console.log(`[多条件告警检查] 条件不满足且之前已触发报警，准备解除报警`);
+          }
+        }
         
         // 更新状态记录
         this._multiConditionAlarmStates[ruleId] = {
-          triggered: allConditionsMet,
+          triggered: shouldTriggerAlarm ? true : (shouldClearAlarm ? false : lastState.triggered),
+          consecutiveCount: newConsecutiveCount,
           lastCheckTime: new Date().toISOString(),
+          lastTriggerTime: shouldTriggerAlarm ? new Date().toISOString() : lastState.lastTriggerTime,
           conditionResults: conditionResults
         };
         
         // 处理新告警
-        if (isNewAlarm) {
-          console.log(`[多条件告警检查] 触发多条件告警: ${rule.name}`);
+        if (shouldTriggerAlarm) {
+          console.log(`[多条件告警检查] 触发多条件告警: ${rule.name} (连续触发 ${newConsecutiveCount} 次)`);
           
           const alarmContent = rule.content || `多条件告警: ${rule.name}`;
           const triggerTime = new Date().toISOString();
@@ -1713,7 +1746,9 @@ class MQTTService extends EventEmitter {
               content: alarmContent,
               timestamp: triggerTime,
               level: rule.level || 'medium',
-              conditions: conditionResults
+              conditions: conditionResults,
+              consecutiveCount: newConsecutiveCount,
+              requiredConsecutiveCount: requiredConsecutiveCount
             }
           });
           
@@ -1724,7 +1759,7 @@ class MQTTService extends EventEmitter {
         }
         
         // 处理告警解除
-        if (isAlarmCleared) {
+        if (shouldClearAlarm) {
           console.log(`[多条件告警检查] 多条件告警解除: ${rule.name}`);
           
           const alarmContent = rule.content || `多条件告警: ${rule.name}`;

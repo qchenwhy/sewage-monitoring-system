@@ -816,6 +816,7 @@
                     <th>规则名称</th>
                     <th>条件数量</th>
                     <th>告警分类</th>
+                    <th>触发次数</th>
                     <th>告警内容</th>
                     <th>状态</th>
                     <th>操作</th>
@@ -1537,7 +1538,7 @@
             </div>
             
             <div class="row">
-              <div class="col-md-6">
+              <div class="col-md-4">
                 <div class="mb-3">
                   <label for="multiAlarmLevel" class="form-label">告警级别</label>
                   <select class="form-select" id="multiAlarmLevel">
@@ -1548,7 +1549,20 @@
                   </select>
                 </div>
               </div>
-              <div class="col-md-6">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="multiAlarmConsecutiveCount" class="form-label">连续触发次数</label>
+                  <select class="form-select" id="multiAlarmConsecutiveCount">
+                    <option value="1">1次 (立即触发)</option>
+                    <option value="2" selected>2次 (连续2次)</option>
+                    <option value="3">3次 (连续3次)</option>
+                    <option value="4">4次 (连续4次)</option>
+                    <option value="5">5次 (连续5次)</option>
+                  </select>
+                  <div class="form-text">设置连续触发次数可避免信号传输延迟造成的误报警</div>
+                </div>
+              </div>
+              <div class="col-md-4">
                 <div class="mb-3">
                   <label for="multiAlarmEnabled" class="form-label">启用状态</label>
                   <select class="form-select" id="multiAlarmEnabled">
@@ -4775,6 +4789,7 @@
         const category = document.getElementById('multiAlarmCategory').value;
         const content = document.getElementById('multiAlarmContent').value.trim();
         const level = document.getElementById('multiAlarmLevel').value;
+        const consecutiveCount = parseInt(document.getElementById('multiAlarmConsecutiveCount').value);
         const enabled = document.getElementById('multiAlarmEnabled').value === 'true';
         
         // 验证基本信息
@@ -4824,6 +4839,7 @@
           category: category,
           content: content || alarmCategoryTemplates[category] || '多条件告警',
           level: level,
+          consecutiveCount: consecutiveCount,
           enabled: enabled,
           conditions: conditions,
           createdAt: new Date().toISOString()
@@ -4928,6 +4944,9 @@
             <span class="badge bg-secondary">${getCategoryDisplayName(rule.category)}</span>
           </td>
           <td>
+            <span class="badge bg-warning text-dark">${rule.consecutiveCount || 1}次</span>
+          </td>
+          <td>
             <div class="text-truncate" style="max-width: 200px;" title="${rule.content}">
               ${rule.content}
             </div>
@@ -4982,10 +5001,13 @@
         return `${logicText}${condition.datapoint} ${getOperatorDisplayName(condition.operator)} ${condition.value}`;
       }).join('');
       
+      const consecutiveCountText = rule.consecutiveCount ? `${rule.consecutiveCount}次` : '1次 (立即触发)';
+      
       alert(`规则详情：
 规则名称：${rule.name}
 告警分类：${getCategoryDisplayName(rule.category)}
 告警级别：${rule.level}
+连续触发次数：${consecutiveCountText}
 启用状态：${rule.enabled ? '启用' : '禁用'}
 告警条件：${conditionsText}
 告警内容：${rule.content}

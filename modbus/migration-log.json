@@ -1308,5 +1308,25 @@
     "date": "2025-07-05T02:43:59.362Z",
     "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
     "status": "success"
+  },
+  {
+    "date": "2025-07-05T08:50:15.350Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-07-05T10:03:56.661Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-07-05T10:05:35.886Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
+  },
+  {
+    "date": "2025-07-06T07:13:32.367Z",
+    "description": "添加unit、description和工作内容相关字段到modbus_data_latest表并创建daily_work_plans表",
+    "status": "success"
   }
 ]

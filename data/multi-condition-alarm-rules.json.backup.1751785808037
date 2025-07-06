@@ -20,9 +20,7 @@
         "logic": "and"
       }
     ],
-    "createdAt": "2025-06-23T16:41:04.064Z",
-    "consecutiveCount": 2,
-    "updatedAt": "2025-07-06T07:10:08.024Z"
+    "createdAt": "2025-06-23T16:41:04.064Z"
   },
   {
     "id": 1750732460519,
@@ -45,9 +43,7 @@
         "logic": "and"
       }
     ],
-    "createdAt": "2025-06-24T02:34:20.519Z",
-    "consecutiveCount": 2,
-    "updatedAt": "2025-07-06T07:10:08.027Z"
+    "createdAt": "2025-06-24T02:34:20.519Z"
   },
   {
     "id": 1750732687281,
@@ -70,9 +66,7 @@
         "logic": "and"
       }
     ],
-    "createdAt": "2025-06-24T02:38:07.281Z",
-    "consecutiveCount": 2,
-    "updatedAt": "2025-07-06T07:10:08.028Z"
+    "createdAt": "2025-06-24T02:38:07.281Z"
   },
   {
     "id": 1750732744135,
@@ -95,9 +89,7 @@
         "logic": "and"
       }
     ],
-    "createdAt": "2025-06-24T02:39:04.135Z",
-    "consecutiveCount": 2,
-    "updatedAt": "2025-07-06T07:10:08.029Z"
+    "createdAt": "2025-06-24T02:39:04.135Z"
   },
   {
     "id": 1750732800381,
@@ -120,9 +112,7 @@
         "logic": "and"
       }
     ],
-    "createdAt": "2025-06-24T02:40:00.381Z",
-    "consecutiveCount": 2,
-    "updatedAt": "2025-07-06T07:10:08.029Z"
+    "createdAt": "2025-06-24T02:40:00.381Z"
   },
   {
     "id": 1750732866188,
@@ -145,9 +135,7 @@
         "logic": "and"
       }
     ],
-    "createdAt": "2025-06-24T02:41:06.188Z",
-    "consecutiveCount": 2,
-    "updatedAt": "2025-07-06T07:10:08.030Z"
+    "createdAt": "2025-06-24T02:41:06.188Z"
   },
   {
     "id": 1750732897536,
@@ -170,9 +158,7 @@
         "logic": "and"
       }
     ],
-    "createdAt": "2025-06-24T02:41:37.536Z",
-    "consecutiveCount": 2,
-    "updatedAt": "2025-07-06T07:10:08.032Z"
+    "createdAt": "2025-06-24T02:41:37.536Z"
   },
   {
     "id": 1750732966060,
@@ -195,9 +181,7 @@
         "logic": "and"
       }
     ],
-    "createdAt": "2025-06-24T02:42:46.060Z",
-    "consecutiveCount": 2,
-    "updatedAt": "2025-07-06T07:10:08.034Z"
+    "createdAt": "2025-06-24T02:42:46.060Z"
   },
   {
     "id": 1750733036625,
@@ -220,9 +204,7 @@
         "logic": "and"
       }
     ],
-    "createdAt": "2025-06-24T02:43:56.625Z",
-    "consecutiveCount": 2,
-    "updatedAt": "2025-07-06T07:10:08.035Z"
+    "createdAt": "2025-06-24T02:43:56.625Z"
   },
   {
     "id": 1750733077483,
@@ -245,9 +227,7 @@
         "logic": "and"
       }
     ],
-    "createdAt": "2025-06-24T02:44:37.483Z",
-    "consecutiveCount": 2,
-    "updatedAt": "2025-07-06T07:10:08.036Z"
+    "createdAt": "2025-06-24T02:44:37.483Z"
   },
   {
     "id": 1750901594989,
@@ -270,8 +250,6 @@
         "logic": "and"
       }
     ],
-    "createdAt": "2025-06-26T01:33:14.989Z",
-    "consecutiveCount": 2,
-    "updatedAt": "2025-07-06T07:10:08.036Z"
+    "createdAt": "2025-06-26T01:33:14.989Z"
   }
 ]

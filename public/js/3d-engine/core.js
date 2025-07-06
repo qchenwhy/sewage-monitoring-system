@@ -1,569 +1,887 @@
 /**
- * 3D可视化引擎核心类
- * 负责场景初始化、渲染管理、设备数据绑定等核心功能
+ * 污水处理站3D可视化引擎核心模块
+ * 版本: 1.0.0
+ * 作者: 污水处理站监控系统
+ * 描述: 提供3D场景管理、设备建模、交互控制等核心功能
  */
+
 class ThreeDEngine {
     constructor() {
-        // 基础属性
+        console.log('🔧 初始化3D引擎核心模块...');
+        
+        // 核心组件
         this.scene = null;
         this.camera = null;
         this.renderer = null;
-        this.container = null;
-        this.canvas2d = null;
-        this.ctx2d = null;
+        this.controls = null;
+        this.raycaster = null;
+        this.mouse = new THREE.Vector2();
         
-        // 渲染模式 ('auto', '3d', '2d')
-        this.renderMode = 'auto';
-        this.currentRenderer = 'threejs'; // 'threejs' or 'canvas2d'
-        
-        // 设备数据
+        // 场景元素
         this.devices = [];
-        this.deviceObjects = new Map(); // 设备ID -> 3D对象映射
+        this.lights = [];
+        this.environment = null;
+        this.waterTanks = [];
+        this.pumpStations = [];
+        this.pipeSystems = [];
+        
+        // 状态管理
+        this.isInitialized = false;
+        this.renderMode = 'auto'; // auto, 3d, 2d
+        this.performanceMode = 'high'; // high, medium, low
+        this.selectedDevice = null;
         
         // 性能监控
-        this.fps = 0;
-        this.frameCount = 0;
-        this.lastTime = performance.now();
+        this.stats = {
+            fps: 0,
+            frameTime: 0,
+            memoryUsage: 0,
+            drawCalls: 0
+        };
         
-        // 动画控制
-        this.animationId = null;
-        this.isRunning = false;
+        // 数据连接
+        this.dataConnector = null;
+        this.lastDataUpdate = Date.now();
         
-        // 事件绑定
-        this.onWindowResize = this.onWindowResize.bind(this);
-        this.animate = this.animate.bind(this);
+        // 动画系统
+        this.animationMixer = null;
+        this.clock = new THREE.Clock();
+        
+        // 事件监听器
+        this.eventListeners = new Map();
+        
+        console.log('✅ 3D引擎核心模块初始化完成');
     }
     
     /**
      * 初始化3D引擎
      */
     async init() {
+        console.log('🚀 开始初始化3D引擎...');
+        
         try {
-            console.log('开始初始化3D引擎...');
+            // 按顺序初始化各个组件
+            await this.initRenderer();
+            await this.initScene();
+            await this.initCamera();
+            await this.initLights();
+            await this.initControls();
+            await this.initRaycaster();
+            await this.createEnvironment();
+            await this.createDevices();
+            await this.setupEventListeners();
+            await this.startRenderLoop();
             
-            // 获取DOM容器
-            this.container = document.getElementById('threejs-container');
-            this.canvas2d = document.getElementById('canvas2d-container');
+            this.isInitialized = true;
+            console.log('🎉 3D引擎初始化完成!');
             
-            if (!this.container || !this.canvas2d) {
-                throw new Error('找不到渲染容器');
-            }
-            
-            // 初始化Canvas 2D上下文
-            this.ctx2d = this.canvas2d.getContext('2d');
-            
-            // 检测设备性能并选择渲染模式
-            await this.detectPerformance();
-            
-            // 初始化Three.js场景
-            this.initThreeJS();
-            
-            // 加载设备数据
-            await this.loadDevices();
-            
-            // 创建基础场景
-            this.createBasicScene();
-            
-            // 开始渲染循环
-            this.startRenderLoop();
-            
-            // 绑定事件
-            this.bindEvents();
-            
-            // 隐藏加载动画
-            this.hideLoading();
-            
-            console.log('3D引擎初始化完成');
+            // 触发初始化完成事件
+            this.emit('initialized');
             
         } catch (error) {
-            console.error('3D引擎初始化失败:', error);
-            this.showError('初始化失败: ' + error.message);
+            console.error('❌ 3D引擎初始化失败:', error);
+            throw error;
         }
     }
     
     /**
-     * 初始化Three.js场景
+     * 初始化渲染器
      */
-    initThreeJS() {
-        // 创建场景
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x0a0a0a);
+    async initRenderer() {
+        console.log('🖥️ 初始化渲染器...');
         
-        // 创建相机
-        const width = this.container.clientWidth;
-        const height = this.container.clientHeight;
-        this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-        this.camera.position.set(0, 50, 100);
-        this.camera.lookAt(0, 0, 0);
+        const container = document.getElementById('threejs-container');
+        if (!container) {
+            throw new Error('未找到3D容器元素');
+        }
         
-        // 创建渲染器
-        this.renderer = new THREE.WebGLRenderer({ 
+        // 创建WebGL渲染器
+        this.renderer = new THREE.WebGLRenderer({
             antialias: true,
-            alpha: true
+            alpha: true,
+            powerPreference: 'high-performance'
         });
-        this.renderer.setSize(width, height);
+        
+        // 设置渲染器属性
+        this.renderer.setSize(container.clientWidth, container.clientHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.0;
         
-        // 将渲染器添加到容器
-        this.container.appendChild(this.renderer.domElement);
+        // 设置背景色
+        this.renderer.setClearColor(0x0a0a0a, 1);
         
-        // 添加基础光照
-        this.addLights();
+        // 添加到容器
+        container.appendChild(this.renderer.domElement);
         
-        console.log('Three.js场景初始化完成');
+        // 处理窗口大小变化
+        window.addEventListener('resize', () => this.onWindowResize());
+        
+        console.log('✅ 渲染器初始化完成');
     }
     
     /**
-     * 添加光照
+     * 初始化场景
      */
-    addLights() {
-        // 环境光
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
-        this.scene.add(ambientLight);
+    async initScene() {
+        console.log('🌍 初始化场景...');
         
-        // 方向光
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(50, 50, 50);
+        this.scene = new THREE.Scene();
+        
+        // 设置雾效果
+        this.scene.fog = new THREE.Fog(0x0a0a0a, 10, 1000);
+        
+        // 添加天空盒
+        await this.createSkybox();
+        
+        console.log('✅ 场景初始化完成');
+    }
+    
+    /**
+     * 初始化摄像机
+     */
+    async initCamera() {
+        console.log('📷 初始化摄像机...');
+        
+        const container = document.getElementById('threejs-container');
+        const aspect = container.clientWidth / container.clientHeight;
+        
+        this.camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 2000);
+        this.camera.position.set(50, 30, 50);
+        this.camera.lookAt(0, 0, 0);
+        
+        console.log('✅ 摄像机初始化完成');
+    }
+    
+    /**
+     * 初始化光照系统
+     */
+    async initLights() {
+        console.log('💡 初始化光照系统...');
+        
+        // 环境光
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+        this.scene.add(ambientLight);
+        this.lights.push(ambientLight);
+        
+        // 主方向光（太阳光）
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(100, 100, 50);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.camera.near = 0.5;
+        directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -100;
+        directionalLight.shadow.camera.right = 100;
+        directionalLight.shadow.camera.top = 100;
+        directionalLight.shadow.camera.bottom = -100;
         this.scene.add(directionalLight);
+        this.lights.push(directionalLight);
         
-        // 点光源
-        const pointLight = new THREE.PointLight(0x00aaff, 0.5, 100);
+        // 补充光源
+        const fillLight = new THREE.DirectionalLight(0x4a90e2, 0.3);
+        fillLight.position.set(-50, 50, -50);
+        this.scene.add(fillLight);
+        this.lights.push(fillLight);
+        
+        // 点光源（设备照明）
+        const pointLight = new THREE.PointLight(0xffffff, 0.5, 100);
         pointLight.position.set(0, 20, 0);
+        pointLight.castShadow = true;
         this.scene.add(pointLight);
+        this.lights.push(pointLight);
+        
+        console.log('✅ 光照系统初始化完成');
     }
     
     /**
-     * 创建基础场景
+     * 初始化控制器
      */
-    createBasicScene() {
-        // 创建地面网格
+    async initControls() {
+        console.log('🎮 初始化控制器...');
+        
+        // 检查OrbitControls是否可用
+        if (typeof THREE.OrbitControls === 'undefined') {
+            console.warn('⚠️ OrbitControls不可用，使用基础控制器');
+            return;
+        }
+        
+        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+        this.controls.screenSpacePanning = false;
+        this.controls.minDistance = 10;
+        this.controls.maxDistance = 500;
+        this.controls.maxPolarAngle = Math.PI / 2;
+        
+        console.log('✅ 控制器初始化完成');
+    }
+    
+    /**
+     * 初始化射线检测器
+     */
+    async initRaycaster() {
+        console.log('🎯 初始化射线检测器...');
+        
+        this.raycaster = new THREE.Raycaster();
+        
+        console.log('✅ 射线检测器初始化完成');
+    }
+    
+    /**
+     * 创建天空盒
+     */
+    async createSkybox() {
+        console.log('🌌 创建天空盒...');
+        
+        const geometry = new THREE.SphereGeometry(1000, 32, 32);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0x1a1a2e,
+            side: THREE.BackSide
+        });
+        
+        const skybox = new THREE.Mesh(geometry, material);
+        this.scene.add(skybox);
+        
+        console.log('✅ 天空盒创建完成');
+    }
+    
+    /**
+     * 创建环境
+     */
+    async createEnvironment() {
+        console.log('🏗️ 创建环境...');
+        
+        // 创建地面
+        const groundGeometry = new THREE.PlaneGeometry(200, 200);
+        const groundMaterial = new THREE.MeshLambertMaterial({
+            color: 0x2c3e50,
+            transparent: true,
+            opacity: 0.8
+        });
+        
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        this.scene.add(ground);
+        
+        // 创建网格辅助线
         const gridHelper = new THREE.GridHelper(200, 20, 0x444444, 0x222222);
         this.scene.add(gridHelper);
         
-        // 创建坐标轴辅助线
-        const axesHelper = new THREE.AxesHelper(50);
+        // 创建坐标轴辅助器
+        const axesHelper = new THREE.AxesHelper(20);
         this.scene.add(axesHelper);
         
-        // 创建一个简单的立方体作为测试对象
-        const geometry = new THREE.BoxGeometry(10, 10, 10);
-        const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
-        const cube = new THREE.Mesh(geometry, material);
-        cube.position.set(0, 5, 0);
-        cube.castShadow = true;
-        cube.receiveShadow = true;
-        this.scene.add(cube);
-        
-        // 保存立方体引用用于动画
-        this.testCube = cube;
-        
-        console.log('基础场景创建完成');
+        console.log('✅ 环境创建完成');
     }
     
     /**
-     * 检测设备性能
+     * 创建设备
      */
-    async detectPerformance() {
-        const performanceInfo = {
-            gpu: 'unknown',
-            memory: navigator.deviceMemory || 'unknown',
-            cores: navigator.hardwareConcurrency || 'unknown',
-            score: 0
+    async createDevices() {
+        console.log('🏭 创建设备...');
+        
+        // 创建示例设备
+        await this.createSampleDevices();
+        
+        console.log('✅ 设备创建完成');
+    }
+    
+    /**
+     * 创建示例设备
+     */
+    async createSampleDevices() {
+        // 创建污水池
+        const waterTank = this.createWaterTank(
+            new THREE.Vector3(0, 0, 0),
+            { width: 20, height: 8, depth: 15 },
+            0.7 // 水位70%
+        );
+        this.waterTanks.push(waterTank);
+        
+        // 创建泵站
+        const pumpStation = this.createPumpStation(
+            new THREE.Vector3(30, 0, 0),
+            'centrifugal',
+            'running'
+        );
+        this.pumpStations.push(pumpStation);
+        
+        // 创建管道系统
+        const pipeSystem = this.createPipeSystem(
+            new THREE.Vector3(10, 2, 0),
+            new THREE.Vector3(25, 2, 0),
+            0.5
+        );
+        this.pipeSystems.push(pipeSystem);
+        
+        // 创建监测设备
+        const monitorDevice = this.createMonitorDevice(
+            new THREE.Vector3(-20, 0, 20),
+            'COD_MONITOR'
+        );
+        this.devices.push(monitorDevice);
+    }
+    
+    /**
+     * 创建污水池
+     */
+    createWaterTank(position, size, waterLevel) {
+        const group = new THREE.Group();
+        group.position.copy(position);
+        
+        // 水池外壳
+        const tankGeometry = new THREE.BoxGeometry(size.width, size.height, size.depth);
+        const tankMaterial = new THREE.MeshPhongMaterial({
+            color: 0x34495e,
+            transparent: true,
+            opacity: 0.8
+        });
+        
+        const tank = new THREE.Mesh(tankGeometry, tankMaterial);
+        tank.position.y = size.height / 2;
+        tank.castShadow = true;
+        tank.receiveShadow = true;
+        group.add(tank);
+        
+        // 水面
+        const waterGeometry = new THREE.PlaneGeometry(size.width - 0.2, size.depth - 0.2);
+        const waterMaterial = new THREE.MeshPhongMaterial({
+            color: 0x3498db,
+            transparent: true,
+            opacity: 0.6,
+            side: THREE.DoubleSide
+        });
+        
+        const water = new THREE.Mesh(waterGeometry, waterMaterial);
+        water.rotation.x = -Math.PI / 2;
+        water.position.y = size.height * waterLevel;
+        group.add(water);
+        
+        // 添加设备信息
+        group.userData = {
+            type: 'water_tank',
+            id: 'tank_' + Date.now(),
+            size: size,
+            waterLevel: waterLevel,
+            capacity: size.width * size.height * size.depth,
+            currentVolume: size.width * size.height * size.depth * waterLevel
         };
         
-        try {
-            // GPU检测
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-            
-            if (gl) {
-                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                if (debugInfo) {
-                    performanceInfo.gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-                }
-            }
-            
-            // 简单的性能基准测试
-            const startTime = performance.now();
-            let result = 0;
-            for (let i = 0; i < 100000; i++) {
-                result += Math.sqrt(i);
-            }
-            const endTime = performance.now();
-            const testTime = endTime - startTime;
-            
-            // 计算性能得分 (时间越短得分越高)
-            performanceInfo.score = Math.max(0, 100 - testTime);
-            
-            // 根据性能得分决定渲染模式
-            if (this.renderMode === 'auto') {
-                if (performanceInfo.score > 70) {
-                    this.currentRenderer = 'threejs';
-                    this.updatePerformanceDisplay('high', '高性能');
-                } else if (performanceInfo.score > 40) {
-                    this.currentRenderer = 'threejs';
-                    this.updatePerformanceDisplay('medium', '中等性能');
-                } else {
-                    this.currentRenderer = 'canvas2d';
-                    this.updatePerformanceDisplay('low', '低端设备');
-                }
-            }
-            
-            console.log('设备性能检测完成:', performanceInfo);
-            
-        } catch (error) {
-            console.warn('性能检测失败:', error);
-            this.currentRenderer = 'threejs'; // 默认使用3D模式
-            this.updatePerformanceDisplay('medium', '未知');
-        }
+        this.scene.add(group);
+        return group;
     }
     
     /**
-     * 加载设备数据
+     * 创建泵站
      */
-    async loadDevices() {
-        try {
-            const response = await fetch('/3d-visualization/api/devices');
-            const result = await response.json();
-            
-            if (result.success) {
-                this.devices = result.data;
-                this.renderDeviceList();
-                console.log('设备数据加载完成:', this.devices.length, '个设备');
-            } else {
-                throw new Error(result.error || '加载设备数据失败');
-            }
-        } catch (error) {
-            console.error('加载设备数据失败:', error);
-            // 使用模拟数据
-            this.devices = [
-                { id: 'test_device', name: '测试设备', type: 'sensor', x: 20, y: 10, z: 20 }
-            ];
-            this.renderDeviceList();
-        }
-    }
-    
-    /**
-     * 渲染设备列表
-     */
-    renderDeviceList() {
-        const deviceList = document.getElementById('device-list');
-        if (!deviceList) return;
+    createPumpStation(position, type, status) {
+        const group = new THREE.Group();
+        group.position.copy(position);
         
-        deviceList.innerHTML = '';
-        
-        this.devices.forEach(device => {
-            const deviceItem = document.createElement('div');
-            deviceItem.className = 'device-item';
-            deviceItem.dataset.deviceId = device.id;
-            
-            deviceItem.innerHTML = `
-                <div class="device-name">${device.name}</div>
-                <div class="device-status">
-                    <span class="status-indicator normal"></span>
-                    <span>正常运行</span>
-                </div>
-                <div class="device-value">数值: 加载中...</div>
-            `;
-            
-            deviceItem.addEventListener('click', () => {
-                this.selectDevice(device.id);
-            });
-            
-            deviceList.appendChild(deviceItem);
+        // 泵体
+        const pumpGeometry = new THREE.CylinderGeometry(2, 2, 4, 8);
+        const pumpMaterial = new THREE.MeshPhongMaterial({
+            color: status === 'running' ? 0x27ae60 : 0xe74c3c
         });
+        
+        const pump = new THREE.Mesh(pumpGeometry, pumpMaterial);
+        pump.position.y = 2;
+        pump.castShadow = true;
+        pump.receiveShadow = true;
+        group.add(pump);
+        
+        // 基座
+        const baseGeometry = new THREE.BoxGeometry(6, 1, 6);
+        const baseMaterial = new THREE.MeshPhongMaterial({
+            color: 0x2c3e50
+        });
+        
+        const base = new THREE.Mesh(baseGeometry, baseMaterial);
+        base.position.y = 0.5;
+        base.castShadow = true;
+        base.receiveShadow = true;
+        group.add(base);
+        
+        // 状态指示灯
+        const lightGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+        const lightMaterial = new THREE.MeshBasicMaterial({
+            color: status === 'running' ? 0x00ff00 : 0xff0000,
+            emissive: status === 'running' ? 0x004400 : 0x440000
+        });
+        
+        const statusLight = new THREE.Mesh(lightGeometry, lightMaterial);
+        statusLight.position.set(0, 4.5, 0);
+        group.add(statusLight);
+        
+        // 添加设备信息
+        group.userData = {
+            type: 'pump_station',
+            id: 'pump_' + Date.now(),
+            pumpType: type,
+            status: status,
+            flow: status === 'running' ? 150 : 0, // L/min
+            power: status === 'running' ? 5.5 : 0, // kW
+            efficiency: status === 'running' ? 85 : 0 // %
+        };
+        
+        this.scene.add(group);
+        return group;
+    }
+    
+    /**
+     * 创建管道系统
+     */
+    createPipeSystem(startPoint, endPoint, diameter) {
+        const group = new THREE.Group();
+        
+        // 计算管道方向和长度
+        const direction = new THREE.Vector3().subVectors(endPoint, startPoint);
+        const length = direction.length();
+        
+        // 创建管道
+        const pipeGeometry = new THREE.CylinderGeometry(diameter, diameter, length, 8);
+        const pipeMaterial = new THREE.MeshPhongMaterial({
+            color: 0x7f8c8d,
+            metalness: 0.3,
+            roughness: 0.7
+        });
+        
+        const pipe = new THREE.Mesh(pipeGeometry, pipeMaterial);
+        
+        // 设置管道位置和方向
+        pipe.position.copy(startPoint).add(endPoint).multiplyScalar(0.5);
+        pipe.lookAt(endPoint);
+        pipe.rotateX(Math.PI / 2);
+        
+        pipe.castShadow = true;
+        pipe.receiveShadow = true;
+        group.add(pipe);
+        
+        // 添加流体动画效果
+        const flowGeometry = new THREE.CylinderGeometry(diameter * 0.8, diameter * 0.8, length, 8);
+        const flowMaterial = new THREE.MeshBasicMaterial({
+            color: 0x3498db,
+            transparent: true,
+            opacity: 0.3
+        });
+        
+        const flow = new THREE.Mesh(flowGeometry, flowMaterial);
+        flow.position.copy(pipe.position);
+        flow.rotation.copy(pipe.rotation);
+        group.add(flow);
+        
+        // 添加设备信息
+        group.userData = {
+            type: 'pipe_system',
+            id: 'pipe_' + Date.now(),
+            startPoint: startPoint,
+            endPoint: endPoint,
+            diameter: diameter,
+            length: length,
+            flowRate: 100, // L/min
+            pressure: 2.5, // bar
+            temperature: 25 // °C
+        };
+        
+        this.scene.add(group);
+        return group;
+    }
+    
+    /**
+     * 创建监测设备
+     */
+    createMonitorDevice(position, deviceType) {
+        const group = new THREE.Group();
+        group.position.copy(position);
+        
+        // 设备主体
+        const deviceGeometry = new THREE.BoxGeometry(2, 3, 1);
+        const deviceMaterial = new THREE.MeshPhongMaterial({
+            color: 0x34495e
+        });
+        
+        const device = new THREE.Mesh(deviceGeometry, deviceMaterial);
+        device.position.y = 1.5;
+        device.castShadow = true;
+        device.receiveShadow = true;
+        group.add(device);
+        
+        // 显示屏
+        const screenGeometry = new THREE.PlaneGeometry(1.5, 1);
+        const screenMaterial = new THREE.MeshBasicMaterial({
+            color: 0x000000,
+            emissive: 0x001100
+        });
+        
+        const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+        screen.position.set(0, 1.8, 0.51);
+        group.add(screen);
+        
+        // 支架
+        const poleGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1.5, 8);
+        const poleMaterial = new THREE.MeshPhongMaterial({
+            color: 0x2c3e50
+        });
+        
+        const pole = new THREE.Mesh(poleGeometry, poleMaterial);
+        pole.position.y = 0.75;
+        group.add(pole);
+        
+        // 添加设备信息
+        group.userData = {
+            type: 'monitor_device',
+            id: 'monitor_' + Date.now(),
+            deviceType: deviceType,
+            status: 'online',
+            lastReading: Math.random() * 100,
+            unit: deviceType === 'COD_MONITOR' ? 'mg/L' : 'pH',
+            calibrationDate: new Date().toISOString().split('T')[0]
+        };
+        
+        this.scene.add(group);
+        return group;
+    }
+    
+    /**
+     * 设置事件监听器
+     */
+    async setupEventListeners() {
+        console.log('👂 设置事件监听器...');
+        
+        // 鼠标点击事件
+        this.renderer.domElement.addEventListener('click', (event) => {
+            this.onMouseClick(event);
+        });
+        
+        // 鼠标移动事件
+        this.renderer.domElement.addEventListener('mousemove', (event) => {
+            this.onMouseMove(event);
+        });
+        
+        console.log('✅ 事件监听器设置完成');
+    }
+    
+    /**
+     * 鼠标点击事件处理
+     */
+    onMouseClick(event) {
+        // 计算鼠标位置
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        // 射线检测
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+        
+        if (intersects.length > 0) {
+            const clickedObject = intersects[0].object;
+            const device = this.findDeviceByObject(clickedObject);
+            
+            if (device) {
+                this.selectDevice(device);
+            }
+        }
+    }
+    
+    /**
+     * 鼠标移动事件处理
+     */
+    onMouseMove(event) {
+        // 更新鼠标位置
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    }
+    
+    /**
+     * 查找设备对象
+     */
+    findDeviceByObject(object) {
+        let current = object;
+        while (current) {
+            if (current.userData && current.userData.type) {
+                return current;
+            }
+            current = current.parent;
+        }
+        return null;
     }
     
     /**
      * 选择设备
      */
-    selectDevice(deviceId) {
-        // 移除其他设备的选中状态
-        document.querySelectorAll('.device-item').forEach(item => {
-            item.classList.remove('active');
-        });
+    selectDevice(device) {
+        console.log('🎯 选择设备:', device.userData);
         
-        // 添加当前设备的选中状态
-        const deviceItem = document.querySelector(`[data-device-id="${deviceId}"]`);
-        if (deviceItem) {
-            deviceItem.classList.add('active');
+        // 取消之前的选择
+        if (this.selectedDevice) {
+            this.unselectDevice(this.selectedDevice);
         }
         
-        // 显示设备详情
-        this.showDeviceDetails(deviceId);
+        // 设置新的选择
+        this.selectedDevice = device;
+        this.highlightDevice(device);
         
-        // 相机聚焦到设备
-        this.focusOnDevice(deviceId);
+        // 更新UI
+        this.updateDeviceInfo(device);
+        
+        // 触发选择事件
+        this.emit('deviceSelected', device);
     }
     
     /**
-     * 显示设备详情
+     * 取消选择设备
      */
-    showDeviceDetails(deviceId) {
-        const device = this.devices.find(d => d.id === deviceId);
-        if (!device) return;
+    unselectDevice(device) {
+        this.unhighlightDevice(device);
+    }
+    
+    /**
+     * 高亮设备
+     */
+    highlightDevice(device) {
+        device.traverse((child) => {
+            if (child.isMesh && child.material) {
+                // 保存原始材质
+                if (!child.userData.originalMaterial) {
+                    child.userData.originalMaterial = child.material.clone();
+                }
+                
+                // 应用高亮效果
+                child.material.emissive = new THREE.Color(0x444444);
+            }
+        });
+    }
+    
+    /**
+     * 取消高亮设备
+     */
+    unhighlightDevice(device) {
+        device.traverse((child) => {
+            if (child.isMesh && child.userData.originalMaterial) {
+                child.material.emissive = new THREE.Color(0x000000);
+            }
+        });
+    }
+    
+    /**
+     * 更新设备信息显示
+     */
+    updateDeviceInfo(device) {
+        const infoPanel = document.getElementById('device-info');
+        if (!infoPanel) return;
         
-        const deviceInfo = document.getElementById('device-info');
-        if (!deviceInfo) return;
-        
-        deviceInfo.innerHTML = `
-            <div class="detail-item">
-                <span class="detail-label">设备名称:</span>
-                <span class="detail-value">${device.name}</span>
+        const data = device.userData;
+        let html = `
+            <div class="device-info-header">
+                <h5>${this.getDeviceTypeName(data.type)}</h5>
+                <span class="device-id">${data.id}</span>
             </div>
-            <div class="detail-item">
-                <span class="detail-label">设备类型:</span>
-                <span class="detail-value">${device.type}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">位置坐标:</span>
-                <span class="detail-value">(${device.x}, ${device.y}, ${device.z})</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">运行状态:</span>
-                <span class="detail-value">正常</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">当前数值:</span>
-                <span class="detail-value">待更新</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">最后更新:</span>
-                <span class="detail-value">${new Date().toLocaleString()}</span>
-            </div>
+            <div class="device-info-content">
         `;
+        
+        // 根据设备类型显示不同信息
+        switch (data.type) {
+            case 'water_tank':
+                html += `
+                    <div class="info-item">
+                        <span class="label">容量:</span>
+                        <span class="value">${data.capacity.toFixed(1)} L</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">当前水位:</span>
+                        <span class="value">${(data.waterLevel * 100).toFixed(1)}%</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">当前水量:</span>
+                        <span class="value">${data.currentVolume.toFixed(1)} L</span>
+                    </div>
+                `;
+                break;
+                
+            case 'pump_station':
+                html += `
+                    <div class="info-item">
+                        <span class="label">状态:</span>
+                        <span class="value status-${data.status}">${data.status === 'running' ? '运行中' : '停止'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">流量:</span>
+                        <span class="value">${data.flow} L/min</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">功率:</span>
+                        <span class="value">${data.power} kW</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">效率:</span>
+                        <span class="value">${data.efficiency}%</span>
+                    </div>
+                `;
+                break;
+                
+            case 'pipe_system':
+                html += `
+                    <div class="info-item">
+                        <span class="label">直径:</span>
+                        <span class="value">${data.diameter} m</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">长度:</span>
+                        <span class="value">${data.length.toFixed(1)} m</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">流量:</span>
+                        <span class="value">${data.flowRate} L/min</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">压力:</span>
+                        <span class="value">${data.pressure} bar</span>
+                    </div>
+                `;
+                break;
+                
+            case 'monitor_device':
+                html += `
+                    <div class="info-item">
+                        <span class="label">设备类型:</span>
+                        <span class="value">${data.deviceType}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">状态:</span>
+                        <span class="value status-${data.status}">${data.status === 'online' ? '在线' : '离线'}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">最新读数:</span>
+                        <span class="value">${data.lastReading.toFixed(2)} ${data.unit}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">校准日期:</span>
+                        <span class="value">${data.calibrationDate}</span>
+                    </div>
+                `;
+                break;
+        }
+        
+        html += '</div>';
+        infoPanel.innerHTML = html;
     }
     
     /**
-     * 聚焦到设备
+     * 获取设备类型名称
      */
-    focusOnDevice(deviceId) {
-        const device = this.devices.find(d => d.id === deviceId);
-        if (!device || !this.camera) return;
-        
-        // 简单的相机移动动画
-        const targetPosition = {
-            x: device.x + 30,
-            y: device.y + 20,
-            z: device.z + 30
+    getDeviceTypeName(type) {
+        const names = {
+            'water_tank': '污水池',
+            'pump_station': '泵站',
+            'pipe_system': '管道系统',
+            'monitor_device': '监测设备'
         };
-        
-        // 这里可以添加更复杂的相机动画
-        this.camera.position.set(targetPosition.x, targetPosition.y, targetPosition.z);
-        this.camera.lookAt(device.x, device.y, device.z);
+        return names[type] || type;
     }
     
     /**
      * 开始渲染循环
      */
     startRenderLoop() {
-        if (this.isRunning) return;
+        console.log('🔄 开始渲染循环...');
         
-        this.isRunning = true;
-        this.animate();
-        console.log('渲染循环已启动');
-    }
-    
-    /**
-     * 停止渲染循环
-     */
-    stopRenderLoop() {
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-            this.animationId = null;
-        }
-        this.isRunning = false;
-        console.log('渲染循环已停止');
-    }
-    
-    /**
-     * 动画循环
-     */
-    animate() {
-        if (!this.isRunning) return;
-        
-        this.animationId = requestAnimationFrame(this.animate);
-        
-        // 更新FPS计数
-        this.updateFPS();
-        
-        // 执行动画
-        this.update();
-        
-        // 渲染场景
-        this.render();
-    }
-    
-    /**
-     * 更新逻辑
-     */
-    update() {
-        // 旋转测试立方体
-        if (this.testCube) {
-            this.testCube.rotation.x += 0.01;
-            this.testCube.rotation.y += 0.01;
-        }
-        
-        // 这里可以添加更多更新逻辑
-    }
-    
-    /**
-     * 渲染场景
-     */
-    render() {
-        if (this.currentRenderer === 'threejs' && this.renderer && this.scene && this.camera) {
-            this.renderer.render(this.scene, this.camera);
-        } else if (this.currentRenderer === 'canvas2d' && this.ctx2d) {
-            this.renderCanvas2D();
-        }
-    }
-    
-    /**
-     * Canvas 2D渲染
-     */
-    renderCanvas2D() {
-        const canvas = this.canvas2d;
-        const ctx = this.ctx2d;
-        
-        // 清空画布
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // 设置背景色
-        ctx.fillStyle = '#0a0a0a';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // 绘制网格
-        ctx.strokeStyle = '#333333';
-        ctx.lineWidth = 1;
-        
-        const gridSize = 20;
-        for (let i = 0; i <= canvas.width; i += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(i, 0);
-            ctx.lineTo(i, canvas.height);
-            ctx.stroke();
-        }
-        
-        for (let i = 0; i <= canvas.height; i += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(0, i);
-            ctx.lineTo(canvas.width, i);
-            ctx.stroke();
-        }
-        
-        // 绘制简单的设备表示
-        ctx.fillStyle = '#00ff00';
-        ctx.fillRect(canvas.width / 2 - 10, canvas.height / 2 - 10, 20, 20);
-        
-        // 添加文字
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '16px Arial';
-        ctx.fillText('2D降级模式', 10, 30);
-    }
-    
-    /**
-     * 更新FPS计数
-     */
-    updateFPS() {
-        this.frameCount++;
-        const currentTime = performance.now();
-        
-        if (currentTime - this.lastTime >= 1000) {
-            this.fps = Math.round((this.frameCount * 1000) / (currentTime - this.lastTime));
-            this.frameCount = 0;
-            this.lastTime = currentTime;
+        const animate = () => {
+            requestAnimationFrame(animate);
             
-            // 更新FPS显示
-            const fpsCounter = document.getElementById('fps-counter');
-            if (fpsCounter) {
-                fpsCounter.textContent = this.fps;
+            // 更新控制器
+            if (this.controls) {
+                this.controls.update();
             }
+            
+            // 更新动画
+            const delta = this.clock.getDelta();
+            if (this.animationMixer) {
+                this.animationMixer.update(delta);
+            }
+            
+            // 更新性能统计
+            this.updateStats();
+            
+            // 渲染场景
+            this.renderer.render(this.scene, this.camera);
+        };
+        
+        animate();
+        console.log('✅ 渲染循环启动完成');
+    }
+    
+    /**
+     * 更新性能统计
+     */
+    updateStats() {
+        // 简单的FPS计算
+        const now = Date.now();
+        if (this.lastFrameTime) {
+            const delta = now - this.lastFrameTime;
+            this.stats.fps = Math.round(1000 / delta);
+            this.stats.frameTime = delta;
         }
+        this.lastFrameTime = now;
+        
+        // 更新UI显示
+        const fpsElement = document.getElementById('fps-counter');
+        if (fpsElement) {
+            fpsElement.textContent = this.stats.fps;
+        }
+    }
+    
+    /**
+     * 处理窗口大小变化
+     */
+    onWindowResize() {
+        const container = document.getElementById('threejs-container');
+        if (!container) return;
+        
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+        
+        this.renderer.setSize(width, height);
     }
     
     /**
      * 设置渲染模式
      */
     setRenderMode(mode) {
+        console.log('🎨 设置渲染模式:', mode);
+        
         this.renderMode = mode;
         
+        // 更新UI显示
+        const modeElement = document.getElementById('render-mode');
+        if (modeElement) {
+            modeElement.textContent = mode === 'auto' ? '自动' : (mode === '3d' ? '3D模式' : '2D模式');
+        }
+        
+        // 根据模式调整渲染设置
         switch (mode) {
-            case '3d':
-                this.currentRenderer = 'threejs';
-                this.showThreeJS();
+            case 'high':
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.renderer.shadowMap.enabled = true;
                 break;
-            case '2d':
-                this.currentRenderer = 'canvas2d';
-                this.showCanvas2D();
+            case 'medium':
+                this.renderer.setPixelRatio(1);
+                this.renderer.shadowMap.enabled = true;
                 break;
-            case 'auto':
-                this.detectPerformance();
+            case 'low':
+                this.renderer.setPixelRatio(1);
+                this.renderer.shadowMap.enabled = false;
                 break;
-        }
-        
-        // 更新显示
-        const renderModeSpan = document.getElementById('render-mode');
-        if (renderModeSpan) {
-            renderModeSpan.textContent = mode === 'auto' ? '自动' : 
-                                        mode === '3d' ? '3D模式' : '2D模式';
-        }
-        
-        console.log('渲染模式已切换为:', mode);
-    }
-    
-    /**
-     * 显示Three.js渲染
-     */
-    showThreeJS() {
-        if (this.container) {
-            this.container.style.display = 'block';
-        }
-        if (this.canvas2d) {
-            this.canvas2d.style.display = 'none';
-        }
-    }
-    
-    /**
-     * 显示Canvas 2D渲染
-     */
-    showCanvas2D() {
-        if (this.container) {
-            this.container.style.display = 'none';
-        }
-        if (this.canvas2d) {
-            this.canvas2d.style.display = 'block';
-            // 调整canvas尺寸
-            this.resizeCanvas2D();
-        }
-    }
-    
-    /**
-     * 调整Canvas 2D尺寸
-     */
-    resizeCanvas2D() {
-        const parent = this.canvas2d.parentElement;
-        this.canvas2d.width = parent.clientWidth;
-        this.canvas2d.height = parent.clientHeight;
-    }
-    
-    /**
-     * 更新性能显示
-     */
-    updatePerformanceDisplay(level, text) {
-        const statusElement = document.getElementById('performance-status');
-        const performanceElement = document.getElementById('device-performance');
-        
-        if (statusElement) {
-            statusElement.textContent = `设备性能: ${text}`;
-            statusElement.className = `status ${level}`;
-        }
-        
-        if (performanceElement) {
-            performanceElement.textContent = text;
         }
     }
     
@@ -571,97 +889,78 @@ class ThreeDEngine {
      * 更新设备数据
      */
     updateDeviceData() {
-        // 这里可以从服务器获取最新的设备数据
-        // 暂时使用模拟数据
+        // 模拟数据更新
         this.devices.forEach(device => {
-            const deviceItem = document.querySelector(`[data-device-id="${device.id}"]`);
-            if (deviceItem) {
-                const valueElement = deviceItem.querySelector('.device-value');
-                if (valueElement) {
-                    valueElement.textContent = `数值: ${(Math.random() * 100).toFixed(2)}`;
-                }
+            if (device.userData.type === 'monitor_device') {
+                device.userData.lastReading = Math.random() * 100;
             }
         });
-    }
-    
-    /**
-     * 绑定事件
-     */
-    bindEvents() {
-        window.addEventListener('resize', this.onWindowResize);
-    }
-    
-    /**
-     * 解绑事件
-     */
-    unbindEvents() {
-        window.removeEventListener('resize', this.onWindowResize);
-    }
-    
-    /**
-     * 窗口大小改变事件
-     */
-    onWindowResize() {
-        if (!this.container) return;
         
-        const width = this.container.clientWidth;
-        const height = this.container.clientHeight;
+        // 更新泵站状态
+        this.pumpStations.forEach(pump => {
+            const isRunning = Math.random() > 0.3;
+            pump.userData.status = isRunning ? 'running' : 'stopped';
+            pump.userData.flow = isRunning ? 100 + Math.random() * 100 : 0;
+            
+            // 更新状态灯颜色
+            pump.traverse((child) => {
+                if (child.material && child.material.emissive) {
+                    child.material.color.setHex(isRunning ? 0x00ff00 : 0xff0000);
+                    child.material.emissive.setHex(isRunning ? 0x004400 : 0x440000);
+                }
+            });
+        });
         
-        // 更新相机
-        if (this.camera) {
-            this.camera.aspect = width / height;
-            this.camera.updateProjectionMatrix();
-        }
-        
-        // 更新渲染器
-        if (this.renderer) {
-            this.renderer.setSize(width, height);
-        }
-        
-        // 更新Canvas 2D
-        if (this.currentRenderer === 'canvas2d') {
-            this.resizeCanvas2D();
+        // 如果有选中的设备，更新其信息显示
+        if (this.selectedDevice) {
+            this.updateDeviceInfo(this.selectedDevice);
         }
     }
     
     /**
-     * 隐藏加载动画
+     * 事件发射器
      */
-    hideLoading() {
-        const loading = document.getElementById('loading');
-        if (loading) {
-            loading.style.display = 'none';
+    emit(eventName, data) {
+        const listeners = this.eventListeners.get(eventName);
+        if (listeners) {
+            listeners.forEach(listener => listener(data));
         }
     }
     
     /**
-     * 显示错误信息
+     * 添加事件监听器
      */
-    showError(message) {
-        const loading = document.getElementById('loading');
-        if (loading) {
-            loading.innerHTML = `<div style="color: #ff6b6b;">${message}</div>`;
+    on(eventName, listener) {
+        if (!this.eventListeners.has(eventName)) {
+            this.eventListeners.set(eventName, []);
         }
+        this.eventListeners.get(eventName).push(listener);
     }
     
     /**
      * 销毁引擎
      */
     destroy() {
-        this.stopRenderLoop();
-        this.unbindEvents();
+        console.log('🗑️ 销毁3D引擎...');
         
+        // 停止渲染循环
         if (this.renderer) {
             this.renderer.dispose();
         }
         
-        if (this.container && this.renderer) {
-            this.container.removeChild(this.renderer.domElement);
+        // 清理场景
+        if (this.scene) {
+            this.scene.clear();
         }
         
-        console.log('3D引擎已销毁');
+        // 移除事件监听器
+        window.removeEventListener('resize', this.onWindowResize);
+        
+        console.log('✅ 3D引擎销毁完成');
     }
 }
 
-// 将类添加到全局作用域
-window.ThreeDEngine = ThreeDEngine; 
+// 导出到全局
+window.ThreeDEngine = ThreeDEngine;
+
+console.log('📦 3D引擎核心模块加载完成'); 
